@@ -14,7 +14,8 @@
     "lucide-react": "latest",
     "motion": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "react-muscle-highlighter": "^1.2.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "latest",

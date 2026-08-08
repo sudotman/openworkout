@@ -2,6 +2,8 @@
 
 A mobile-first, private workout tracker that runs entirely in the browser. Workouts, routines, measurements, custom exercises, and progress photos stay on the current device and can be exported as JSON or CSV.
 
+Every exercise detail includes a responsive front/back muscle map. Primary and assisting regions are derived from the exercise library and rendered locally with the MIT-licensed `react-muscle-highlighter` SVG paths; see [public/THIRD_PARTY_NOTICES.txt](./public/THIRD_PARTY_NOTICES.txt). The notice is copied into every production build.
+
 ## Run locally
 
     npm install
@@ -21,6 +23,19 @@ The deployable static site is written to the dist directory.
 - Root directory: repository root
 
 After the first deployment, add the chosen satyam.lol subdomain in **Workers & Pages → Custom domains**. The included public/_headers file adds privacy/security headers and correct cache behavior for the service worker and fingerprinted assets.
+
+## Automatic deployment at workout.satyam.lol
+
+The included `.github/workflows/deploy-pages.yml` workflow mirrors the Hear deployment. Every push to `main` builds the app and deploys `dist` to a Cloudflare Pages project named `openworkout`.
+
+One-time setup:
+
+1. Create the `openworkout` Pages project in the same Cloudflare account that manages `satyam.lol`.
+2. Add `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` to the GitHub repository's Actions secrets. The token needs Cloudflare Pages edit permission.
+3. In the Pages project's **Custom domains** settings, attach `workout.satyam.lol`.
+4. Push to `main`, or run **Deploy OpenWorkout to Cloudflare Pages** manually from the Actions tab.
+
+Cloudflare keeps the custom domain attached to the Pages project, so subsequent successful workflow runs update the subdomain automatically.
 
 ## GitHub Pages
 

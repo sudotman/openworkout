@@ -1,0 +1,171 @@
+.muscle-map {
+  margin-top: 24px;
+  overflow: hidden;
+  color: white;
+  background: #151711;
+  border-radius: 17px;
+}
+
+.muscle-map-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 17px 17px 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.11);
+}
+
+.muscle-map-head > div {
+  display: grid;
+  gap: 5px;
+}
+
+.muscle-map-head span,
+.muscle-map-head > p,
+.muscle-map-key span,
+.muscle-map-figure figcaption,
+.muscle-map-note {
+  font: 500 8px/1.2 var(--mono);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.muscle-map-head span {
+  color: var(--accent);
+}
+
+.muscle-map-head h3 {
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+.muscle-map-head > p {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.muscle-map-body {
+  display: grid;
+  gap: 4px;
+}
+
+.muscle-map-figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 245px;
+  padding: 18px 26px 8px;
+  gap: 18px;
+  background:
+    radial-gradient(circle at 25% 45%, rgba(217, 255, 79, 0.055), transparent 36%),
+    radial-gradient(circle at 75% 45%, rgba(217, 255, 79, 0.055), transparent 36%);
+}
+
+.muscle-map-figure {
+  display: grid;
+  min-width: 0;
+  margin: 0;
+  justify-items: center;
+  gap: 7px;
+}
+
+.muscle-map-figure > div {
+  display: grid;
+  width: 100%;
+  place-items: center;
+}
+
+.muscle-map-figure svg {
+  width: 100% !important;
+  max-width: 124px;
+  height: 218px !important;
+}
+
+.muscle-map-figure path {
+  cursor: default !important;
+  transition: fill 260ms ease, filter 260ms ease;
+}
+
+.muscle-map-figure path[fill="#d9ff4f"] {
+  filter: drop-shadow(0 0 5px rgba(217, 255, 79, 0.24));
+}
+
+.muscle-map-figure figcaption {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.muscle-map-key {
+  display: grid;
+  padding: 0 16px 14px;
+  gap: 1px;
+}
+
+.muscle-map-key > div {
+  display: grid;
+  grid-template-columns: 10px 64px minmax(0, 1fr);
+  align-items: baseline;
+  min-height: 35px;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.muscle-map-key span {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.muscle-map-key strong {
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+
+.muscle-map-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.muscle-map-swatch--primary {
+  background: var(--accent);
+}
+
+.muscle-map-swatch--secondary {
+  background: #8c956f;
+}
+
+.muscle-map-note {
+  padding: 11px 16px 13px;
+  color: rgba(255, 255, 255, 0.32);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: 0;
+  line-height: 1.45;
+  text-transform: none;
+}
+
+@media (min-width: 560px) {
+  .muscle-map-body {
+    grid-template-columns: minmax(310px, 1.45fr) minmax(170px, 0.8fr);
+    align-items: center;
+    padding-right: 20px;
+  }
+
+  .muscle-map-figures {
+    min-height: 285px;
+    padding: 22px 32px 12px;
+  }
+
+  .muscle-map-figure svg {
+    max-width: 144px;
+    height: 250px !important;
+  }
+
+  .muscle-map-key {
+    padding: 14px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .muscle-map-figure path {
+    transition: none;
+  }
+}

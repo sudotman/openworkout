@@ -63,6 +63,7 @@ const MuscleBreakdown = lazy(() =>
 const ExercisePerformance = lazy(() =>
   import('./components/ProgressPlus.jsx').then((module) => ({ default: module.ExercisePerformance })),
 )
+const ExerciseMuscleMap = lazy(() => import('./components/ExerciseMuscleMap.jsx'))
 const ProgressPhotos = lazy(() =>
   import('./components/ProgressPhotos.jsx').then((module) => ({ default: module.ProgressPhotos })),
 )
@@ -2300,6 +2301,8 @@ function ExerciseDetail({
           <span>BARBELL BACK SQUAT · SETUP</span>
         </div>
       )}
+
+      <ExerciseMuscleMap exercise={exercise} />
 
       <div className="instruction-layout">
         <section>
