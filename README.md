@@ -1,6 +1,6 @@
 # OpenWorkout
 
-A mobile-first, private workout tracker that runs entirely in the browser. Workouts, routines, measurements, custom exercises, and progress photos stay on the current device and can be exported as JSON or CSV.
+A mobile-first, private workout tracker that runs entirely in the browser. Workouts, routines, measurements, custom exercises, and progress photos stay on the current device and can be exported as JSON or CSV. Finished sessions can also be turned into a 1080 × 1920 story card and shared through the device share menu or downloaded as a PNG.
 
 Every exercise detail includes a responsive front/back muscle map. Primary and assisting regions are derived from the exercise library and rendered locally with the MIT-licensed `react-muscle-highlighter` SVG paths; see [public/THIRD_PARTY_NOTICES.txt](./public/THIRD_PARTY_NOTICES.txt). The notice is copied into every production build.
 

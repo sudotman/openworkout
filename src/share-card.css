@@ -1,0 +1,193 @@
+.share-workout-sheet {
+  display: grid;
+  padding: 34px 20px calc(28px + env(safe-area-inset-bottom));
+  gap: 24px;
+}
+
+.share-workout-copy {
+  min-width: 0;
+  text-align: center;
+}
+
+.share-complete-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 17px;
+  color: var(--ink);
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+.share-workout-copy h2 {
+  max-width: 420px;
+  margin: 8px auto 0;
+  font-size: clamp(29px, 8vw, 42px);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+.share-workout-copy > p {
+  max-width: 420px;
+  margin: 12px auto 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.share-workout-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 420px;
+  margin: 19px auto 0;
+  padding-top: 13px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  font: 500 8px/1 var(--mono);
+}
+
+.share-workout-meta strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.share-workout-actions {
+  display: grid;
+  max-width: 420px;
+  margin: 18px auto 0;
+  gap: 6px;
+}
+
+.share-privacy-note {
+  display: block;
+  max-width: 420px;
+  margin: 9px auto 0;
+  color: var(--muted-2);
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.share-card-preview {
+  position: relative;
+  width: min(100%, 286px);
+  aspect-ratio: 9 / 16;
+  margin: 0 auto;
+  overflow: hidden;
+  background: #11130f;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 26px 70px rgba(12, 13, 10, 0.24);
+}
+
+.share-card-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.share-card-loading,
+.share-card-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 24px;
+  gap: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  font-size: 10px;
+}
+
+.share-card-loading span {
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: share-card-spin 800ms linear infinite;
+}
+
+.share-card-error strong {
+  color: white;
+  font-size: 12px;
+}
+
+.share-card-error span {
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+}
+
+@keyframes share-card-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (min-width: 760px) {
+  .sheet--share {
+    max-width: 850px;
+  }
+
+  .share-workout-sheet {
+    grid-template-columns: minmax(280px, 1fr) 320px;
+    align-items: center;
+    min-height: 650px;
+    padding: 40px 54px 42px;
+    gap: 55px;
+  }
+
+  .share-workout-copy {
+    text-align: left;
+  }
+
+  .share-complete-icon,
+  .share-workout-copy h2,
+  .share-workout-copy > p,
+  .share-workout-meta,
+  .share-workout-actions,
+  .share-privacy-note {
+    margin-left: 0;
+  }
+
+  .share-card-preview {
+    width: 320px;
+  }
+}
+
+@media (max-width: 759px) {
+  .share-workout-sheet {
+    padding-top: 26px;
+  }
+
+  .share-card-preview {
+    order: -1;
+    width: min(58vw, 248px);
+  }
+
+  .share-complete-icon {
+    display: none;
+  }
+}
+
+@media (max-height: 760px) and (max-width: 759px) {
+  .share-card-preview {
+    width: min(44vw, 190px);
+  }
+
+  .share-workout-sheet {
+    gap: 18px;
+  }
+
+  .share-workout-copy > p,
+  .share-workout-meta {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .share-card-loading span {
+    animation-duration: 1.8s;
+  }
+}

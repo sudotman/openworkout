@@ -28,6 +28,7 @@ import {
   Plus,
   Search,
   Settings,
+  Share2,
   ShieldCheck,
   Sparkles,
   Target,
@@ -72,6 +73,9 @@ const WorkoutTools = lazy(() =>
 )
 const SetOptions = lazy(() =>
   import('./components/WorkoutTools.jsx').then((module) => ({ default: module.SetOptions })),
+)
+const WorkoutShareCard = lazy(() =>
+  import('./components/WorkoutShareCard.jsx').then((module) => ({ default: module.WorkoutShareCard })),
 )
 
 const NAV_ITEMS = [
@@ -772,7 +776,7 @@ function App() {
       measurements: state.hasStarterData ? [] : state.measurements,
     }))
     setRestRemaining(null)
-    setSheet(null)
+    setSheet({ type: 'share', workout: finished })
     setView('history')
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }))
     notify('Workout saved on this device')
@@ -1095,7 +1099,8 @@ function App() {
         {sheet && (
           <Sheet
             onClose={() => setSheet(null)}
-            wide={sheet.type === 'picker' || sheet.type === 'exercise'}
+            wide={sheet.type === 'picker' || sheet.type === 'exercise' || sheet.type === 'share'}
+            share={sheet.type === 'share'}
             hideClose={sheet.type === 'tools' || sheet.type === 'set-options'}
           >
             <Suspense fallback={<FeatureLoader compact />}>
@@ -1168,6 +1173,7 @@ function App() {
                 updateWorkout={updateWorkout}
                 deleteWorkout={deleteWorkout}
                 repeatWorkout={repeatWorkout}
+                openShare={(workout) => setSheet({ type: 'share', workout })}
               />
             )}
             {sheet.type === 'tools' && (
@@ -1199,6 +1205,15 @@ function App() {
                 unit={appState.settings.unit}
                 finishWorkout={finishWorkout}
                 cancel={() => setSheet(null)}
+              />
+            )}
+            {sheet.type === 'share' && (
+              <WorkoutShareCard
+                workout={sheet.workout}
+                unit={appState.settings.unit}
+                exerciseMap={exerciseMap}
+                onDone={() => setSheet(null)}
+                notify={notify}
               />
             )}
             {sheet.type === 'discard' && (
@@ -2158,7 +2173,7 @@ function VolumeChart({ data }) {
   )
 }
 
-function Sheet({ children, onClose, wide = false, hideClose = false }) {
+function Sheet({ children, onClose, wide = false, share = false, hideClose = false }) {
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === 'Escape') onClose()
@@ -2177,7 +2192,7 @@ function Sheet({ children, onClose, wide = false, hideClose = false }) {
       }}
     >
       <motion.div
-        className={'sheet ' + (wide ? 'sheet--wide' : '')}
+        className={'sheet ' + (wide ? 'sheet--wide ' : '') + (share ? 'sheet--share' : '')}
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
@@ -2356,7 +2371,7 @@ function ExerciseDetail({
   )
 }
 
-function WorkoutDetail({ workout, unit, exerciseMap, updateWorkout, deleteWorkout, repeatWorkout }) {
+function WorkoutDetail({ workout, unit, exerciseMap, updateWorkout, deleteWorkout, repeatWorkout, openShare }) {
   const [editing, setEditing] = useState(false)
   const [deleteArmed, setDeleteArmed] = useState(false)
   const [name, setName] = useState(workout?.name || '')
@@ -2379,6 +2394,7 @@ function WorkoutDetail({ workout, unit, exerciseMap, updateWorkout, deleteWorkou
       <div className="workout-detail-actions">
         <button onClick={() => setEditing((value) => !value)}><Settings size={16} /> Edit</button>
         <button onClick={() => repeatWorkout(workout)}><Copy size={16} /> Repeat</button>
+        <button onClick={() => openShare(workout)}><Share2 size={16} /> Share</button>
       </div>
       {editing && (
         <div className="workout-edit-form">
