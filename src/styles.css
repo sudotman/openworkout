@@ -1996,6 +1996,7 @@ p {
 
 .workout-detail-actions {
   display: flex;
+  flex-wrap: wrap;
   margin-top: 20px;
   gap: 8px;
 }
@@ -2012,6 +2013,53 @@ p {
   border-radius: 999px;
   font-size: 9px;
   font-weight: 700;
+}
+
+.workout-detail-actions .save-routine-action {
+  background: rgba(217, 255, 79, 0.55);
+}
+
+.workout-day-list {
+  margin-top: 25px;
+  border-top: 1px solid var(--ink);
+}
+
+.workout-day-list > button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  width: 100%;
+  min-height: 76px;
+  padding: 12px 2px;
+  gap: 15px;
+  color: var(--ink);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.workout-day-list > button > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.workout-day-list > button > span:nth-child(2) {
+  align-items: flex-end;
+}
+
+.workout-day-list strong {
+  font-size: 11px;
+}
+
+.workout-day-list small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .workout-edit-form {
@@ -2241,6 +2289,22 @@ p {
 }
 
 .compact-sheet > .button + .button {
+  margin-top: 5px;
+}
+
+.finish-routine-actions {
+  display: grid;
+  gap: 6px;
+}
+
+.finish-routine-actions > span {
+  margin-bottom: 2px;
+  color: var(--muted);
+  font: 500 8px/1 var(--mono);
+  letter-spacing: 0.08em;
+}
+
+.finish-routine-actions + .button {
   margin-top: 5px;
 }
 

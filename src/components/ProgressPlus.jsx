@@ -155,7 +155,18 @@ function EmptyPanel({ icon: Icon, title, body, actionLabel, onAction }) {
  */
 export function TrainingCalendar({ workouts = [], onSelectWorkout }) {
   const [visibleMonth, setVisibleMonth] = useState(() => {
-    const date = new Date()
+    const now = new Date()
+    const hasWorkoutThisMonth = workouts.some((workout) => {
+      const date = toDate(workout?.startedAt || workout?.completedAt)
+      return isValidDate(date) &&
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth()
+    })
+    const latestWorkoutDate = workouts.reduce((latest, workout) => {
+      const date = toDate(workout?.startedAt || workout?.completedAt)
+      return isValidDate(date) && (!latest || date > latest) ? date : latest
+    }, null)
+    const date = hasWorkoutThisMonth || !latestWorkoutDate ? now : latestWorkoutDate
     return new Date(date.getFullYear(), date.getMonth(), 1)
   })
   const [direction, setDirection] = useState(1)
@@ -168,6 +179,9 @@ export function TrainingCalendar({ workouts = [], onSelectWorkout }) {
       if (!days.has(key)) days.set(key, [])
       days.get(key).push(workout)
     })
+    days.forEach((dayWorkouts) => dayWorkouts.sort(
+      (left, right) => toDate(left?.startedAt || left?.completedAt) - toDate(right?.startedAt || right?.completedAt),
+    ))
     return days
   }, [workouts])
 
@@ -299,8 +313,8 @@ export function TrainingCalendar({ workouts = [], onSelectWorkout }) {
           >
             {calendarDays.map((date) => {
               const key = localDateKey(date)
-              const dayWorkouts = workoutDays.get(key) || []
               const outsideMonth = date.getMonth() !== visibleMonth.getMonth()
+              const dayWorkouts = outsideMonth ? [] : workoutDays.get(key) || []
               const isToday = key === localDateKey(new Date())
               const label = formatDate(date, { weekday: 'long', month: 'long', day: 'numeric' })
               return (
@@ -313,11 +327,20 @@ export function TrainingCalendar({ workouts = [], onSelectWorkout }) {
                   ].filter(Boolean).join(' ')}
                   key={key}
                   type="button"
-                  disabled={!dayWorkouts.length}
-                  onClick={() => onSelectWorkout?.(dayWorkouts[0], dayWorkouts)}
-                  aria-label={dayWorkouts.length
-                    ? label + ', ' + dayWorkouts.length + (dayWorkouts.length === 1 ? ' workout' : ' workouts')
-                    : label + ', no workout'}
+                  disabled={!outsideMonth && !dayWorkouts.length}
+                  onClick={() => {
+                    if (outsideMonth) {
+                      setDirection(date < visibleMonth ? -1 : 1)
+                      setVisibleMonth(new Date(date.getFullYear(), date.getMonth(), 1))
+                    } else {
+                      onSelectWorkout?.(dayWorkouts[0], dayWorkouts)
+                    }
+                  }}
+                  aria-label={outsideMonth
+                    ? label + ', view month'
+                    : dayWorkouts.length
+                      ? label + ', ' + dayWorkouts.length + (dayWorkouts.length === 1 ? ' workout' : ' workouts')
+                      : label + ', no workout'}
                 >
                   <span>{date.getDate()}</span>
                   <i className="pp-workout-dots" aria-hidden="true">

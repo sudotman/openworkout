@@ -29,6 +29,7 @@
  * @typedef {Object} Workout
  * @property {string} id
  * @property {string} name
+ * @property {string | null} sourceRoutineId
  * @property {string} startedAt
  * @property {string | null} completedAt
  * @property {number} durationSeconds

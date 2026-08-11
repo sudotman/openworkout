@@ -328,6 +328,42 @@ function getPreviousSet(workouts, exerciseId) {
   return null
 }
 
+function sameExerciseOrder(left = [], right = []) {
+  return left.length === right.length && left.every((id, index) => id === right[index])
+}
+
+function workoutExerciseIds(workout) {
+  return Array.from(new Set((workout?.exercises || []).map((item) => item.exerciseId).filter(Boolean)))
+}
+
+function routineDataFromWorkout(workout, sourceRoutine = null) {
+  const exerciseIds = workoutExerciseIds(workout)
+  const prescriptions = Object.fromEntries(
+    exerciseIds.flatMap((exerciseId) => {
+      const item = workout.exercises.find((exercise) => exercise.exerciseId === exerciseId)
+      const sourcePrescription = sourceRoutine?.prescriptions?.[exerciseId]
+      const completedSets = (item?.sets || []).filter((set) => set.completed)
+      const setCount = completedSets.length || item?.sets?.length || 0
+      const prescription = sourcePrescription ? { ...sourcePrescription } : {}
+
+      if (!sourcePrescription && setCount) prescription.sets = setCount
+      if (item?.targetMinReps) prescription.minReps = item.targetMinReps
+      if (item?.targetMaxReps) prescription.maxReps = item.targetMaxReps
+      if (item?.restSeconds !== undefined) prescription.restSeconds = item.restSeconds
+
+      return Object.keys(prescription).length ? [[exerciseId, prescription]] : []
+    }),
+  )
+
+  return {
+    name: workout?.name?.trim() || 'Workout routine',
+    folder: sourceRoutine?.folder || 'Unfiled',
+    description: sourceRoutine?.description || 'Saved from a completed workout.',
+    exerciseIds,
+    prescriptions,
+  }
+}
+
 function getTrackingType(exercise) {
   if (exercise?.trackingType) return exercise.trackingType
   if (DURATION_EXERCISES.has(exercise?.id)) return 'duration'
@@ -486,9 +522,15 @@ function App() {
 
   const startWorkout = (template) => {
     const chosen = template?.exerciseIds || []
+    const sourceRoutineId = template?.sourceRoutineId || (
+      template?.id && appState.routines.some((routine) => routine.id === template.id)
+        ? template.id
+        : null
+    )
     const workout = {
       id: uid('workout'),
       name: template?.name || 'Open workout',
+      sourceRoutineId,
       startedAt: new Date().toISOString(),
       completedAt: null,
       durationSeconds: 0,
@@ -761,25 +803,51 @@ function App() {
     notify('Exercise rest set to ' + seconds + ' seconds')
   }
 
-  const finishWorkout = () => {
+  const finishWorkout = (routineAction = 'none') => {
     if (!activeWorkout) return
+    const newRoutineId = routineAction === 'create' ? uid('routine') : null
     const finished = {
       ...activeWorkout,
+      sourceRoutineId: newRoutineId || activeWorkout.sourceRoutineId || null,
       completedAt: new Date().toISOString(),
       durationSeconds: elapsedSeconds,
     }
-    setAppState((state) => ({
-      ...state,
-      activeWorkout: null,
-      hasStarterData: false,
-      workouts: [finished, ...state.workouts.filter((workout) => !workout.isSample)],
-      measurements: state.hasStarterData ? [] : state.measurements,
-    }))
+    setAppState((state) => {
+      const sourceRoutine = state.routines.find((routine) => routine.id === activeWorkout.sourceRoutineId)
+      let routines = state.routines
+
+      if (routineAction === 'update' && sourceRoutine) {
+        const routineData = routineDataFromWorkout(finished, sourceRoutine)
+        routines = state.routines.map((routine) =>
+          routine.id === sourceRoutine.id ? { ...routine, ...routineData } : routine,
+        )
+      } else if (routineAction === 'create' && newRoutineId) {
+        routines = [
+          ...state.routines,
+          { ...routineDataFromWorkout(finished, sourceRoutine), id: newRoutineId },
+        ]
+      }
+
+      return {
+        ...state,
+        routines,
+        activeWorkout: null,
+        hasStarterData: false,
+        workouts: [finished, ...state.workouts.filter((workout) => !workout.isSample)],
+        measurements: state.hasStarterData ? [] : state.measurements,
+      }
+    })
     setRestRemaining(null)
     setSheet({ type: 'share', workout: finished })
     setView('history')
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }))
-    notify('Workout saved on this device')
+    notify(
+      routineAction === 'update'
+        ? 'Workout saved and routine updated'
+        : routineAction === 'create'
+          ? 'Workout and new routine saved'
+          : 'Workout saved on this device',
+    )
   }
 
   const discardWorkout = () => {
@@ -908,6 +976,28 @@ function App() {
     notify('Workout updated')
   }
 
+  const saveWorkoutAsRoutine = (workout) => {
+    if (!workoutExerciseIds(workout).length) {
+      notify('Add an exercise before saving a routine')
+      return
+    }
+    const routineId = uid('routine')
+    setAppState((state) => {
+      const sourceRoutine = state.routines.find((routine) => routine.id === workout.sourceRoutineId)
+      return {
+        ...state,
+        routines: [
+          ...state.routines,
+          { ...routineDataFromWorkout(workout, sourceRoutine), id: routineId },
+        ],
+        workouts: state.workouts.map((entry) =>
+          entry.id === workout.id ? { ...entry, sourceRoutineId: routineId } : entry,
+        ),
+      }
+    })
+    notify('Routine created from workout')
+  }
+
   const deleteWorkout = (id) => {
     setAppState((state) => ({
       ...state,
@@ -921,6 +1011,7 @@ function App() {
     startWorkout({
       name: workout.name,
       exerciseIds: workout.exercises.map((exercise) => exercise.exerciseId),
+      sourceRoutineId: workout.sourceRoutineId || null,
     })
     setSheet(null)
   }
@@ -928,6 +1019,7 @@ function App() {
   const changeUnit = (nextUnit) => {
     if (nextUnit === appState.settings.unit) return
     const factor = nextUnit === 'lb' ? 2.2046226218 : 1 / 2.2046226218
+    const lengthFactor = nextUnit === 'lb' ? 1 / 2.54 : 2.54
     const convertWorkout = (workout) =>
       workout
         ? {
@@ -947,6 +1039,24 @@ function App() {
       settings: { ...state.settings, unit: nextUnit },
       workouts: state.workouts.map(convertWorkout),
       activeWorkout: convertWorkout(state.activeWorkout),
+      measurements: state.measurements.map((measurement) => ({
+        ...measurement,
+        weight: measurement.weight === '' || measurement.weight == null
+          ? measurement.weight
+          : Math.round(Number(measurement.weight) * factor * 10) / 10,
+        waist: measurement.waist === '' || measurement.waist == null
+          ? measurement.waist
+          : Math.round(Number(measurement.waist) * lengthFactor * 10) / 10,
+        chest: measurement.chest === '' || measurement.chest == null
+          ? measurement.chest
+          : Math.round(Number(measurement.chest) * lengthFactor * 10) / 10,
+        arm: measurement.arm === '' || measurement.arm == null
+          ? measurement.arm
+          : Math.round(Number(measurement.arm) * lengthFactor * 10) / 10,
+        thigh: measurement.thigh === '' || measurement.thigh == null
+          ? measurement.thigh
+          : Math.round(Number(measurement.thigh) * lengthFactor * 10) / 10,
+      })),
     }))
     notify('Weights converted to ' + nextUnit)
   }
@@ -1030,6 +1140,7 @@ function App() {
                 ) : (
                   <TrainView
                     workouts={appState.workouts}
+                    routines={appState.routines}
                     unit={appState.settings.unit}
                     hasStarterData={appState.hasStarterData}
                     clearStarterData={clearStarterData}
@@ -1075,7 +1186,11 @@ function App() {
                   deleteMeasurement={deleteMeasurement}
                   addProgressPhoto={addProgressPhoto}
                   deleteProgressPhoto={deleteProgressPhoto}
-                  openWorkout={(workout) => setSheet({ type: 'workout', workout })}
+                  openWorkout={(workout, dayWorkouts = []) => setSheet(
+                    dayWorkouts.length > 1
+                      ? { type: 'workout-day', workouts: dayWorkouts }
+                      : { type: 'workout', workout },
+                  )}
                 />
               )}
               </motion.div>
@@ -1174,6 +1289,15 @@ function App() {
                 deleteWorkout={deleteWorkout}
                 repeatWorkout={repeatWorkout}
                 openShare={(workout) => setSheet({ type: 'share', workout })}
+                saveWorkoutAsRoutine={saveWorkoutAsRoutine}
+              />
+            )}
+            {sheet.type === 'workout-day' && (
+              <WorkoutDaySheet
+                workouts={sheet.workouts}
+                unit={appState.settings.unit}
+                exerciseMap={exerciseMap}
+                openWorkout={(workout) => setSheet({ type: 'workout', workout })}
               />
             )}
             {sheet.type === 'tools' && (
@@ -1203,6 +1327,7 @@ function App() {
                 workout={activeWorkout}
                 elapsedSeconds={elapsedSeconds}
                 unit={appState.settings.unit}
+                sourceRoutine={appState.routines.find((routine) => routine.id === activeWorkout?.sourceRoutineId)}
                 finishWorkout={finishWorkout}
                 cancel={() => setSheet(null)}
               />
@@ -1373,8 +1498,11 @@ function ViewHeader({ eyebrow, title, subtitle, action }) {
   )
 }
 
-function TrainView({ workouts, unit, hasStarterData, clearStarterData, startWorkout, openWorkout }) {
+function TrainView({ workouts, routines, unit, hasStarterData, clearStarterData, startWorkout, openWorkout }) {
   const latestWorkout = workouts[0]
+  const getStoredRoutine = (template) => routines.find(
+    (routine) => routine.id === template.id || routine.id === 'routine-' + template.id,
+  ) || template
   const weekCutoff = Date.now() - 7 * 86400000
   const weekWorkouts = workouts.filter((workout) => new Date(workout.startedAt).getTime() >= weekCutoff)
   const weekSets = weekWorkouts.reduce((total, workout) => total + completedSetCount(workout), 0)
@@ -1417,7 +1545,7 @@ function TrainView({ workouts, unit, hasStarterData, clearStarterData, startWork
                 <span>4 exercises</span>
                 <span>~55 min</span>
               </div>
-              <button className="button button--accent button--large" onClick={() => startWorkout(TEMPLATES[0])}>
+              <button className="button button--accent button--large" onClick={() => startWorkout(getStoredRoutine(TEMPLATES[0]))}>
                 <Play size={18} fill="currentColor" />
                 Start workout
               </button>
@@ -1439,7 +1567,7 @@ function TrainView({ workouts, unit, hasStarterData, clearStarterData, startWork
                 <button
                   key={template.id}
                   className="template-row"
-                  onClick={() => startWorkout(template)}
+                  onClick={() => startWorkout(getStoredRoutine(template))}
                 >
                   <span className="template-index">0{index + 1}</span>
                   <span className="template-main">
@@ -2371,7 +2499,49 @@ function ExerciseDetail({
   )
 }
 
-function WorkoutDetail({ workout, unit, exerciseMap, updateWorkout, deleteWorkout, repeatWorkout, openShare }) {
+function WorkoutDaySheet({ workouts, unit, exerciseMap, openWorkout }) {
+  const date = workouts[0]?.startedAt || workouts[0]?.completedAt
+  return (
+    <div className="sheet-content workout-day-sheet">
+      <SheetHeading
+        eyebrow="TRAINING DAY"
+        title={formatDate(date, { weekday: 'long', day: 'numeric', month: 'long' })}
+        body={workouts.length + ' sessions were completed on this day.'}
+      />
+      <div className="workout-day-list">
+        {workouts.map((workout) => (
+          <button key={workout.id} onClick={() => openWorkout(workout)}>
+            <span>
+              <strong>{workout.name}</strong>
+              <small>
+                {workout.exercises.slice(0, 3)
+                  .map((item) => exerciseMap.get(item.exerciseId)?.name)
+                  .filter(Boolean)
+                  .join(' · ')}
+              </small>
+            </span>
+            <span>
+              <strong>{Math.round(workout.durationSeconds / 60)} min</strong>
+              <small>{compactNumber(workoutVolume(workout))} {unit}</small>
+            </span>
+            <ChevronRight size={18} />
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function WorkoutDetail({
+  workout,
+  unit,
+  exerciseMap,
+  updateWorkout,
+  deleteWorkout,
+  repeatWorkout,
+  openShare,
+  saveWorkoutAsRoutine,
+}) {
   const [editing, setEditing] = useState(false)
   const [deleteArmed, setDeleteArmed] = useState(false)
   const [name, setName] = useState(workout?.name || '')
@@ -2395,6 +2565,9 @@ function WorkoutDetail({ workout, unit, exerciseMap, updateWorkout, deleteWorkou
         <button onClick={() => setEditing((value) => !value)}><Settings size={16} /> Edit</button>
         <button onClick={() => repeatWorkout(workout)}><Copy size={16} /> Repeat</button>
         <button onClick={() => openShare(workout)}><Share2 size={16} /> Share</button>
+        <button className="save-routine-action" onClick={() => saveWorkoutAsRoutine(workout)}>
+          <ListPlus size={16} /> Save as routine
+        </button>
       </div>
       {editing && (
         <div className="workout-edit-form">
@@ -2458,23 +2631,61 @@ function WorkoutDetail({ workout, unit, exerciseMap, updateWorkout, deleteWorkou
   )
 }
 
-function FinishWorkoutSheet({ workout, elapsedSeconds, unit, finishWorkout, cancel }) {
+function FinishWorkoutSheet({ workout, elapsedSeconds, unit, sourceRoutine, finishWorkout, cancel }) {
+  const currentExerciseIds = workoutExerciseIds(workout)
+  const routineChanged = sourceRoutine && !sameExerciseOrder(
+    currentExerciseIds,
+    sourceRoutine.exerciseIds || [],
+  )
+  const canCreateRoutine = currentExerciseIds.length > 0
+
   return (
     <div className="sheet-content compact-sheet">
       <span className="confirm-icon confirm-icon--success"><Check size={25} /></span>
       <SheetHeading
         eyebrow="SESSION COMPLETE"
         title="Finish workout?"
-        body="Review the session summary before saving it to your local history."
+        body={routineChanged
+          ? 'You changed the exercise lineup. Choose what should happen to your routine.'
+          : 'Review the session summary before saving it to your local history.'}
       />
       <div className="finish-summary">
         <div><span>TIME</span><strong>{formatDuration(elapsedSeconds)}</strong></div>
         <div><span>SETS</span><strong>{completedSetCount(workout)}</strong></div>
         <div><span>VOLUME</span><strong>{compactNumber(workoutVolume(workout))} <small>{unit}</small></strong></div>
       </div>
-      <button className="button button--accent button--wide" onClick={finishWorkout}>
-        <Check size={18} /> Save workout
-      </button>
+      {routineChanged ? (
+        <div className="finish-routine-actions">
+          <span>ROUTINE CHANGES</span>
+          <button className="button button--accent button--wide" onClick={() => finishWorkout('update')}>
+            <Check size={18} /> Update {sourceRoutine.name}
+          </button>
+          <button className="button button--outline button--wide" onClick={() => finishWorkout('create')}>
+            <ListPlus size={18} /> Save as new routine
+          </button>
+          <button className="button button--ghost button--wide" onClick={() => finishWorkout('none')}>
+            Save workout only
+          </button>
+        </div>
+      ) : sourceRoutine ? (
+        <button className="button button--accent button--wide" onClick={() => finishWorkout('none')}>
+          <Check size={18} /> Save workout
+        </button>
+      ) : (
+        <div className="finish-routine-actions">
+          <span>SAVE THIS SESSION</span>
+          <button
+            className="button button--accent button--wide"
+            onClick={() => finishWorkout('create')}
+            disabled={!canCreateRoutine}
+          >
+            <ListPlus size={18} /> Save workout + new routine
+          </button>
+          <button className="button button--ghost button--wide" onClick={() => finishWorkout('none')}>
+            Save workout only
+          </button>
+        </div>
+      )}
       <button className="button button--ghost button--wide" onClick={cancel}>Keep training</button>
     </div>
   )
