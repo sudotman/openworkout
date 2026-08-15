@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenWorkout · Share directions, round two</title>
+    <style>
+      @font-face {
+        font-family: Manrope;
+        src: url('/node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2') format('woff2');
+        font-weight: 200 800;
+      }
+      @font-face {
+        font-family: 'DM Mono';
+        src: url('/node_modules/@fontsource/dm-mono/files/dm-mono-latin-400-normal.woff2') format('woff2');
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: 'DM Mono';
+        src: url('/node_modules/@fontsource/dm-mono/files/dm-mono-latin-500-normal.woff2') format('woff2');
+        font-weight: 500;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { min-height: 100%; }
+      body {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        margin: 0;
+        overflow: hidden;
+        color: #151611;
+        background: #e7e3d9;
+        font-family: Manrope, sans-serif;
+      }
+      .board {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        padding: 38px 34px 28px;
+      }
+      .board-head {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: end;
+        width: min(100%, 1085px);
+        margin: 0 auto 20px;
+      }
+      .board-no,
+      .board-note,
+      .brand,
+      .meta,
+      .eyebrow,
+      .metric-label,
+      .chart-title,
+      .fact span,
+      .footer,
+      .mode-tag {
+        font-family: 'DM Mono', monospace;
+        text-transform: uppercase;
+      }
+      .board-no { font-size: 10px; letter-spacing: .09em; }
+      .board-title { margin: 4px 0 0; font-size: 29px; line-height: 1; letter-spacing: -.05em; }
+      .board-note { max-width: 500px; color: #6f6b62; font-size: 9px; line-height: 1.5; letter-spacing: .06em; text-align: right; }
+      .pair { display: flex; align-items: center; justify-content: center; gap: 38px; }
+      .preview { position: relative; }
+      .preview::before {
+        position: absolute;
+        inset: 14px -11px -15px 11px;
+        z-index: -1;
+        background: rgba(27, 25, 20, .12);
+        filter: blur(18px);
+        content: '';
+      }
+      .mode-tag {
+        position: absolute;
+        z-index: 8;
+        top: 13px;
+        right: -9px;
+        padding: 5px 11px;
+        color: #f4f0e6;
+        background: #171813;
+        font-size: 7px;
+        letter-spacing: .08em;
+        transform: rotate(2deg);
+      }
+      .story {
+        position: relative;
+        width: 315px;
+        height: 560px;
+        overflow: hidden;
+        isolation: isolate;
+      }
+      .top { display: flex; align-items: center; justify-content: space-between; }
+      .brand { font: 760 8px/1 Manrope, sans-serif; }
+      .meta { font-size: 5px; line-height: 1.5; text-align: right; }
+      .story h2 { margin: 0; font-weight: 740; text-transform: uppercase; }
+      .metric-label { font-size: 6px; letter-spacing: .05em; }
+      .metric { font-weight: 760; letter-spacing: -.095em; }
+      .metric small { font: 500 10px/1 'DM Mono', monospace; letter-spacing: 0; }
+      .facts { display: grid; grid-template-columns: repeat(3, 1fr); }
+      .fact span { display: block; font-size: 5px; }
+      .fact strong { display: block; margin-top: 5px; font-size: 11px; line-height: 1; }
+      .footer { position: absolute; right: 22px; bottom: 17px; left: 22px; display: flex; align-items: center; justify-content: space-between; font-size: 5px; }
+      .work-heading,
+      .work-row { font-family: 'DM Mono', monospace; text-transform: uppercase; }
+      .work-heading { display: flex; justify-content: space-between; font-size: 5px; }
+      .work-row { display: grid; grid-template-columns: 18px 1fr auto; align-items: center; padding: 4px 0; font-size: 5.5px; }
+      .work-row strong { overflow: hidden; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+
+      .chart { position: relative; }
+      .chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+      .chart .guide { stroke-width: .7; }
+      .chart .axis-label,
+      .chart .data-label { font: 400 5px 'DM Mono', monospace; }
+      .chart .bar-value { font: 500 5px 'DM Mono', monospace; }
+      .chart .line { fill: none; stroke-width: 2.1; vector-effect: non-scaling-stroke; }
+      .chart .point { stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+      .hybrid-plot { display: grid; height: 100%; grid-template-rows: 1fr 1fr; gap: 7px; }
+      .hybrid-lane { display: grid; min-height: 0; grid-template-rows: auto 1fr; gap: 2px; }
+      .hybrid-lane + .hybrid-lane { padding-top: 5px; border-top: 1px solid currentColor; }
+      .hybrid-lane-title { font: 400 5px/1 'DM Mono', monospace; text-transform: uppercase; }
+      .hybrid-chart-svg { min-height: 0; }
+      .hybrid-chart-svg svg { width: 100%; height: 100%; }
+
+      /* A — Ledger Plot: the requested palette/layout combination */
+      .v1 { padding: 22px; color: #171713; background: #f3efe5; }
+      .v1::before {
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        opacity: .18;
+        background-image: radial-gradient(#877f70 .45px, transparent .45px);
+        background-size: 5px 5px;
+        content: '';
+      }
+      .v1 .top { padding-bottom: 13px; border-bottom: 1px solid #171713; }
+      .v1 h2 { max-width: 250px; margin-top: 22px; font-size: 34px; line-height: .88; letter-spacing: -.07em; }
+      .v1 .headline { display: flex; align-items: end; justify-content: space-between; margin-top: 19px; }
+      .v1 .metric { margin-left: -3px; font-size: 62px; line-height: .92; }
+      .v1 .metric small { color: #cf4433; }
+      .v1 .hybrid-metrics { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 12px; }
+      .v1 .hybrid-metrics > div + div { padding-left: 12px; border-left: 1px solid #171713; }
+      .v1 .hybrid-metrics .metric { font-size: 43px; }
+      .v1 .chart-shell { margin-top: 14px; padding: 10px 0 8px; border-top: 1px solid #171713; border-bottom: 1px solid #171713; }
+      .v1 .chart-title { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 5px; }
+      .v1 .chart-title span:last-child { color: #cf4433; }
+      .v1 .chart { height: 142px; }
+      .v1 .chart--hybrid { height: 152px; }
+      .v1 .guide { stroke: #b4ad9e; }
+      .v1 .axis-label, .v1 .data-label { fill: #766f62; }
+      .v1 .bar { fill: #191a15; }
+      .v1 .bar--accent, .v1 .line { fill: none; stroke: #cf4433; }
+      .v1 .point { fill: #f3efe5; stroke: #cf4433; }
+      .v1 .bar-value { fill: #171713; }
+      .v1 .hybrid-lane + .hybrid-lane { border-color: #b4ad9e; }
+      .v1 .facts { margin-top: 13px; padding-bottom: 13px; border-bottom: 1px solid #171713; }
+      .v1 .fact + .fact { padding-left: 10px; border-left: 1px solid #171713; }
+      .v1 .work-register { margin-top: 10px; }
+      .v1 .work-heading { margin-bottom: 3px; color: #766f62; }
+      .v1 .work-row { border-bottom: 1px dotted #a79f90; }
+      .v1 .work-row span:first-child { color: #cf4433; }
+      .v1 .stamp { width: 6px; height: 6px; background: #cf4433; border-radius: 50%; }
+
+      /* B — Margin Index: a clean replacement for the discarded dark direction */
+      .v2 { padding: 21px 21px 19px 49px; color: #171713; background: #ece5d8; }
+      .v2::before { position: absolute; inset: 0 auto 0 0; width: 32px; background: #cf4433; content: ''; }
+      .v2::after { position: absolute; inset: 0 auto 0 38px; width: 1px; background: #171713; content: ''; }
+      .v2 .rail { position: absolute; bottom: 19px; left: 11px; color: #f3efe5; font: 500 6px/1 'DM Mono', monospace; letter-spacing: .08em; text-transform: uppercase; writing-mode: vertical-rl; transform: rotate(180deg); }
+      .v2 .top { padding-bottom: 10px; border-bottom: 1px solid #171713; }
+      .v2 .kicker { margin-top: 20px; color: #cf4433; font: 500 6px/1 'DM Mono', monospace; letter-spacing: .07em; text-transform: uppercase; }
+      .v2 h2 { max-width: 235px; margin-top: 7px; font-size: 35px; line-height: .86; letter-spacing: -.07em; }
+      .v2 .metric-strip { margin-top: 16px; padding: 10px 0 9px; border-top: 1px solid #171713; border-bottom: 1px solid #171713; }
+      .v2 .metric { margin: 3px 0 0 -3px; font-size: 49px; line-height: .9; }
+      .v2 .metric small { color: #cf4433; }
+      .v2 .hybrid-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .v2 .hybrid-metrics > div + div { padding-left: 10px; border-left: 1px solid #171713; }
+      .v2 .hybrid-metrics .metric { font-size: 35px; }
+      .v2 .chart-area { padding: 9px 0 7px; border-bottom: 1px solid #171713; }
+      .v2 .chart-title { display: flex; justify-content: space-between; color: #6f685c; font-size: 5px; }
+      .v2 .chart-title span:last-child { color: #cf4433; }
+      .v2 .chart { height: 108px; margin-top: 4px; }
+      .v2 .chart--hybrid { height: 120px; }
+      .v2 .guide { stroke: #aaa191; }
+      .v2 .axis-label, .v2 .data-label { fill: #746c5e; }
+      .v2 .bar { fill: #171713; }
+      .v2 .bar--accent, .v2 .line { fill: none; stroke: #cf4433; }
+      .v2 .point { fill: #ece5d8; stroke: #cf4433; }
+      .v2 .bar-value { fill: #171713; }
+      .v2 .hybrid-lane + .hybrid-lane { border-color: #aaa191; }
+      .v2 .facts { padding: 9px 0; border-bottom: 1px solid #171713; }
+      .v2 .fact + .fact { padding-left: 8px; border-left: 1px solid #aaa191; }
+      .v2 .work-register { margin-top: 8px; }
+      .v2 .work-heading { margin-bottom: 2px; color: #6f685c; }
+      .v2 .work-row { border-bottom: 1px solid #c2b9aa; }
+      .v2 .work-row span:first-child { color: #cf4433; }
+      .v2 .footer { right: 21px; bottom: 14px; left: 49px; color: #746c5e; }
+
+      /* C — Split Report: hybrid-aware editorial register */
+      .v3 { color: #171713; background: #f3efe5; }
+      .v3 .mast { display: flex; align-items: center; justify-content: space-between; height: 42px; padding: 0 20px; color: #f3efe5; background: #171713; }
+      .v3 .intro { padding: 17px 20px 15px; border-bottom: 1px solid #171713; }
+      .v3 .eyebrow { color: #cf4433; font-size: 5px; }
+      .v3 h2 { max-width: 260px; margin-top: 9px; font-size: 35px; line-height: .87; letter-spacing: -.065em; }
+      .v3 .score { display: grid; grid-template-columns: 1fr 1.2fr; min-height: 84px; border-bottom: 1px solid #171713; }
+      .v3 .score-main { padding: 14px 13px 11px 20px; background: #cf4433; }
+      .v3 .score .metric { margin-top: 2px; font-size: 51px; line-height: .9; }
+      .v3 .score-secondary { display: grid; align-content: center; padding: 12px 20px; }
+      .v3 .score-secondary .metric { font-size: 31px; line-height: 1; }
+      .v3 .score-secondary .metric + .metric-label { margin-top: 10px; }
+      .v3 .plot-section { padding: 13px 20px 9px; }
+      .v3 .chart-title { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 5px; }
+      .v3 .chart { height: 140px; }
+      .v3 .chart--hybrid { height: 146px; }
+      .v3 .guide { stroke: #b6ad9c; }
+      .v3 .axis-label, .v3 .data-label { fill: #756e60; }
+      .v3 .bar { fill: #171713; }
+      .v3 .bar--accent, .v3 .line { fill: none; stroke: #cf4433; }
+      .v3 .point { fill: #f3efe5; stroke: #cf4433; }
+      .v3 .bar-value { fill: #171713; }
+      .v3 .mast .top { width: 100%; }
+      .v3 .hybrid-lane + .hybrid-lane { border-color: #b6ad9c; }
+      .v3 .facts { margin: 0 20px; padding: 11px 0; border-top: 1px solid #171713; }
+      .v3 .fact + .fact { padding-left: 9px; border-left: 1px solid #b6ad9c; }
+      .v3 .work-register { margin: 8px 20px 0; }
+      .v3 .work-heading { margin-bottom: 2px; color: #756e60; }
+      .v3 .work-row { border-bottom: 1px solid #c2b9aa; }
+      .v3 .work-row span:first-child { color: #cf4433; }
+      .v3 .footer { right: 20px; bottom: 14px; left: 20px; }
+
+      @media (max-width: 1040px) {
+        .pair { gap: 16px; transform: scale(.86); transform-origin: top center; }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="app"></main>
+    <script>
+      const variants = [
+        { name: 'Ledger Plot · R2', note: 'Refined with a four-line work register · exercise names and completed sets remain visible' },
+        { name: 'Margin Index', note: 'New replacement direction · a coach’s logbook margin with graph, metrics, and work register' },
+        { name: 'Split Report · R2', note: 'Tighter plot area, stronger session documentation · mixed work stays on two honest scales' },
+      ]
+
+      const sessions = {
+        strength: {
+          title: 'Upper strength', eyebrow: 'Strength session', mainLabel: 'Total volume', main: '5,240', unit: 'kg',
+          facts: [['Duration', '47 min'], ['Work sets', '12'], ['Movements', '4']],
+          bars: [['BENCH', 1680], ['PULL-UP', 960], ['PRESS', 1200], ['ROW', 1400]],
+          work: [['Barbell bench press', '4 sets'], ['Weighted pull-up', '3 sets'], ['Overhead press', '3 sets'], ['Cable row', '2 sets']],
+        },
+        cardio: {
+          title: 'Treadmill run', eyebrow: 'Cardio session', mainLabel: 'Distance', main: '5.00', unit: 'km',
+          facts: [['Run time', '27:30'], ['Avg pace', '5:30 /km'], ['Avg speed', '10.9']],
+          paces: [338, 331, 329, 326, 326],
+          work: [['Treadmill run', '5 splits']],
+        },
+        hybrid: {
+          title: 'Run + Upper', eyebrow: 'Mixed session', mainLabel: 'Run distance', main: '3.00', unit: 'km',
+          secondLabel: 'Lift volume', second: '2,940', secondUnit: 'kg',
+          facts: [['Duration', '51 min'], ['Run pace', '5:36 /km'], ['Work sets', '7']],
+          paces: [342, 337, 329],
+          bars: [['BENCH', 1260], ['ROW', 980], ['PRESS', 700]],
+          work: [['Treadmill run', '3 splits'], ['Barbell bench press', '3 sets'], ['Cable row', '2 sets'], ['Overhead press', '2 sets']],
+        },
+      }
+
+      const fmtPace = (seconds) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+      const facts = (items) => `<div class="facts">${items.map(([label, value]) => `<div class="fact"><span>${label}</span><strong>${value}</strong></div>`).join('')}</div>`
+      const workRegister = (items) => `<div class="work-register"><div class="work-heading"><span>Work performed</span><span>Completed</span></div>${items.map(([name,count], index) => `<div class="work-row"><span>${String(index + 1).padStart(2, '0')}</span><strong>${name}</strong><span>${count}</span></div>`).join('')}</div>`
+      const metricBlock = (d, hybrid = false) => hybrid
+        ? `<div class="hybrid-metrics"><div><div class="metric-label">${d.mainLabel}</div><div class="metric">${d.main}<small>${d.unit}</small></div></div><div><div class="metric-label">${d.secondLabel}</div><div class="metric">${d.second}<small>${d.secondUnit}</small></div></div></div>`
+        : `<div><div class="metric-label">${d.mainLabel}</div><div class="metric">${d.main}<small>${d.unit}</small></div></div>`
+
+      function barsSvg(items, width = 260, height = 128) {
+        const max = Math.max(...items.map(([, value]) => value))
+        const chartTop = 12
+        const chartBottom = height - 21
+        const innerHeight = chartBottom - chartTop
+        const slot = width / items.length
+        return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Volume by movement">
+          <line class="guide" x1="0" y1="${chartBottom}" x2="${width}" y2="${chartBottom}"/>
+          ${items.map(([label, value], index) => {
+            const barHeight = Math.max(10, (value / max) * innerHeight)
+            const x = index * slot + slot * .24
+            const y = chartBottom - barHeight
+            const w = slot * .48
+            return `<rect class="bar" x="${x}" y="${y}" width="${w}" height="${barHeight}"/><text class="bar-value" x="${x + w/2}" y="${Math.max(7, y - 4)}" text-anchor="middle">${value}</text><text class="data-label" x="${x + w/2}" y="${height - 7}" text-anchor="middle">${label}</text>`
+          }).join('')}
+        </svg>`
+      }
+
+      function paceSvg(values, width = 260, height = 128) {
+        const min = Math.min(...values) - 4
+        const max = Math.max(...values) + 4
+        const left = 27
+        const right = width - 7
+        const top = 10
+        const bottom = height - 22
+        const pointFor = (value, index) => {
+          const x = left + (values.length === 1 ? 0 : index * (right - left) / (values.length - 1))
+          const y = top + ((value - min) / (max - min)) * (bottom - top)
+          return [x, y]
+        }
+        const points = values.map(pointFor)
+        const path = points.map(([x,y], index) => `${index ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ')
+        const guideValues = [min, Math.round((min + max) / 2), max]
+        return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Pace by kilometre">
+          ${guideValues.map((value) => {
+            const y = top + ((value - min) / (max - min)) * (bottom - top)
+            return `<line class="guide" x1="${left}" y1="${y}" x2="${right}" y2="${y}"/><text class="axis-label" x="0" y="${y + 2}">${fmtPace(value)}</text>`
+          }).join('')}
+          <path class="line" d="${path}"/>
+          ${points.map(([x,y], index) => `<circle class="point" cx="${x}" cy="${y}" r="3"/><text class="data-label" x="${x}" y="${height - 7}" text-anchor="middle">KM ${index + 1}</text>`).join('')}
+        </svg>`
+      }
+
+      function hybridSvg(d, width = 260, height = 155) {
+        return `<div class="hybrid-plot" role="img" aria-label="Run pace by split and lifting volume by movement">
+          <div class="hybrid-lane"><span class="hybrid-lane-title">Run · pace / split</span><div class="hybrid-chart-svg">${paceSvg(d.paces, width, Math.floor(height / 2))}</div></div>
+          <div class="hybrid-lane"><span class="hybrid-lane-title">Lift · volume / movement</span><div class="hybrid-chart-svg">${barsSvg(d.bars, width, Math.floor(height / 2))}</div></div>
+        </div>`
+      }
+
+      function chartFor(mode, d) {
+        if (mode === 'strength') return barsSvg(d.bars)
+        if (mode === 'cardio') return paceSvg(d.paces)
+        return hybridSvg(d)
+      }
+
+      function card(variant, mode) {
+        const d = sessions[mode]
+        const hybrid = mode === 'hybrid'
+        const top = `<div class="top"><span class="brand">OPENWORKOUT</span><span class="meta">08 AUG 2026<br/>07:14 PM</span></div>`
+        const plotTitle = mode === 'strength' ? ['VOLUME BY MOVEMENT', 'KG'] : mode === 'cardio' ? ['PACE BY KILOMETRE', 'MIN / KM'] : ['RUN + LIFT REGISTER', 'TWO SCALES']
+        if (variant === 1) return `<article class="story v1">${top}<h2>${d.title}</h2><div class="headline">${metricBlock(d, hybrid)}</div><div class="chart-shell"><div class="chart-title"><span>${plotTitle[0]}</span><span>${plotTitle[1]}</span></div><div class="chart ${hybrid ? 'chart--hybrid' : ''}">${chartFor(mode,d)}</div></div>${facts(d.facts)}${workRegister(d.work)}<div class="footer"><span class="stamp"></span><span>Session 218 · Logged data</span></div></article>`
+        if (variant === 2) return `<article class="story v2"><span class="rail">OpenWorkout / Session 218</span>${top}<div class="kicker">${d.eyebrow} / 218</div><h2>${d.title}</h2><div class="metric-strip">${metricBlock(d, hybrid)}</div><div class="chart-area"><div class="chart-title"><span>${plotTitle[0]}</span><span>${plotTitle[1]}</span></div><div class="chart ${hybrid ? 'chart--hybrid' : ''}">${chartFor(mode,d)}</div></div>${facts(d.facts)}${workRegister(d.work)}<div class="footer"><span>08.08.26</span><span>Local record</span></div></article>`
+        return `<article class="story v3"><div class="mast">${top}</div><div class="intro"><div class="eyebrow">${d.eyebrow} / Session 218</div><h2>${d.title}</h2></div><div class="score"><div class="score-main"><div class="metric-label">${d.mainLabel}</div><div class="metric">${d.main}<small>${d.unit}</small></div></div><div class="score-secondary">${hybrid ? `<div class="metric-label">${d.secondLabel}</div><div class="metric">${d.second}<small>${d.secondUnit}</small></div>` : `<div class="metric-label">${d.facts[1][0]}</div><div class="metric">${d.facts[1][1]}</div>`}</div></div><div class="plot-section"><div class="chart-title"><span>${plotTitle[0]}</span><span>${plotTitle[1]}</span></div><div class="chart ${hybrid ? 'chart--hybrid' : ''}">${chartFor(mode,d)}</div></div>${facts(d.facts)}${workRegister(d.work)}<div class="footer"><span>Recorded locally</span><span>OpenWorkout / 2026</span></div></article>`
+      }
+
+      const selected = Math.min(3, Math.max(1, Number(new URLSearchParams(location.search).get('variant')) || 1))
+      const descriptor = variants[selected - 1]
+      document.querySelector('#app').innerHTML = `
+        <section class="board">
+          <header class="board-head">
+            <div><div class="board-no">Pass ${String(selected).padStart(2, '0')}</div><h1 class="board-title">${descriptor.name}</h1></div>
+            <div class="board-note">${descriptor.note}</div>
+          </header>
+          <div class="pair">
+            <div class="preview"><span class="mode-tag">Strength</span>${card(selected, 'strength')}</div>
+            <div class="preview"><span class="mode-tag">Cardio</span>${card(selected, 'cardio')}</div>
+            <div class="preview"><span class="mode-tag">Mixed</span>${card(selected, 'hybrid')}</div>
+          </div>
+        </section>`
+    </script>
+  </body>
+</html>

@@ -1,0 +1,262 @@
+.cardio-tracker {
+  padding: 14px;
+  background: #f3f2eb;
+}
+
+.cardio-segment {
+  overflow: hidden;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.cardio-segment + .cardio-segment {
+  margin-top: 10px;
+}
+
+.cardio-segment.is-complete {
+  background: #faffdf;
+  border-color: rgba(111, 136, 14, 0.34);
+  box-shadow: inset 3px 0 0 var(--accent-dark);
+}
+
+.cardio-segment > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cardio-segment > header > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardio-segment > header span {
+  color: var(--ink);
+  font: 600 8px/1 var(--mono);
+  letter-spacing: 0.08em;
+}
+
+.cardio-segment > header small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardio-delete {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+}
+
+.cardio-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 12px;
+  gap: 10px;
+}
+
+.cardio-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cardio-field > span:first-child {
+  overflow: hidden;
+  color: var(--muted);
+  font: 500 7px/1 var(--mono);
+  letter-spacing: 0.055em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardio-input-wrap {
+  position: relative;
+  display: block;
+}
+
+.cardio-input-wrap input {
+  width: 100%;
+  height: 42px;
+  padding: 0 42px 0 10px;
+  color: var(--ink);
+  background: #efeee7;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font: 600 13px/1 var(--mono);
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.cardio-input-wrap input:focus {
+  background: white;
+  border-color: var(--ink);
+  outline: none;
+}
+
+.cardio-input-wrap small {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  color: var(--muted);
+  font: 500 7px/1 var(--mono);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.cardio-derived {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.cardio-derived > div {
+  display: grid;
+  min-width: 0;
+  min-height: 70px;
+  grid-template-columns: auto 1fr;
+  align-content: center;
+  align-items: center;
+  padding: 10px;
+  gap: 5px 6px;
+}
+
+.cardio-derived > div + div {
+  border-left: 1px solid var(--line);
+}
+
+.cardio-derived svg {
+  color: var(--accent-dark);
+}
+
+.cardio-derived span {
+  overflow: hidden;
+  color: var(--muted);
+  font: 500 6px/1 var(--mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardio-derived strong {
+  overflow: hidden;
+  grid-column: 1 / -1;
+  font: 600 10px/1 var(--mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardio-complete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  gap: 7px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.cardio-complete svg {
+  display: grid;
+  padding: 3px;
+  color: var(--muted);
+  background: #e7e6de;
+  border-radius: 50%;
+}
+
+.cardio-complete.is-complete svg {
+  color: var(--ink);
+  background: var(--accent);
+}
+
+.cardio-complete:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.cardio-add-split {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 42px;
+  margin-top: 10px;
+  gap: 6px;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px dashed #c9c8c0;
+  border-radius: 12px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.cardio-guidance {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  margin-top: 10px;
+  padding: 10px 4px 1px;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.cardio-guidance p {
+  margin: 0;
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.cardio-guidance svg:last-child {
+  color: var(--accent-dark);
+}
+
+@media (min-width: 620px) {
+  .cardio-tracker {
+    padding: 17px;
+  }
+
+  .cardio-fields {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 14px;
+  }
+
+  .cardio-field:first-child,
+  .cardio-field:nth-child(2) {
+    grid-column: span 2;
+  }
+
+  .cardio-derived > div {
+    min-height: 78px;
+    padding-inline: 14px;
+  }
+
+  .cardio-derived strong {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cardio-segment,
+  .cardio-input-wrap input {
+    transition: none;
+  }
+}

@@ -1,23 +1,44 @@
+import {
+  cardioSetPaceSecondsPerKm,
+  formatCardioDistance,
+  formatCardioPace,
+  formatCardioSpeed,
+  formatCardioTime,
+  getCardioSummary,
+  isCardioExercise,
+} from './cardio.js'
+
 const CARD_WIDTH = 1080
 const CARD_HEIGHT = 1920
+const PAPER = '#f3efe5'
+const INK = '#171713'
+const MUTED = '#766f62'
+const RULE = '#aaa191'
+const ACCENT = '#cf4433'
+const MAX_VISIBLE_MOVEMENTS = 4
+const KM_PER_MILE = 1.609344
 
-function roundedRect(context, x, y, width, height, radius) {
-  const safeRadius = Math.min(radius, width / 2, height / 2)
-  context.beginPath()
-  context.roundRect(x, y, width, height, safeRadius)
-}
-
-function fitFontSize(context, text, maxWidth, startSize, minimumSize = 42, weight = 760) {
+function fitFontSize(context, text, maxWidth, startSize, minimumSize = 32, weight = 760) {
   let size = startSize
   while (size > minimumSize) {
     context.font = `${weight} ${size}px Manrope, sans-serif`
-    if (context.measureText(text).width <= maxWidth) break
+    if (context.measureText(String(text)).width <= maxWidth) break
     size -= 2
   }
   return size
 }
 
-function wrapText(context, text, maxWidth, maxLines = 3) {
+function truncateText(context, text, maxWidth) {
+  const value = String(text || '')
+  if (context.measureText(value).width <= maxWidth) return value
+  let visible = value
+  while (visible.length > 1 && context.measureText(`${visible}…`).width > maxWidth) {
+    visible = visible.slice(0, -1).trim()
+  }
+  return `${visible}…`
+}
+
+function wrapText(context, text, maxWidth, maxLines = 2) {
   const words = String(text || '').trim().split(/\s+/).filter(Boolean)
   const lines = []
   let line = ''
@@ -33,17 +54,10 @@ function wrapText(context, text, maxWidth, maxLines = 3) {
   })
   if (line) lines.push(line)
 
-  if (lines.length > maxLines) {
-    const visible = lines.slice(0, maxLines)
-    const overflow = lines.slice(maxLines - 1).join(' ')
-    let finalLine = overflow
-    while (finalLine.length > 1 && context.measureText(`${finalLine}…`).width > maxWidth) {
-      finalLine = finalLine.slice(0, -1).trim()
-    }
-    visible[maxLines - 1] = `${finalLine}…`
-    return visible
-  }
-  return lines
+  if (lines.length <= maxLines) return lines
+  const visible = lines.slice(0, maxLines)
+  visible[maxLines - 1] = truncateText(context, lines.slice(maxLines - 1).join(' '), maxWidth)
+  return visible
 }
 
 function formatDate(dateValue) {
@@ -69,110 +83,408 @@ function formatVolume(value) {
   return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(value || 0))
 }
 
-function drawBrandMark(context, x, y) {
+function formatPaceTick(seconds) {
+  const rounded = Math.max(0, Math.round(Number(seconds) || 0))
+  return `${Math.floor(rounded / 60)}:${String(rounded % 60).padStart(2, '0')}`
+}
+
+function drawRule(context, x1, y, x2, color = INK, width = 2) {
   context.save()
-  context.strokeStyle = '#d9ff4f'
-  context.lineWidth = 3
+  context.strokeStyle = color
+  context.lineWidth = width
   context.beginPath()
-  context.arc(x + 25, y + 25, 24, 0, Math.PI * 2)
+  context.moveTo(x1, y)
+  context.lineTo(x2, y)
   context.stroke()
-  context.fillStyle = '#d9ff4f'
-  roundedRect(context, x + 10, y + 15, 6, 20, 3)
-  context.fill()
-  roundedRect(context, x + 34, y + 15, 6, 20, 3)
-  context.fill()
-  roundedRect(context, x + 14, y + 22, 22, 6, 3)
-  context.fill()
   context.restore()
 }
 
-function drawBackground(context) {
-  context.fillStyle = '#11130f'
+function drawPaper(context) {
+  context.fillStyle = PAPER
   context.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
 
-  const glow = context.createRadialGradient(1040, 120, 20, 1040, 120, 720)
-  glow.addColorStop(0, 'rgba(217, 255, 79, 0.27)')
-  glow.addColorStop(0.45, 'rgba(217, 255, 79, 0.07)')
-  glow.addColorStop(1, 'rgba(217, 255, 79, 0)')
-  context.fillStyle = glow
-  context.fillRect(300, 0, 780, 900)
-
-  context.save()
-  context.strokeStyle = 'rgba(217, 255, 79, 0.10)'
-  context.lineWidth = 3
-  ;[0, 1, 2, 3].forEach((index) => {
-    context.beginPath()
-    context.moveTo(600 + index * 62, -80)
-    context.bezierCurveTo(1000 + index * 30, 220, 690 + index * 72, 500, 1160, 700 + index * 54)
-    context.stroke()
-  })
-  context.restore()
-
-  let seed = 17
-  context.fillStyle = 'rgba(255, 255, 255, 0.035)'
-  for (let index = 0; index < 620; index += 1) {
+  let seed = 31
+  context.fillStyle = 'rgba(91, 82, 67, 0.11)'
+  for (let index = 0; index < 1800; index += 1) {
     seed = (seed * 9301 + 49297) % 233280
     const x = (seed / 233280) * CARD_WIDTH
     seed = (seed * 9301 + 49297) % 233280
     const y = (seed / 233280) * CARD_HEIGHT
-    context.fillRect(Math.round(x), Math.round(y), 2, 2)
+    context.fillRect(Math.round(x), Math.round(y), 1.25, 1.25)
   }
-
-  context.fillStyle = '#d9ff4f'
-  context.fillRect(0, 0, 14, CARD_HEIGHT)
 }
 
-function drawStat(context, x, y, width, label, value) {
-  context.fillStyle = 'rgba(255, 255, 255, 0.045)'
-  roundedRect(context, x, y, width, 190, 28)
-  context.fill()
-  context.strokeStyle = 'rgba(255, 255, 255, 0.09)'
-  context.lineWidth = 2
-  context.stroke()
-
-  context.fillStyle = 'rgba(255, 255, 255, 0.48)'
-  context.font = '500 22px "DM Mono", monospace'
-  context.fillText(label, x + 30, y + 48)
-  context.fillStyle = '#f8f7f0'
-  const size = fitFontSize(context, value, width - 60, 56, 36, 650)
-  context.font = `650 ${size}px Manrope, sans-serif`
-  context.fillText(value, x + 30, y + 127)
-}
-
-function buildCardData(workout, unit, exerciseMap) {
-  const completedExercises = (workout?.exercises || []).map((item) => {
+function buildCardData(workout, unit, distanceUnit, exerciseMap) {
+  const completedExercises = (workout?.exercises || []).flatMap((item) => {
+    const exercise = exerciseMap?.get?.(item.exerciseId)
+    const cardio = isCardioExercise(exercise)
     const completedSets = (item.sets || []).filter((set) => set.completed)
-    return {
-      name: exerciseMap?.get(item.exerciseId)?.name || 'Exercise',
-      setCount: completedSets.length,
-    }
-  }).filter((item) => item.setCount > 0)
+    const countedSets = cardio
+      ? completedSets
+      : completedSets.filter((set) => set.type !== 'warmup')
+    if (!countedSets.length) return []
 
-  const completedSets = completedExercises.reduce((total, item) => total + item.setCount, 0)
-  const volume = (workout?.exercises || []).reduce(
-    (total, item) => total + (item.sets || []).reduce((setTotal, set) => {
-      if (!set.completed || set.type === 'warmup') return setTotal
-      return setTotal + (Number(set.weight) || 0) * (Number(set.reps) || 0)
-    }, 0),
-    0,
-  )
+    const volume = cardio ? 0 : countedSets.reduce(
+      (total, set) => total + (Number(set.weight) || 0) * (Number(set.reps) || 0),
+      0,
+    )
+    return [{
+      name: exercise?.name || 'Exercise',
+      setCount: countedSets.length,
+      cardio,
+      volume,
+    }]
+  })
+
+  const strengthExercises = completedExercises.filter((item) => !item.cardio)
+  const cardioExercises = completedExercises.filter((item) => item.cardio)
+  const strengthSets = strengthExercises.reduce((total, item) => total + item.setCount, 0)
+  const volume = strengthExercises.reduce((total, item) => total + item.volume, 0)
+  const cardio = getCardioSummary(workout, exerciseMap)
+  const hasCardio = cardio.entries.length > 0
+  const hasStrength = strengthSets > 0
+  const mode = hasCardio && hasStrength ? 'hybrid' : hasCardio ? 'cardio' : 'strength'
 
   return {
     title: String(workout?.name || 'Workout').trim().toUpperCase(),
     date: formatDate(workout?.completedAt || workout?.startedAt),
     duration: formatDuration(workout?.durationSeconds),
-    completedSets,
     volume,
     unit: unit || 'kg',
+    distanceUnit: distanceUnit === 'mi' ? 'mi' : 'km',
     exercises: completedExercises,
+    strengthExercises,
+    cardioExercises,
+    strengthSets,
+    cardio,
+    mode,
   }
 }
 
-export async function createWorkoutShareImage(workout, unit, exerciseMap) {
+function drawHeader(context, data) {
+  context.fillStyle = INK
+  context.font = '760 30px Manrope, sans-serif'
+  context.fillText('OPENWORKOUT', 80, 112)
+
+  context.fillStyle = MUTED
+  context.font = '500 20px "DM Mono", monospace'
+  context.textAlign = 'right'
+  context.fillText(data.date, 1000, 104)
+  context.fillText(data.mode.toUpperCase(), 1000, 132)
+  context.textAlign = 'left'
+  drawRule(context, 80, 164, 1000)
+}
+
+function drawTitle(context, title) {
+  context.fillStyle = INK
+  context.font = '760 100px Manrope, sans-serif'
+  const lines = wrapText(context, title, 920, 2)
+  lines.forEach((line, index) => context.fillText(line, 78, 285 + index * 92))
+  return Math.max(390, 302 + lines.length * 92)
+}
+
+function drawMetric(context, { label, value, unit }, x, y, width, size = 150) {
+  context.fillStyle = MUTED
+  context.font = '500 20px "DM Mono", monospace'
+  context.fillText(label, x, y)
+
+  const valueSize = fitFontSize(context, value, width - 88, size, 70, 760)
+  context.fillStyle = INK
+  context.font = `760 ${valueSize}px Manrope, sans-serif`
+  context.fillText(value, x - 5, y + 145)
+  const valueWidth = context.measureText(value).width
+  context.fillStyle = ACCENT
+  context.font = '500 29px "DM Mono", monospace'
+  context.fillText(unit, Math.min(x + width - 62, x + valueWidth + 10), y + 136)
+}
+
+function drawHero(context, data, top) {
+  const hasVolume = data.volume > 0
+  if (data.mode === 'hybrid') {
+    drawMetric(context, {
+      label: 'RUN DISTANCE',
+      value: formatCardioDistance(data.cardio.distanceKm, data.distanceUnit),
+      unit: data.distanceUnit.toUpperCase(),
+    }, 80, top, 420, 112)
+
+    context.strokeStyle = INK
+    context.lineWidth = 2
+    context.beginPath()
+    context.moveTo(540, top - 10)
+    context.lineTo(540, top + 158)
+    context.stroke()
+
+    drawMetric(context, {
+      label: hasVolume ? 'LIFT VOLUME' : 'LIFT WORK',
+      value: hasVolume ? formatVolume(data.volume) : String(data.strengthSets),
+      unit: hasVolume ? data.unit.toUpperCase() : data.strengthSets === 1 ? 'SET' : 'SETS',
+    }, 580, top, 420, 112)
+  } else if (data.mode === 'cardio') {
+    drawMetric(context, {
+      label: 'DISTANCE',
+      value: formatCardioDistance(data.cardio.distanceKm, data.distanceUnit),
+      unit: data.distanceUnit.toUpperCase(),
+    }, 80, top, 920)
+  } else {
+    drawMetric(context, {
+      label: hasVolume ? 'TOTAL VOLUME' : 'COMPLETED WORK',
+      value: hasVolume ? formatVolume(data.volume) : String(data.strengthSets),
+      unit: hasVolume ? data.unit.toUpperCase() : data.strengthSets === 1 ? 'SET' : 'SETS',
+    }, 80, top, 920)
+  }
+  return top + 184
+}
+
+function strengthPlotValues(data) {
+  const usesVolume = data.strengthExercises.some((item) => item.volume > 0)
+  return {
+    usesVolume,
+    entries: data.strengthExercises.slice(0, MAX_VISIBLE_MOVEMENTS).map((item) => ({
+      label: item.name,
+      value: usesVolume ? item.volume : item.setCount,
+    })),
+  }
+}
+
+function drawBarChart(context, entries, x, y, width, height, usesVolume) {
+  if (!entries.length) {
+    context.fillStyle = MUTED
+    context.font = '500 20px "DM Mono", monospace'
+    context.fillText('NO LIFTING DATA LOGGED', x, y + height / 2)
+    return
+  }
+
+  const maxValue = Math.max(...entries.map((item) => item.value), 1)
+  const baseline = y + height - 42
+  const availableHeight = height - 74
+  const slot = width / entries.length
+  drawRule(context, x, baseline, x + width, RULE, 1.5)
+
+  entries.forEach((entry, index) => {
+    const barWidth = Math.min(112, slot * 0.5)
+    const barHeight = Math.max(18, (entry.value / maxValue) * availableHeight)
+    const barX = x + index * slot + (slot - barWidth) / 2
+    const barY = baseline - barHeight
+    context.fillStyle = INK
+    context.fillRect(barX, barY, barWidth, barHeight)
+
+    context.fillStyle = INK
+    context.font = '500 18px "DM Mono", monospace'
+    context.textAlign = 'center'
+    context.fillText(usesVolume ? formatVolume(entry.value) : String(entry.value), barX + barWidth / 2, barY - 12)
+
+    context.fillStyle = MUTED
+    context.font = '500 17px "DM Mono", monospace'
+    const shortLabel = truncateText(context, entry.label.toUpperCase(), slot - 16)
+    context.fillText(shortLabel, x + index * slot + slot / 2, baseline + 30)
+  })
+  context.textAlign = 'left'
+}
+
+function cardioPaces(data) {
+  const factor = data.distanceUnit === 'mi' ? KM_PER_MILE : 1
+  return data.cardio.entries
+    .map((entry) => cardioSetPaceSecondsPerKm(entry.set) * factor)
+    .filter((pace) => Number.isFinite(pace) && pace > 0)
+}
+
+function drawPaceChart(context, paces, x, y, width, height) {
+  if (!paces.length) {
+    context.fillStyle = MUTED
+    context.font = '500 20px "DM Mono", monospace'
+    context.fillText('PACE DATA NOT LOGGED', x, y + height / 2)
+    return
+  }
+
+  const minimum = Math.min(...paces)
+  const maximum = Math.max(...paces)
+  const padding = Math.max(5, (maximum - minimum) * 0.18)
+  const low = minimum - padding
+  const high = maximum + padding
+  const left = x + 86
+  const right = x + width
+  const top = y + 15
+  const bottom = y + height - 44
+  const range = Math.max(1, high - low)
+
+  ;[low, (low + high) / 2, high].forEach((value) => {
+    const lineY = top + ((value - low) / range) * (bottom - top)
+    drawRule(context, left, lineY, right, RULE, 1.2)
+    context.fillStyle = MUTED
+    context.font = '500 17px "DM Mono", monospace'
+    context.fillText(formatPaceTick(value), x, lineY + 6)
+  })
+
+  const points = paces.map((pace, index) => ({
+    x: paces.length === 1 ? (left + right) / 2 : left + index * (right - left) / (paces.length - 1),
+    y: top + ((pace - low) / range) * (bottom - top),
+  }))
+
+  context.strokeStyle = ACCENT
+  context.lineWidth = 4
+  context.beginPath()
+  points.forEach((point, index) => {
+    if (!index) context.moveTo(point.x, point.y)
+    else context.lineTo(point.x, point.y)
+  })
+  context.stroke()
+
+  const labelEvery = Math.max(1, Math.ceil(points.length / 7))
+  points.forEach((point, index) => {
+    context.fillStyle = PAPER
+    context.strokeStyle = ACCENT
+    context.lineWidth = 3
+    context.beginPath()
+    context.arc(point.x, point.y, 8, 0, Math.PI * 2)
+    context.fill()
+    context.stroke()
+
+    if (index % labelEvery === 0 || index === points.length - 1) {
+      context.fillStyle = MUTED
+      context.font = '500 16px "DM Mono", monospace'
+      context.textAlign = 'center'
+      context.fillText(`S${index + 1}`, point.x, bottom + 32)
+    }
+  })
+  context.textAlign = 'left'
+}
+
+function drawChartHeader(context, label, value, y) {
+  context.fillStyle = MUTED
+  context.font = '500 18px "DM Mono", monospace'
+  context.fillText(label, 80, y)
+  context.fillStyle = ACCENT
+  context.textAlign = 'right'
+  context.fillText(value, 1000, y)
+  context.textAlign = 'left'
+}
+
+function drawPerformancePlot(context, data, top) {
+  drawRule(context, 80, top, 1000)
+  if (data.mode === 'hybrid') {
+    drawChartHeader(context, 'RUN · PACE BY SPLIT', `MIN / ${data.distanceUnit.toUpperCase()}`, top + 38)
+    drawPaceChart(context, cardioPaces(data), 80, top + 56, 920, 155)
+    drawRule(context, 80, top + 226, 1000, RULE, 1.5)
+    const strength = strengthPlotValues(data)
+    drawChartHeader(context, 'LIFT · VOLUME BY MOVEMENT', strength.usesVolume ? data.unit.toUpperCase() : 'SETS', top + 262)
+    drawBarChart(context, strength.entries, 80, top + 276, 920, 158, strength.usesVolume)
+    drawRule(context, 80, top + 456, 1000)
+    return top + 456
+  }
+
+  if (data.mode === 'cardio') {
+    drawChartHeader(context, 'PACE BY SPLIT', `MIN / ${data.distanceUnit.toUpperCase()}`, top + 38)
+    drawPaceChart(context, cardioPaces(data), 80, top + 64, 920, 292)
+  } else {
+    const strength = strengthPlotValues(data)
+    drawChartHeader(context, strength.usesVolume ? 'VOLUME BY MOVEMENT' : 'SETS BY MOVEMENT', strength.usesVolume ? data.unit.toUpperCase() : 'SETS', top + 38)
+    drawBarChart(context, strength.entries, 80, top + 60, 920, 300, strength.usesVolume)
+  }
+  drawRule(context, 80, top + 382, 1000)
+  return top + 382
+}
+
+function drawFacts(context, data, top) {
+  const facts = data.mode === 'hybrid'
+    ? [
+        ['DURATION', data.duration],
+        ['RUN PACE', formatCardioPace(data.cardio.paceSecondsPerKm, data.distanceUnit)],
+        ['LIFT SETS', String(data.strengthSets)],
+      ]
+    : data.mode === 'cardio'
+      ? [
+          ['RUN TIME', formatCardioTime(data.cardio.totalDurationSeconds)],
+          ['AVG PACE', formatCardioPace(data.cardio.paceSecondsPerKm, data.distanceUnit)],
+          ['AVG SPEED', formatCardioSpeed(data.cardio.averageSpeedKph, data.distanceUnit)],
+        ]
+      : [
+          ['DURATION', data.duration],
+          ['WORK SETS', String(data.strengthSets)],
+          ['MOVEMENTS', String(data.strengthExercises.length)],
+        ]
+
+  const cellWidth = 920 / 3
+  facts.forEach(([label, value], index) => {
+    const x = 80 + index * cellWidth
+    if (index) {
+      context.strokeStyle = RULE
+      context.lineWidth = 1.5
+      context.beginPath()
+      context.moveTo(x, top + 5)
+      context.lineTo(x, top + 96)
+      context.stroke()
+    }
+    context.fillStyle = MUTED
+    context.font = '500 17px "DM Mono", monospace'
+    context.fillText(label, x + (index ? 22 : 0), top + 27)
+    context.fillStyle = INK
+    context.font = '700 35px Manrope, sans-serif'
+    context.fillText(value, x + (index ? 22 : 0), top + 78)
+  })
+  drawRule(context, 80, top + 112, 1000)
+  return top + 112
+}
+
+function workRows(data) {
+  return data.exercises.map((exercise) => ({
+    name: exercise.name,
+    value: exercise.cardio
+      ? `${exercise.setCount} ${exercise.setCount === 1 ? 'SPLIT' : 'SPLITS'}`
+      : `${exercise.setCount} ${exercise.setCount === 1 ? 'SET' : 'SETS'}`,
+  }))
+}
+
+function drawWorkRegister(context, data, top) {
+  const rows = workRows(data)
+  const visibleRows = rows.slice(0, MAX_VISIBLE_MOVEMENTS)
+  const hiddenCount = Math.max(0, rows.length - visibleRows.length)
+
+  context.fillStyle = MUTED
+  context.font = '500 18px "DM Mono", monospace'
+  context.fillText('WORK PERFORMED', 80, top + 24)
+  context.textAlign = 'right'
+  context.fillStyle = hiddenCount > 0 ? ACCENT : MUTED
+  context.fillText(hiddenCount > 0 ? `+${hiddenCount} MORE MOVEMENTS` : 'COMPLETED', 1000, top + 24)
+  context.textAlign = 'left'
+
+  visibleRows.forEach((row, index) => {
+    const y = top + 72 + index * 68
+    context.fillStyle = ACCENT
+    context.font = '500 18px "DM Mono", monospace'
+    context.fillText(String(index + 1).padStart(2, '0'), 80, y)
+
+    context.fillStyle = INK
+    context.font = '650 27px Manrope, sans-serif'
+    context.fillText(truncateText(context, row.name.toUpperCase(), 660), 145, y + 2)
+
+    context.fillStyle = MUTED
+    context.font = '500 18px "DM Mono", monospace'
+    context.textAlign = 'right'
+    context.fillText(row.value, 1000, y)
+    context.textAlign = 'left'
+    drawRule(context, 145, y + 27, 1000, RULE, 1)
+  })
+}
+
+function drawFooter(context, data) {
+  context.fillStyle = ACCENT
+  context.beginPath()
+  context.arc(86, 1842, 8, 0, Math.PI * 2)
+  context.fill()
+
+  context.fillStyle = MUTED
+  context.font = '500 17px "DM Mono", monospace'
+  context.fillText(`SESSION ${data.date} · LOCAL RECORD`, 115, 1848)
+  context.textAlign = 'right'
+  context.fillText('OPENWORKOUT', 1000, 1848)
+  context.textAlign = 'left'
+}
+
+export async function createWorkoutShareImage(workout, unit, distanceUnit, exerciseMap) {
   if (typeof document === 'undefined') throw new Error('Share images require a browser')
   await Promise.allSettled([
-    document.fonts?.load?.('760 112px Manrope'),
-    document.fonts?.load?.('500 24px "DM Mono"'),
+    document.fonts?.load?.('760 100px Manrope'),
+    document.fonts?.load?.('500 20px "DM Mono"'),
   ].filter(Boolean))
 
   const canvas = document.createElement('canvas')
@@ -181,104 +493,15 @@ export async function createWorkoutShareImage(workout, unit, exerciseMap) {
   const context = canvas.getContext('2d')
   if (!context) throw new Error('Could not prepare the share image')
 
-  const data = buildCardData(workout, unit, exerciseMap)
-  drawBackground(context)
-
-  drawBrandMark(context, 78, 77)
-  context.fillStyle = '#f8f7f0'
-  context.font = '750 30px Manrope, sans-serif'
-  context.fillText('OPENWORKOUT', 150, 112)
-  context.fillStyle = 'rgba(255, 255, 255, 0.46)'
-  context.font = '500 21px "DM Mono", monospace'
-  context.textAlign = 'right'
-  context.fillText(`SESSION // ${data.date}`, 1000, 110)
-  context.textAlign = 'left'
-
-  context.fillStyle = '#d9ff4f'
-  roundedRect(context, 80, 216, 288, 58, 29)
-  context.fill()
-  context.fillStyle = '#161812'
-  context.font = '650 20px "DM Mono", monospace'
-  context.fillText('SESSION COMPLETE', 110, 253)
-
-  context.fillStyle = '#f8f7f0'
-  context.font = '760 112px Manrope, sans-serif'
-  const titleLines = wrapText(context, data.title, 900, 3)
-  titleLines.forEach((line, index) => context.fillText(line, 78, 390 + index * 108))
-
-  const dividerY = Math.max(712, 420 + titleLines.length * 108)
-  context.strokeStyle = 'rgba(255, 255, 255, 0.13)'
-  context.lineWidth = 2
-  context.beginPath()
-  context.moveTo(80, dividerY)
-  context.lineTo(1000, dividerY)
-  context.stroke()
-
-  const hasVolume = data.volume > 0
-  const heroValue = hasVolume ? formatVolume(data.volume) : String(data.completedSets)
-  const heroUnit = hasVolume ? data.unit.toUpperCase() : data.completedSets === 1 ? 'SET' : 'SETS'
-  const heroLabel = hasVolume ? 'TOTAL TRAINING VOLUME' : 'COMPLETED WORK'
-  context.fillStyle = 'rgba(255, 255, 255, 0.46)'
-  context.font = '500 23px "DM Mono", monospace'
-  context.fillText(heroLabel, 80, dividerY + 82)
-
-  const heroSize = fitFontSize(context, heroValue, 740, 160, 92, 760)
-  context.fillStyle = '#f8f7f0'
-  context.font = `760 ${heroSize}px Manrope, sans-serif`
-  context.fillText(heroValue, 74, dividerY + 248)
-  const heroWidth = context.measureText(heroValue).width
-  context.fillStyle = '#d9ff4f'
-  context.font = '650 42px "DM Mono", monospace'
-  context.fillText(heroUnit, Math.min(850, 82 + heroWidth), dividerY + 238)
-
-  const statsY = dividerY + 310
-  drawStat(context, 80, statsY, 286, 'DURATION', data.duration)
-  drawStat(context, 397, statsY, 286, 'WORK SETS', String(data.completedSets))
-  drawStat(context, 714, statsY, 286, 'MOVEMENTS', String(data.exercises.length))
-
-  const movementY = statsY + 280
-  context.fillStyle = 'rgba(255, 255, 255, 0.46)'
-  context.font = '500 22px "DM Mono", monospace'
-  context.fillText('TODAY’S WORK', 80, movementY)
-
-  const visibleExercises = data.exercises.slice(0, 4)
-  visibleExercises.forEach((exercise, index) => {
-    const rowY = movementY + 70 + index * 94
-    context.fillStyle = 'rgba(255, 255, 255, 0.28)'
-    context.font = '500 21px "DM Mono", monospace'
-    context.fillText(String(index + 1).padStart(2, '0'), 80, rowY)
-    context.fillStyle = '#f8f7f0'
-    const exerciseSize = fitFontSize(context, exercise.name, 650, 37, 28, 650)
-    context.font = `650 ${exerciseSize}px Manrope, sans-serif`
-    context.fillText(exercise.name, 150, rowY + 2)
-    context.fillStyle = '#d9ff4f'
-    context.font = '500 21px "DM Mono", monospace'
-    context.textAlign = 'right'
-    context.fillText(`${exercise.setCount} ${exercise.setCount === 1 ? 'SET' : 'SETS'}`, 1000, rowY)
-    context.textAlign = 'left'
-    if (index < visibleExercises.length - 1) {
-      context.strokeStyle = 'rgba(255, 255, 255, 0.08)'
-      context.beginPath()
-      context.moveTo(150, rowY + 40)
-      context.lineTo(1000, rowY + 40)
-      context.stroke()
-    }
-  })
-
-  if (data.exercises.length > visibleExercises.length) {
-    context.fillStyle = 'rgba(255, 255, 255, 0.42)'
-    context.font = '500 19px "DM Mono", monospace'
-    context.fillText(`+ ${data.exercises.length - visibleExercises.length} MORE MOVEMENTS`, 150, movementY + 70 + visibleExercises.length * 94)
-  }
-
-  context.fillStyle = '#d9ff4f'
-  context.font = '650 23px "DM Mono", monospace'
-  context.fillText('WORK PUT IN. SESSION LOGGED.', 80, 1834)
-  context.fillStyle = 'rgba(255, 255, 255, 0.34)'
-  context.font = '500 19px "DM Mono", monospace'
-  context.textAlign = 'right'
-  context.fillText('TRAIN • TRACK • REPEAT', 1000, 1834)
-  context.textAlign = 'left'
+  const data = buildCardData(workout, unit, distanceUnit, exerciseMap)
+  drawPaper(context)
+  drawHeader(context, data)
+  const titleBottom = drawTitle(context, data.title)
+  const heroBottom = drawHero(context, data, titleBottom + 25)
+  const plotBottom = drawPerformancePlot(context, data, heroBottom + 25)
+  const factsBottom = drawFacts(context, data, plotBottom + 22)
+  drawWorkRegister(context, data, factsBottom + 24)
+  drawFooter(context, data)
 
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
@@ -309,4 +532,3 @@ export function downloadShareImage(blob, filename) {
   anchor.remove()
   window.setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
-

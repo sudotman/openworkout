@@ -18,6 +18,13 @@
  * @property {number | ''} weight
  * @property {number | ''} reps
  * @property {number | ''} rpe
+ * @property {number | ''} [duration]
+ * @property {number | ''} [distance]
+ * @property {number | ''} [distanceKm]
+ * @property {number | ''} [speed]
+ * @property {number | ''} [incline]
+ * @property {number | ''} [heartRate]
+ * @property {number | ''} [calories]
  * @property {boolean} completed
  *
  * @typedef {Object} WorkoutExercise

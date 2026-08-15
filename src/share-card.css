@@ -1,7 +1,9 @@
 .share-workout-sheet {
+  position: relative;
   display: grid;
   padding: 34px 20px calc(28px + env(safe-area-inset-bottom));
   gap: 24px;
+  isolation: isolate;
 }
 
 .share-workout-copy {
@@ -9,14 +11,12 @@
   text-align: center;
 }
 
-.share-complete-icon {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 17px;
-  color: var(--ink);
-  background: var(--accent);
+.share-record-mark {
+  display: block;
+  width: 10px;
+  height: 10px;
+  margin: 0 auto 20px;
+  background: #cf4433;
   border-radius: 50%;
 }
 
@@ -36,15 +36,54 @@
   line-height: 1.55;
 }
 
+.share-session-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 420px;
+  margin: 20px auto 0;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+
+.share-session-facts > div {
+  display: flex;
+  min-width: 0;
+  min-height: 70px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 9px;
+  gap: 7px;
+}
+
+.share-session-facts > div + div {
+  border-left: 1px solid var(--line);
+}
+
+.share-session-facts span {
+  overflow: hidden;
+  color: var(--muted);
+  font: 500 7px/1 var(--mono);
+  letter-spacing: 0.05em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-session-facts strong {
+  overflow: hidden;
+  color: var(--ink);
+  font: 650 10px/1.2 var(--mono);
+  text-overflow: ellipsis;
+}
+
 .share-workout-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
   max-width: 420px;
-  margin: 19px auto 0;
-  padding-top: 13px;
+  margin: 12px auto 0;
+  padding-top: 0;
   color: var(--muted);
-  border-top: 1px solid var(--line);
+  border-top: 0;
   font: 500 8px/1 var(--mono);
 }
 
@@ -58,6 +97,10 @@
   max-width: 420px;
   margin: 18px auto 0;
   gap: 6px;
+}
+
+.share-workout-actions .button {
+  min-height: 48px;
 }
 
 .share-privacy-note {
@@ -75,10 +118,25 @@
   aspect-ratio: 9 / 16;
   margin: 0 auto;
   overflow: hidden;
-  background: #11130f;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 20px;
-  box-shadow: 0 26px 70px rgba(12, 13, 10, 0.24);
+  background: #f3efe5;
+  border: 1px solid rgba(23, 23, 19, 0.18);
+  border-radius: 22px;
+  box-shadow: 0 32px 80px rgba(12, 13, 10, 0.28), 0 5px 16px rgba(12, 13, 10, 0.12);
+  transition: transform 240ms ease, box-shadow 240ms ease;
+}
+
+.share-card-preview::after {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: inherit;
+  content: '';
+  pointer-events: none;
+}
+
+.share-card-preview:hover {
+  transform: translateY(-4px) rotate(0.35deg);
+  box-shadow: 0 38px 90px rgba(12, 13, 10, 0.31), 0 8px 20px rgba(12, 13, 10, 0.14);
 }
 
 .share-card-preview img {
@@ -97,7 +155,7 @@
   flex-direction: column;
   padding: 24px;
   gap: 13px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(23, 23, 19, 0.68);
   text-align: center;
   font-size: 10px;
 }
@@ -105,19 +163,19 @@
 .share-card-loading span {
   width: 28px;
   height: 28px;
-  border: 2px solid rgba(255, 255, 255, 0.14);
-  border-top-color: var(--accent);
+  border: 2px solid rgba(23, 23, 19, 0.14);
+  border-top-color: #cf4433;
   border-radius: 50%;
   animation: share-card-spin 800ms linear infinite;
 }
 
 .share-card-error strong {
-  color: white;
+  color: #171713;
   font-size: 12px;
 }
 
 .share-card-error span {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(23, 23, 19, 0.52);
   line-height: 1.5;
 }
 
@@ -142,9 +200,10 @@
     text-align: left;
   }
 
-  .share-complete-icon,
+  .share-record-mark,
   .share-workout-copy h2,
   .share-workout-copy > p,
+  .share-session-facts,
   .share-workout-meta,
   .share-workout-actions,
   .share-privacy-note {
@@ -166,7 +225,7 @@
     width: min(58vw, 248px);
   }
 
-  .share-complete-icon {
+  .share-record-mark {
     display: none;
   }
 }
@@ -181,6 +240,7 @@
   }
 
   .share-workout-copy > p,
+  .share-session-facts,
   .share-workout-meta {
     display: none;
   }
@@ -189,5 +249,9 @@
 @media (prefers-reduced-motion: reduce) {
   .share-card-loading span {
     animation-duration: 1.8s;
+  }
+
+  .share-card-preview {
+    transition: none;
   }
 }

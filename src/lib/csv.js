@@ -6,7 +6,7 @@ function escapeCell(value) {
 export function exportWorkoutsCsv(state, exerciseMap) {
   try {
     const rows = [
-      ['Workout ID', 'Workout', 'Started At', 'Duration Seconds', 'Exercise', 'Primary Muscle', 'Set', 'Set Type', 'Weight', 'Unit', 'Reps', 'RPE', 'Completed', 'Exercise Notes'],
+      ['Workout ID', 'Workout', 'Started At', 'Duration Seconds', 'Exercise', 'Primary Muscle', 'Set', 'Set Type', 'Weight', 'Unit', 'Reps', 'Timed Duration Seconds', 'Loaded Distance Meters', 'Run Distance Kilometers', 'Treadmill Speed KPH', 'Incline Percent', 'Average Heart Rate', 'Calories', 'RPE', 'Completed', 'Exercise Notes'],
     ]
 
     for (const workout of state.workouts || []) {
@@ -26,6 +26,13 @@ export function exportWorkoutsCsv(state, exerciseMap) {
             set.weight,
             state.settings?.unit || 'kg',
             set.reps,
+            set.duration,
+            set.distance,
+            set.distanceKm,
+            set.speed,
+            set.incline,
+            set.heartRate,
+            set.calories,
             set.rpe,
             Boolean(set.completed),
             item.notes || '',

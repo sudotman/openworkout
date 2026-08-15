@@ -1,13 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Check, Download, Share2 } from 'lucide-react'
+import { Download, Share2 } from 'lucide-react'
+import { motion } from 'motion/react'
 import {
   createWorkoutShareImage,
   downloadShareImage,
   workoutShareFilename,
 } from '../lib/share-card.js'
+import {
+  formatCardioDistance,
+  formatCardioPace,
+  formatCardioTime,
+  getCardioSummary,
+  isCardioExercise,
+} from '../lib/cardio.js'
 import '../share-card.css'
 
-export function WorkoutShareCard({ workout, unit, exerciseMap, onDone, notify }) {
+export function WorkoutShareCard({ workout, unit, distanceUnit, exerciseMap, onDone, notify }) {
   const [imageBlob, setImageBlob] = useState(null)
   const [previewUrl, setPreviewUrl] = useState('')
   const [error, setError] = useState('')
@@ -20,7 +28,7 @@ export function WorkoutShareCard({ workout, unit, exerciseMap, onDone, notify })
     setPreviewUrl('')
     setError('')
 
-    createWorkoutShareImage(workout, unit, exerciseMap)
+    createWorkoutShareImage(workout, unit, distanceUnit, exerciseMap)
       .then((blob) => {
         if (cancelled) return
         objectUrl = URL.createObjectURL(blob)
@@ -35,7 +43,50 @@ export function WorkoutShareCard({ workout, unit, exerciseMap, onDone, notify })
       cancelled = true
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [exerciseMap, unit, workout])
+  }, [distanceUnit, exerciseMap, unit, workout])
+
+  const cardio = useMemo(() => getCardioSummary(workout, exerciseMap), [exerciseMap, workout])
+  const strength = useMemo(() => (workout?.exercises || []).flatMap((item) => {
+    if (isCardioExercise(exerciseMap?.get(item.exerciseId))) return []
+    const completedSets = (item.sets || []).filter((set) => set.completed && set.type !== 'warmup')
+    return completedSets.length ? [{ item, completedSets }] : []
+  }), [exerciseMap, workout])
+  const strengthSetCount = strength.reduce((total, entry) => total + entry.completedSets.length, 0)
+  const strengthVolume = strength.reduce((total, entry) => total + entry.completedSets.reduce(
+    (setTotal, set) => setTotal + (Number(set.weight) || 0) * (Number(set.reps) || 0),
+    0,
+  ), 0)
+  const hasCardio = cardio.distanceKm > 0
+  const mode = hasCardio && strengthSetCount > 0 ? 'hybrid' : hasCardio ? 'cardio' : 'strength'
+  const completedMovementCount = useMemo(() => (workout?.exercises || []).filter((item) => {
+    const exercise = exerciseMap?.get(item.exerciseId)
+    return (item.sets || []).some((set) => (
+      set.completed && (isCardioExercise(exercise) || set.type !== 'warmup')
+    ))
+  }).length, [exerciseMap, workout])
+  const hiddenMovementCount = Math.max(0, completedMovementCount - 4)
+  const shareFacts = mode === 'hybrid'
+    ? [
+        ['DISTANCE', `${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit}`],
+        ['PACE', formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)],
+        ['LIFTING', strengthVolume > 0 ? `${Math.round(strengthVolume).toLocaleString()} ${unit}` : `${strengthSetCount} sets`],
+      ]
+    : mode === 'cardio'
+      ? [
+          ['DISTANCE', `${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit}`],
+          ['PACE', formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)],
+          ['RUN TIME', formatCardioTime(cardio.totalDurationSeconds)],
+        ]
+      : [
+          ['WORK SETS', String(strengthSetCount)],
+          ['MOVEMENTS', String(strength.length)],
+          ['DURATION', formatCardioTime(workout?.durationSeconds)],
+        ]
+  const shareCopy = {
+    kicker: `STORY EXPORT · ${mode.toUpperCase()}`,
+    title: workout?.name || 'Workout',
+    body: `Includes your logged metrics, performance plot, and up to four named movements${hiddenMovementCount ? ` with +${hiddenMovementCount} more noted` : ''}.`,
+  }
 
   const filename = useMemo(() => workoutShareFilename(workout), [workout])
   const shareFile = useMemo(
@@ -69,7 +120,9 @@ export function WorkoutShareCard({ workout, unit, exerciseMap, onDone, notify })
       await navigator.share({
         files: [shareFile],
         title: `${workout.name} · OpenWorkout`,
-        text: 'Session complete. Work put in.',
+        text: hasCardio
+          ? `${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit} · ${formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}${mode === 'hybrid' ? ` · ${strengthSetCount} lifting sets` : ''}. Session logged.`
+          : 'Session complete. Work put in.',
       })
     } catch (shareError) {
       if (shareError?.name !== 'AbortError') notify?.('Could not open the share menu')
@@ -79,12 +132,30 @@ export function WorkoutShareCard({ workout, unit, exerciseMap, onDone, notify })
   }
 
   return (
-    <div className="share-workout-sheet">
-      <div className="share-workout-copy">
-        <span className="share-complete-icon"><Check size={22} strokeWidth={3} /></span>
-        <span className="section-kicker">WORKOUT SAVED</span>
-        <h2>That one’s in the books.</h2>
-        <p>Your session card is ready for Stories, group chats, or wherever you keep the people who keep you honest.</p>
+    <motion.div
+      className={`share-workout-sheet share-workout-sheet--${mode}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.24 }}
+    >
+      <motion.div
+        className="share-workout-copy"
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <span className="share-record-mark" aria-hidden="true" />
+        <span className="section-kicker">{shareCopy.kicker}</span>
+        <h2>{shareCopy.title}</h2>
+        <p>{shareCopy.body}</p>
+        <div className="share-session-facts">
+          {shareFacts.map(([label, value]) => (
+            <div key={label}>
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </div>
         <div className="share-workout-meta">
           <span>STORY FORMAT</span>
           <strong>1080 × 1920 PNG</strong>
@@ -106,9 +177,15 @@ export function WorkoutShareCard({ workout, unit, exerciseMap, onDone, notify })
           <button className="button button--ghost button--wide" onClick={onDone}>Done</button>
         </div>
         <small className="share-privacy-note">Nothing is posted automatically. You choose where the image goes.</small>
-      </div>
+      </motion.div>
 
-      <div className="share-card-preview" aria-live="polite">
+      <motion.div
+        className="share-card-preview"
+        aria-live="polite"
+        initial={{ opacity: 0, y: 16, rotate: 0.8 }}
+        animate={{ opacity: 1, y: 0, rotate: 0 }}
+        transition={{ duration: 0.46, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+      >
         {previewUrl && <img src={previewUrl} alt={`Share card for ${workout.name}`} />}
         {!previewUrl && !error && (
           <div className="share-card-loading">
@@ -122,7 +199,7 @@ export function WorkoutShareCard({ workout, unit, exerciseMap, onDone, notify })
             <span>{error}</span>
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

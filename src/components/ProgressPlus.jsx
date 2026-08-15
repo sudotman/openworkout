@@ -16,6 +16,13 @@ import {
   Trophy,
   X,
 } from 'lucide-react'
+import {
+  cardioSetDistanceKm,
+  cardioSetPaceSecondsPerKm,
+  formatCardioDistance,
+  formatCardioPace,
+  formatCardioTime,
+} from '../lib/cardio.js'
 import '../progress-plus.css'
 
 const DAY_MS = 86400000
@@ -715,12 +722,13 @@ export function MuscleBreakdown({ workouts = [], exerciseMap }) {
   )
 }
 
-function PerformanceChart({ sessions, metric = 'estimate', unit }) {
+function PerformanceChart({ sessions, metric = 'estimate', unit, distanceUnit = 'km' }) {
   const chartMeta = {
     estimate: { title: 'Estimated 1RM trend', suffix: unit, aria: 'Estimated one rep max' },
     reps: { title: 'Rep trend', suffix: 'reps', aria: 'Rep' },
     duration: { title: 'Duration trend', suffix: 'seconds', aria: 'Duration' },
     distance: { title: 'Distance trend', suffix: 'm', aria: 'Distance' },
+    cardio: { title: 'Run distance trend', suffix: distanceUnit, aria: 'Run distance' },
   }[metric]
   const data = sessions.slice(-12).map((session) => ({
     ...session,
@@ -785,7 +793,7 @@ function PerformanceChart({ sessions, metric = 'estimate', unit }) {
 }
 
 /** Detailed performance history for one exercise. */
-export function ExercisePerformance({ exercise, workouts = [], unit = 'kg' }) {
+export function ExercisePerformance({ exercise, workouts = [], unit = 'kg', distanceUnit = 'km' }) {
   const weightUnit = normalizedUnit(unit)
   const exerciseId = typeof exercise === 'string' ? exercise : exercise?.id
   const exerciseName = typeof exercise === 'string' ? 'Exercise performance' : exercise?.name || 'Exercise performance'
@@ -802,9 +810,17 @@ export function ExercisePerformance({ exercise, workouts = [], unit = 'kg' }) {
           reps: Number(set.reps) || 0,
           duration: Number(set.duration) || 0,
           distance: Number(set.distance) || 0,
+          distanceKm: cardioSetDistanceKm(set),
+          paceSecondsPerKm: cardioSetPaceSecondsPerKm(set),
+          speed: Number(set.speed) || 0,
+          incline: Number(set.incline) || 0,
+          heartRate: Number(set.heartRate) || 0,
+          calories: Number(set.calories) || 0,
           rpe: Number(set.rpe) || null,
         }))
-        .filter((set) => trackingType === 'duration'
+        .filter((set) => trackingType === 'cardio'
+          ? set.distanceKm > 0 || set.duration > 0
+          : trackingType === 'duration'
           ? set.duration > 0
           : trackingType === 'distance'
             ? set.distance > 0
@@ -821,7 +837,9 @@ export function ExercisePerformance({ exercise, workouts = [], unit = 'kg' }) {
         volume: sets.reduce((total, set) => total + set.weight * set.reps, 0),
         bestEstimate: Math.max(...sets.map((set) => set.weight * (1 + set.reps / 30))),
         bestReps: Math.max(...sets.map((set) => set.reps)),
-        bestMetric: trackingType === 'duration'
+        bestMetric: trackingType === 'cardio'
+          ? sets.reduce((total, set) => total + set.distanceKm, 0)
+          : trackingType === 'duration'
           ? Math.max(...sets.map((set) => set.duration))
           : Math.max(...sets.map((set) => set.distance)),
       }]
@@ -838,6 +856,10 @@ export function ExercisePerformance({ exercise, workouts = [], unit = 'kg' }) {
   const totalDuration = allSets.reduce((total, set) => total + set.duration, 0)
   const bestDistance = Math.max(...allSets.map((set) => set.distance), 0)
   const totalDistance = allSets.reduce((total, set) => total + set.distance, 0)
+  const cardioSessionDistances = sessions.map((session) => session.sets.reduce((total, set) => total + set.distanceKm, 0))
+  const bestCardioDistance = Math.max(...cardioSessionDistances, 0)
+  const totalCardioDistance = allSets.reduce((total, set) => total + set.distanceKm, 0)
+  const fastestPace = Math.min(...allSets.map((set) => set.paceSecondsPerKm).filter(Boolean), Infinity)
   const recentSets = [...allSets].reverse().slice(0, 10)
 
   return (
@@ -855,7 +877,14 @@ export function ExercisePerformance({ exercise, workouts = [], unit = 'kg' }) {
 
       {sessions.length ? (
         <>
-          {trackingType === 'duration' ? (
+          {trackingType === 'cardio' ? (
+            <div className="pp-performance-metrics">
+              <div><span><Trophy size={15} /> LONGEST RUN</span><strong>{formatCardioDistance(bestCardioDistance, distanceUnit)}<small> {distanceUnit}</small></strong></div>
+              <div><span><TrendingUp size={15} /> FASTEST PACE</span><strong>{Number.isFinite(fastestPace) ? formatCardioPace(fastestPace, distanceUnit) : '—'}</strong></div>
+              <div><span><Activity size={15} /> TOTAL DISTANCE</span><strong>{formatCardioDistance(totalCardioDistance, distanceUnit)}<small> {distanceUnit}</small></strong></div>
+              <div><span><Dumbbell size={15} /> TOTAL TIME</span><strong>{formatCardioTime(totalDuration)}</strong></div>
+            </div>
+          ) : trackingType === 'duration' ? (
             <div className="pp-performance-metrics">
               <div><span><Trophy size={15} /> BEST HOLD</span><strong>{formatDuration(bestDuration)}</strong></div>
               <div><span><Activity size={15} /> TOTAL TIME</span><strong>{formatDuration(totalDuration)}</strong></div>
@@ -896,19 +925,22 @@ export function ExercisePerformance({ exercise, workouts = [], unit = 'kg' }) {
               ? 'duration'
               : trackingType === 'distance'
                 ? 'distance'
+                : trackingType === 'cardio'
+                  ? 'cardio'
                 : usesRepTrend ? 'reps' : 'estimate'}
             unit={weightUnit}
+            distanceUnit={distanceUnit}
           />
 
           <div className="pp-set-history">
             <div className="pp-subhead">
-              <strong>Recent sets</strong>
+              <strong>{trackingType === 'cardio' ? 'Recent splits' : 'Recent sets'}</strong>
               <span>{allSets.length} completed</span>
             </div>
             <div className="pp-set-history-head" aria-hidden="true">
               <span>Date</span>
-              <span>{trackingType === 'duration' ? 'Duration' : trackingType === 'distance' ? 'Distance' : 'Set'}</span>
-              <span>{trackingType === 'duration' ? 'Total' : trackingType === 'distance' ? 'Load' : 'e1RM'}</span>
+              <span>{trackingType === 'cardio' ? 'Distance' : trackingType === 'duration' ? 'Duration' : trackingType === 'distance' ? 'Distance' : 'Set'}</span>
+              <span>{trackingType === 'cardio' ? 'Pace' : trackingType === 'duration' ? 'Total' : trackingType === 'distance' ? 'Load' : 'e1RM'}</span>
               <span>RPE</span>
             </div>
             {recentSets.map((set, index) => (
@@ -923,7 +955,12 @@ export function ExercisePerformance({ exercise, workouts = [], unit = 'kg' }) {
                   <strong>{formatDate(set.session.date, { month: 'short', day: 'numeric' })}</strong>
                   <small>{formatDate(set.session.date, { year: 'numeric' })}</small>
                 </span>
-                {trackingType === 'duration' ? (
+                {trackingType === 'cardio' ? (
+                  <>
+                    <span><strong>{formatCardioDistance(set.distanceKm, distanceUnit)} {distanceUnit}</strong><small>{formatCardioTime(set.duration)}</small></span>
+                    <span><strong>{formatCardioPace(set.paceSecondsPerKm, distanceUnit)}</strong><small>{set.heartRate ? `${set.heartRate} bpm` : 'average'}</small></span>
+                  </>
+                ) : trackingType === 'duration' ? (
                   <>
                     <span><strong>{formatDuration(set.duration)}</strong><small>timed hold</small></span>
                     <span><strong>{formatDuration(set.duration)}</strong><small>completed</small></span>

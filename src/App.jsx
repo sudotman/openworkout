@@ -48,6 +48,17 @@ import {
   saveAppState,
 } from './lib/storage.js'
 import { exportWorkoutsCsv } from './lib/csv.js'
+import {
+  cardioSetDistanceKm,
+  cardioSetPaceSecondsPerKm,
+  formatCardioDistance,
+  formatCardioPace,
+  formatCardioSpeed,
+  formatCardioTime,
+  getCardioSummary,
+  isCardioExercise,
+  workoutIsCardioOnly,
+} from './lib/cardio.js'
 
 const RoutinesView = lazy(() =>
   import('./components/RoutinesView.jsx').then((module) => ({ default: module.RoutinesView })),
@@ -76,6 +87,9 @@ const SetOptions = lazy(() =>
 )
 const WorkoutShareCard = lazy(() =>
   import('./components/WorkoutShareCard.jsx').then((module) => ({ default: module.WorkoutShareCard })),
+)
+const CardioTracker = lazy(() =>
+  import('./components/CardioTracker.jsx').then((module) => ({ default: module.CardioTracker })),
 )
 
 const NAV_ITEMS = [
@@ -114,6 +128,14 @@ const TEMPLATES = [
     eyebrow: 'Balanced',
     description: '4 exercises · about 45 min',
     exerciseIds: ['goblet-squat', 'push-up', 'one-arm-dumbbell-row', 'kettlebell-swing'],
+  },
+  {
+    id: 'treadmill-run-session',
+    name: 'Treadmill run',
+    eyebrow: 'Cardio',
+    description: 'Distance, pace, incline & heart rate',
+    exerciseIds: ['treadmill-run'],
+    prescriptions: { 'treadmill-run': { sets: 1 } },
   },
 ]
 
@@ -170,6 +192,7 @@ function createInitialState() {
     version: 1,
     settings: {
       unit: 'kg',
+      distanceUnit: 'km',
       restSeconds: 90,
       keepAwake: true,
       countWarmups: false,
@@ -305,6 +328,24 @@ function completedSetCount(workout) {
   )
 }
 
+function createWorkoutSet(previous = null) {
+  return {
+    id: uid('set'),
+    weight: previous?.weight ?? '',
+    reps: previous?.reps ?? '',
+    duration: previous?.duration ?? '',
+    distance: previous?.distance ?? '',
+    distanceKm: previous?.distanceKm ?? '',
+    speed: previous?.speed ?? '',
+    incline: previous?.incline ?? '',
+    heartRate: previous?.heartRate ?? '',
+    calories: previous?.calories ?? '',
+    rpe: '',
+    type: 'normal',
+    completed: false,
+  }
+}
+
 function compactNumber(value) {
   return new Intl.NumberFormat('en', {
     notation: value >= 10000 ? 'compact' : 'standard',
@@ -381,10 +422,13 @@ function previousSetLabel(set, trackingType) {
   return String(set.weight ?? '—') + ' × ' + String(set.reps ?? '—')
 }
 
-function completedSetLabel(set, trackingType, unit) {
+function completedSetLabel(set, trackingType, unit, distanceUnit = 'km') {
   if (trackingType === 'duration') return (set.duration || 0) + ' seconds'
   if (trackingType === 'distance') {
     return (set.weight || 0) + ' ' + unit + ' · ' + (set.distance || 0) + ' m'
+  }
+  if (trackingType === 'cardio') {
+    return `${formatCardioDistance(cardioSetDistanceKm(set), distanceUnit)} ${distanceUnit} · ${formatCardioTime(set.duration)} · ${formatCardioPace(cardioSetPaceSecondsPerKm(set), distanceUnit)}`
   }
   return (set.weight || 'BW') + (set.weight ? ' ' + unit : '') + ' × ' + (set.reps || 0)
 }
@@ -539,6 +583,7 @@ function App() {
       exercises: chosen.map((exerciseId) => {
         const previous = getPreviousSet(appState.workouts, exerciseId)
         const prescription = template?.prescriptions?.[exerciseId]
+        const cardio = isCardioExercise(exerciseMap.get(exerciseId))
         return {
           id: uid('we'),
           exerciseId,
@@ -546,16 +591,7 @@ function App() {
           restSeconds: prescription?.restSeconds,
           targetMinReps: prescription?.minReps,
           targetMaxReps: prescription?.maxReps,
-          sets: Array.from({ length: prescription?.sets || 3 }, () => ({
-            id: uid('set'),
-            weight: previous?.weight ?? '',
-            reps: previous?.reps ?? '',
-            duration: previous?.duration ?? '',
-            distance: previous?.distance ?? '',
-            rpe: '',
-            type: 'normal',
-            completed: false,
-          })),
+          sets: Array.from({ length: prescription?.sets || (cardio ? 1 : 3) }, () => createWorkoutSet(previous)),
         }
       }),
     }
@@ -605,18 +641,7 @@ function App() {
             id: uid('we'),
             exerciseId,
             notes: '',
-            sets: [
-              {
-                id: uid('set'),
-                weight: previous?.weight ?? '',
-                reps: previous?.reps ?? '',
-                duration: previous?.duration ?? '',
-                distance: previous?.distance ?? '',
-                rpe: '',
-                type: 'normal',
-                completed: false,
-              },
-            ],
+            sets: [createWorkoutSet(previous)],
           },
         ],
       }
@@ -660,7 +685,9 @@ function App() {
     }))
 
     if (willComplete) {
-      setRestRemaining(item?.restSeconds || appState.settings.restSeconds)
+      if (!isCardioExercise(exerciseMap.get(item?.exerciseId))) {
+        setRestRemaining(item?.restSeconds || appState.settings.restSeconds)
+      }
       window.navigator?.vibrate?.(35)
       const weight = Number(targetSet?.weight) || 0
       const reps = Number(targetSet?.reps) || 0
@@ -715,16 +742,7 @@ function App() {
           ...exercise,
           sets: [
             ...exercise.sets,
-            {
-              id: uid('set'),
-              weight: previous?.weight ?? '',
-              reps: previous?.reps ?? '',
-              duration: previous?.duration ?? '',
-              distance: previous?.distance ?? '',
-              rpe: '',
-              type: previous?.type || 'normal',
-              completed: false,
-            },
+            { ...createWorkoutSet(previous), type: previous?.type || 'normal' },
           ],
         }
       }),
@@ -806,11 +824,13 @@ function App() {
   const finishWorkout = (routineAction = 'none') => {
     if (!activeWorkout) return
     const newRoutineId = routineAction === 'create' ? uid('routine') : null
+    const cardio = getCardioSummary(activeWorkout, exerciseMap)
+    const recordedDuration = Math.max(elapsedSeconds, cardio.totalDurationSeconds || 0)
     const finished = {
       ...activeWorkout,
       sourceRoutineId: newRoutineId || activeWorkout.sourceRoutineId || null,
       completedAt: new Date().toISOString(),
-      durationSeconds: elapsedSeconds,
+      durationSeconds: recordedDuration,
     }
     setAppState((state) => {
       const sourceRoutine = state.routines.find((routine) => routine.id === activeWorkout.sourceRoutineId)
@@ -1061,6 +1081,14 @@ function App() {
     notify('Weights converted to ' + nextUnit)
   }
 
+  const changeDistanceUnit = (distanceUnit) => {
+    setAppState((state) => ({
+      ...state,
+      settings: { ...state.settings, distanceUnit: distanceUnit === 'mi' ? 'mi' : 'km' },
+    }))
+    notify('Running distances shown in ' + (distanceUnit === 'mi' ? 'miles' : 'kilometres'))
+  }
+
   const handleImport = async (event) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -1121,6 +1149,7 @@ function App() {
                     workout={activeWorkout}
                     elapsedSeconds={elapsedSeconds}
                     unit={appState.settings.unit}
+                    distanceUnit={appState.settings.distanceUnit}
                     exerciseMap={exerciseMap}
                     previousWorkouts={appState.workouts}
                     updateActiveWorkout={updateActiveWorkout}
@@ -1142,6 +1171,8 @@ function App() {
                     workouts={appState.workouts}
                     routines={appState.routines}
                     unit={appState.settings.unit}
+                    distanceUnit={appState.settings.distanceUnit}
+                    exerciseMap={exerciseMap}
                     hasStarterData={appState.hasStarterData}
                     clearStarterData={clearStarterData}
                     startWorkout={startWorkout}
@@ -1152,6 +1183,7 @@ function App() {
                 <HistoryView
                   workouts={appState.workouts}
                   unit={appState.settings.unit}
+                  distanceUnit={appState.settings.distanceUnit}
                   exerciseMap={exerciseMap}
                   openWorkout={(workout) => setSheet({ type: 'workout', workout })}
                   startWorkout={startWorkout}
@@ -1224,6 +1256,7 @@ function App() {
                 settings={appState.settings}
                 workoutCount={appState.workouts.length}
                 changeUnit={changeUnit}
+                changeDistanceUnit={changeDistanceUnit}
                 changeRest={(seconds) =>
                   setAppState((state) => ({
                     ...state,
@@ -1269,6 +1302,7 @@ function App() {
                 exercise={exerciseMap.get(sheet.exerciseId)}
                 workouts={appState.workouts}
                 unit={appState.settings.unit}
+                distanceUnit={appState.settings.distanceUnit}
                 canAdd={Boolean(activeWorkout) && !activeWorkout.exercises.some((item) => item.exerciseId === sheet.exerciseId)}
                 addExercise={addExercise}
                 goBack={sheet.returnTo ? () => setSheet({ type: sheet.returnTo }) : null}
@@ -1284,6 +1318,7 @@ function App() {
               <WorkoutDetail
                 workout={appState.workouts.find((workout) => workout.id === sheet.workout.id) || sheet.workout}
                 unit={appState.settings.unit}
+                distanceUnit={appState.settings.distanceUnit}
                 exerciseMap={exerciseMap}
                 updateWorkout={updateWorkout}
                 deleteWorkout={deleteWorkout}
@@ -1296,6 +1331,7 @@ function App() {
               <WorkoutDaySheet
                 workouts={sheet.workouts}
                 unit={appState.settings.unit}
+                distanceUnit={appState.settings.distanceUnit}
                 exerciseMap={exerciseMap}
                 openWorkout={(workout) => setSheet({ type: 'workout', workout })}
               />
@@ -1327,6 +1363,8 @@ function App() {
                 workout={activeWorkout}
                 elapsedSeconds={elapsedSeconds}
                 unit={appState.settings.unit}
+                distanceUnit={appState.settings.distanceUnit}
+                exerciseMap={exerciseMap}
                 sourceRoutine={appState.routines.find((routine) => routine.id === activeWorkout?.sourceRoutineId)}
                 finishWorkout={finishWorkout}
                 cancel={() => setSheet(null)}
@@ -1336,6 +1374,7 @@ function App() {
               <WorkoutShareCard
                 workout={sheet.workout}
                 unit={appState.settings.unit}
+                distanceUnit={appState.settings.distanceUnit}
                 exerciseMap={exerciseMap}
                 onDone={() => setSheet(null)}
                 notify={notify}
@@ -1498,7 +1537,7 @@ function ViewHeader({ eyebrow, title, subtitle, action }) {
   )
 }
 
-function TrainView({ workouts, routines, unit, hasStarterData, clearStarterData, startWorkout, openWorkout }) {
+function TrainView({ workouts, routines, unit, distanceUnit, exerciseMap, hasStarterData, clearStarterData, startWorkout, openWorkout }) {
   const latestWorkout = workouts[0]
   const getStoredRoutine = (template) => routines.find(
     (routine) => routine.id === template.id || routine.id === 'routine-' + template.id,
@@ -1507,6 +1546,13 @@ function TrainView({ workouts, routines, unit, hasStarterData, clearStarterData,
   const weekWorkouts = workouts.filter((workout) => new Date(workout.startedAt).getTime() >= weekCutoff)
   const weekSets = weekWorkouts.reduce((total, workout) => total + completedSetCount(workout), 0)
   const weekVolume = weekWorkouts.reduce((total, workout) => total + workoutVolume(workout), 0)
+  const weekCardio = weekWorkouts.reduce((summary, workout) => {
+    const cardio = getCardioSummary(workout, exerciseMap)
+    return {
+      distanceKm: summary.distanceKm + cardio.distanceKm,
+    }
+  }, { distanceKm: 0 })
+  const latestCardio = latestWorkout ? getCardioSummary(latestWorkout, exerciseMap) : null
 
   return (
     <div className="train-view content-width">
@@ -1592,11 +1638,13 @@ function TrainView({ workouts, routines, unit, hasStarterData, clearStarterData,
               </div>
               <div>
                 <strong>{weekSets}</strong>
-                <span>working sets</span>
+                <span>{weekCardio.distanceKm > 0 ? 'sets / splits' : 'working sets'}</span>
               </div>
               <div>
-                <strong>{compactNumber(weekVolume)}</strong>
-                <span>{unit} volume</span>
+                <strong>{weekCardio.distanceKm > 0
+                  ? formatCardioDistance(weekCardio.distanceKm, distanceUnit)
+                  : compactNumber(weekVolume)}</strong>
+                <span>{weekCardio.distanceKm > 0 ? `${distanceUnit} running` : `${unit} volume`}</span>
               </div>
             </div>
             <div className="week-bars" aria-label={weekWorkouts.length + ' workouts this week'}>
@@ -1631,7 +1679,9 @@ function TrainView({ workouts, routines, unit, hasStarterData, clearStarterData,
                 </div>
                 <div>
                   <strong>{latestWorkout.name}</strong>
-                  <span>{latestWorkout.exercises.length} exercises · {Math.round(latestWorkout.durationSeconds / 60)} min</span>
+                  <span>{latestCardio?.distanceKm > 0
+                    ? `${formatCardioDistance(latestCardio.distanceKm, distanceUnit)} ${distanceUnit} · ${formatCardioPace(latestCardio.paceSecondsPerKm, distanceUnit)}`
+                    : `${latestWorkout.exercises.length} exercises · ${Math.round(latestWorkout.durationSeconds / 60)} min`}</span>
                 </div>
                 <ChevronRight size={18} />
               </button>
@@ -1649,6 +1699,7 @@ function LiveWorkout({
   workout,
   elapsedSeconds,
   unit,
+  distanceUnit,
   exerciseMap,
   previousWorkouts,
   updateActiveWorkout,
@@ -1665,6 +1716,15 @@ function LiveWorkout({
   openDiscard,
   toggleWorkoutTimer,
 }) {
+  const cardioSummary = getCardioSummary(workout, exerciseMap, { completedOnly: false })
+  const completedCardio = getCardioSummary(workout, exerciseMap)
+  const cardioOnly = workoutIsCardioOnly(workout, exerciseMap)
+  const completedWork = completedSetCount(workout)
+  const completedStrengthWork = Math.max(0, completedWork - completedCardio.segmentCount)
+  const hybrid = completedCardio.segmentCount > 0 && completedStrengthWork > 0
+  const completedWorkLabel = cardioOnly
+    ? completedWork === 1 ? 'split' : 'splits'
+    : completedWork === 1 ? 'set' : 'sets'
   return (
     <div className="live-workout content-width content-width--narrow">
       <div className="live-header">
@@ -1693,9 +1753,22 @@ function LiveWorkout({
           </div>
         </div>
         <div className="live-summary">
-          <span>{workout.exercises.length} exercises</span>
-          <span>{completedSetCount(workout)} sets complete</span>
-          <span>{compactNumber(workoutVolume(workout))} {unit}</span>
+          {cardioSummary.distanceKm > 0 && (
+            <span>{formatCardioDistance(cardioSummary.distanceKm, distanceUnit)} {distanceUnit}</span>
+          )}
+          {cardioSummary.paceSecondsPerKm > 0 && (
+            <span>{formatCardioPace(cardioSummary.paceSecondsPerKm, distanceUnit)} pace</span>
+          )}
+          {!cardioOnly && <span>{workout.exercises.length} exercises</span>}
+          {hybrid ? (
+            <>
+              <span>{completedCardio.segmentCount} {completedCardio.segmentCount === 1 ? 'split' : 'splits'} logged</span>
+              <span>{completedStrengthWork} {completedStrengthWork === 1 ? 'set' : 'sets'} complete</span>
+            </>
+          ) : (
+            <span>{completedWork} {completedWorkLabel} complete</span>
+          )}
+          {!cardioOnly && <span>{compactNumber(workoutVolume(workout))} {unit}</span>}
         </div>
       </div>
 
@@ -1736,6 +1809,19 @@ function LiveWorkout({
                 </button>
               </div>
 
+              {trackingType === 'cardio' ? (
+                <CardioTracker
+                  item={item}
+                  exercise={exercise}
+                  previous={previous}
+                  distanceUnit={distanceUnit}
+                  updateSet={updateSet}
+                  toggleSet={toggleSet}
+                  addSet={addSet}
+                  removeSet={removeSet}
+                />
+              ) : (
+                <>
               <div className="set-grid set-grid--header" aria-hidden="true">
                 <span>SET</span>
                 <span>PREVIOUS</span>
@@ -1837,6 +1923,8 @@ function LiveWorkout({
               <button className="add-set-button" onClick={() => addSet(item.id)}>
                 <Plus size={15} /> Add set
               </button>
+                </>
+              )}
 
               <textarea
                 className="exercise-notes"
@@ -1892,7 +1980,7 @@ function LiveWorkout({
   )
 }
 
-function HistoryView({ workouts, unit, exerciseMap, openWorkout, startWorkout }) {
+function HistoryView({ workouts, unit, distanceUnit, exerciseMap, openWorkout, startWorkout }) {
   const grouped = useMemo(() => {
     const groups = new Map()
     workouts.forEach((workout) => {
@@ -1925,26 +2013,40 @@ function HistoryView({ workouts, unit, exerciseMap, openWorkout, startWorkout })
                 <span>{entries.length} {entries.length === 1 ? 'session' : 'sessions'}</span>
               </div>
               <div className="history-list">
-                {entries.map((workout) => (
+                {entries.map((workout) => {
+                  const cardio = getCardioSummary(workout, exerciseMap)
+                  const cardioOnly = workoutIsCardioOnly(workout, exerciseMap)
+                  const strengthSetCount = Math.max(0, completedSetCount(workout) - cardio.segmentCount)
+                  return (
                   <button className="history-row" key={workout.id} onClick={() => openWorkout(workout)}>
                     <div className="history-date">
                       <strong>{formatDate(workout.startedAt, { day: '2-digit' })}</strong>
                       <span>{formatDate(workout.startedAt, { weekday: 'short' })}</span>
                     </div>
-                <div className="history-main">
+                    <div className="history-main">
                       <strong>{workout.name} {workout.isSample && <em className="sample-tag">SAMPLE</em>}</strong>
                       <span>
-                        {workout.exercises.slice(0, 3).map((item) => exerciseMap.get(item.exerciseId)?.name).filter(Boolean).join(' · ')}
-                        {workout.exercises.length > 3 ? ' +' + (workout.exercises.length - 3) : ''}
+                        {cardio.distanceKm > 0
+                          ? `${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit} · ${formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}${!cardioOnly && strengthSetCount ? ` · ${strengthSetCount} lifting ${strengthSetCount === 1 ? 'set' : 'sets'}` : ''}`
+                          : workout.exercises.slice(0, 3).map((item) => exerciseMap.get(item.exerciseId)?.name).filter(Boolean).join(' · ')}
+                        {!cardio.distanceKm && workout.exercises.length > 3 ? ' +' + (workout.exercises.length - 3) : ''}
                       </span>
                     </div>
                     <div className="history-stats">
-                      <span><Clock3 size={14} /> {Math.round(workout.durationSeconds / 60)} min</span>
-                      <span><Dumbbell size={14} /> {compactNumber(workoutVolume(workout))} {unit}</span>
+                      <span><Clock3 size={14} /> {Math.round((cardioOnly && cardio.totalDurationSeconds ? cardio.totalDurationSeconds : workout.durationSeconds) / 60)} min</span>
+                      {cardio.distanceKm > 0 ? (
+                        <span><Activity size={14} /> {formatCardioDistance(cardio.distanceKm, distanceUnit)} {distanceUnit} · {formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}</span>
+                      ) : (
+                        <span><Dumbbell size={14} /> {compactNumber(workoutVolume(workout))} {unit}</span>
+                      )}
+                      {cardio.distanceKm > 0 && workoutVolume(workout) > 0 && (
+                        <span><Dumbbell size={14} /> {compactNumber(workoutVolume(workout))} {unit}</span>
+                      )}
                     </div>
                     <ChevronRight size={19} />
                   </button>
-                ))}
+                  )
+                })}
               </div>
             </section>
           ))}
@@ -2422,6 +2524,7 @@ function ExerciseDetail({
   exercise,
   workouts,
   unit,
+  distanceUnit,
   canAdd,
   addExercise,
   goBack,
@@ -2479,7 +2582,7 @@ function ExerciseDetail({
         </aside>
       </div>
 
-      <ExercisePerformance exercise={exercise} workouts={workouts} unit={unit} />
+      <ExercisePerformance exercise={exercise} workouts={workouts} unit={unit} distanceUnit={distanceUnit} />
 
       {exercise.custom && (
         <div className="custom-detail-actions">
@@ -2499,7 +2602,7 @@ function ExerciseDetail({
   )
 }
 
-function WorkoutDaySheet({ workouts, unit, exerciseMap, openWorkout }) {
+function WorkoutDaySheet({ workouts, unit, distanceUnit, exerciseMap, openWorkout }) {
   const date = workouts[0]?.startedAt || workouts[0]?.completedAt
   return (
     <div className="sheet-content workout-day-sheet">
@@ -2509,7 +2612,10 @@ function WorkoutDaySheet({ workouts, unit, exerciseMap, openWorkout }) {
         body={workouts.length + ' sessions were completed on this day.'}
       />
       <div className="workout-day-list">
-        {workouts.map((workout) => (
+        {workouts.map((workout) => {
+          const cardio = getCardioSummary(workout, exerciseMap)
+          const cardioOnly = workoutIsCardioOnly(workout, exerciseMap)
+          return (
           <button key={workout.id} onClick={() => openWorkout(workout)}>
             <span>
               <strong>{workout.name}</strong>
@@ -2521,12 +2627,15 @@ function WorkoutDaySheet({ workouts, unit, exerciseMap, openWorkout }) {
               </small>
             </span>
             <span>
-              <strong>{Math.round(workout.durationSeconds / 60)} min</strong>
-              <small>{compactNumber(workoutVolume(workout))} {unit}</small>
+              <strong>{Math.round((cardioOnly && cardio.totalDurationSeconds ? cardio.totalDurationSeconds : workout.durationSeconds) / 60)} min</strong>
+              <small>{cardio.distanceKm > 0
+                ? `${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit} · ${formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}`
+                : `${compactNumber(workoutVolume(workout))} ${unit}`}</small>
             </span>
             <ChevronRight size={18} />
           </button>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
@@ -2535,6 +2644,7 @@ function WorkoutDaySheet({ workouts, unit, exerciseMap, openWorkout }) {
 function WorkoutDetail({
   workout,
   unit,
+  distanceUnit,
   exerciseMap,
   updateWorkout,
   deleteWorkout,
@@ -2547,6 +2657,15 @@ function WorkoutDetail({
   const [name, setName] = useState(workout?.name || '')
   const [date, setDate] = useState(workout?.startedAt ? new Date(workout.startedAt).toISOString().slice(0, 10) : '')
   if (!workout) return null
+  const cardio = getCardioSummary(workout, exerciseMap)
+  const cardioOnly = workoutIsCardioOnly(workout, exerciseMap)
+  const strengthSetCount = Math.max(0, completedSetCount(workout) - cardio.segmentCount)
+  const hybrid = cardio.distanceKm > 0 && strengthSetCount > 0
+  const summaryBody = hybrid
+    ? `${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit} · ${formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)} · ${strengthSetCount} lifting ${strengthSetCount === 1 ? 'set' : 'sets'} · ${compactNumber(workoutVolume(workout))} ${unit}`
+    : cardioOnly && cardio.distanceKm > 0
+    ? `${formatCardioTime(cardio.totalDurationSeconds)} · ${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit} · ${formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}`
+    : Math.round(workout.durationSeconds / 60) + ' min · ' + completedSetCount(workout) + ' sets · ' + compactNumber(workoutVolume(workout)) + ' ' + unit
   const saveDetails = () => {
     const nextDate = new Date(workout.startedAt)
     const [year, month, day] = date.split('-').map(Number)
@@ -2559,7 +2678,7 @@ function WorkoutDetail({
       <SheetHeading
         eyebrow={formatDate(workout.startedAt, { weekday: 'long', day: 'numeric', month: 'long' })}
         title={workout.name}
-        body={Math.round(workout.durationSeconds / 60) + ' min · ' + completedSetCount(workout) + ' sets · ' + compactNumber(workoutVolume(workout)) + ' ' + unit}
+        body={summaryBody}
       />
       <div className="workout-detail-actions">
         <button onClick={() => setEditing((value) => !value)}><Settings size={16} /> Edit</button>
@@ -2582,24 +2701,35 @@ function WorkoutDetail({
           <button className="button button--dark button--wide" onClick={saveDetails}>Save changes</button>
         </div>
       )}
+      {cardio.distanceKm > 0 && (
+        <div className="workout-cardio-summary">
+          <div><span>DISTANCE</span><strong>{formatCardioDistance(cardio.distanceKm, distanceUnit)} <small>{distanceUnit}</small></strong></div>
+          <div><span>PACE</span><strong>{formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}</strong></div>
+          <div><span>AVG SPEED</span><strong>{formatCardioSpeed(cardio.averageSpeedKph, distanceUnit)}</strong></div>
+        </div>
+      )}
       <div className="workout-detail-list">
         {workout.exercises.map((item, index) => {
           const exercise = exerciseMap.get(item.exerciseId)
           const trackingType = getTrackingType(exercise)
+          const completedCount = item.sets.filter((set) => set.completed).length
+          const workLabel = trackingType === 'cardio'
+            ? completedCount === 1 ? 'split' : 'splits'
+            : completedCount === 1 ? 'set' : 'sets'
           return (
             <section key={item.id}>
               <div className="workout-detail-exercise">
                 <span>{String(index + 1).padStart(2, '0')}</span>
                 <div>
                   <strong>{exercise?.name || 'Exercise'}</strong>
-                  <small>{exercise?.primaryMuscle} · {item.sets.filter((set) => set.completed).length} sets</small>
+                  <small>{exercise?.primaryMuscle} · {completedCount} {workLabel}</small>
                 </div>
               </div>
               <div className="readonly-sets">
                 {item.sets.filter((set) => set.completed).map((set, setIndex) => (
                   <div key={set.id}>
-                    <span>SET {setIndex + 1}</span>
-                    <strong>{completedSetLabel(set, trackingType, unit)}</strong>
+                    <span>{trackingType === 'cardio' ? 'SPLIT' : 'SET'} {setIndex + 1}</span>
+                    <strong>{completedSetLabel(set, trackingType, unit, distanceUnit)}</strong>
                     <small>{set.rpe ? 'RPE ' + set.rpe : '—'}</small>
                   </div>
                 ))}
@@ -2631,8 +2761,12 @@ function WorkoutDetail({
   )
 }
 
-function FinishWorkoutSheet({ workout, elapsedSeconds, unit, sourceRoutine, finishWorkout, cancel }) {
+function FinishWorkoutSheet({ workout, elapsedSeconds, unit, distanceUnit, exerciseMap, sourceRoutine, finishWorkout, cancel }) {
   const currentExerciseIds = workoutExerciseIds(workout)
+  const cardio = getCardioSummary(workout, exerciseMap)
+  const cardioOnly = workoutIsCardioOnly(workout, exerciseMap)
+  const strengthSetCount = Math.max(0, completedSetCount(workout) - cardio.segmentCount)
+  const hybrid = cardio.distanceKm > 0 && strengthSetCount > 0
   const routineChanged = sourceRoutine && !sameExerciseOrder(
     currentExerciseIds,
     sourceRoutine.exerciseIds || [],
@@ -2643,16 +2777,32 @@ function FinishWorkoutSheet({ workout, elapsedSeconds, unit, sourceRoutine, fini
     <div className="sheet-content compact-sheet">
       <span className="confirm-icon confirm-icon--success"><Check size={25} /></span>
       <SheetHeading
-        eyebrow="SESSION COMPLETE"
+        eyebrow={hybrid ? 'HYBRID COMPLETE' : cardioOnly ? 'RUN COMPLETE' : 'SESSION COMPLETE'}
         title="Finish workout?"
         body={routineChanged
           ? 'You changed the exercise lineup. Choose what should happen to your routine.'
           : 'Review the session summary before saving it to your local history.'}
       />
       <div className="finish-summary">
-        <div><span>TIME</span><strong>{formatDuration(elapsedSeconds)}</strong></div>
-        <div><span>SETS</span><strong>{completedSetCount(workout)}</strong></div>
-        <div><span>VOLUME</span><strong>{compactNumber(workoutVolume(workout))} <small>{unit}</small></strong></div>
+        {hybrid ? (
+          <>
+            <div><span>DISTANCE</span><strong>{formatCardioDistance(cardio.distanceKm, distanceUnit)} <small>{distanceUnit}</small></strong></div>
+            <div><span>PACE</span><strong>{formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}</strong></div>
+            <div><span>LIFT VOLUME</span><strong>{compactNumber(workoutVolume(workout))} <small>{unit}</small></strong></div>
+          </>
+        ) : cardioOnly ? (
+          <>
+            <div><span>TIME</span><strong>{formatDuration(cardio.totalDurationSeconds || elapsedSeconds)}</strong></div>
+            <div><span>DISTANCE</span><strong>{formatCardioDistance(cardio.distanceKm, distanceUnit)} <small>{distanceUnit}</small></strong></div>
+            <div><span>PACE</span><strong>{formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}</strong></div>
+          </>
+        ) : (
+          <>
+            <div><span>TIME</span><strong>{formatDuration(elapsedSeconds)}</strong></div>
+            <div><span>SETS</span><strong>{completedSetCount(workout)}</strong></div>
+            <div><span>VOLUME</span><strong>{compactNumber(workoutVolume(workout))} <small>{unit}</small></strong></div>
+          </>
+        )}
       </div>
       {routineChanged ? (
         <div className="finish-routine-actions">
@@ -2819,6 +2969,7 @@ function CustomExerciseSheet({ initial, onSave }) {
             <option value="weight-reps">Weight + reps</option>
             <option value="duration">Duration</option>
             <option value="distance">Weight + distance</option>
+            <option value="cardio">Run / cardio metrics</option>
           </select>
         </label>
         <label className="custom-form-wide">
@@ -2845,6 +2996,7 @@ function SettingsSheet({
   settings,
   workoutCount,
   changeUnit,
+  changeDistanceUnit,
   changeRest,
   changeKeepAwake,
   changeTimerSound,
@@ -2877,6 +3029,24 @@ function SettingsSheet({
               onClick={() => changeUnit(unit)}
             >
               {unit.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="setting-section">
+        <div className="setting-label">
+          <div><Activity size={18} /><span>Running distance</span></div>
+          <small>Run data stays precise when you switch display units.</small>
+        </div>
+        <div className="segmented-control">
+          {['km', 'mi'].map((distanceUnit) => (
+            <button
+              key={distanceUnit}
+              className={(settings.distanceUnit || 'km') === distanceUnit ? 'is-active' : ''}
+              onClick={() => changeDistanceUnit(distanceUnit)}
+            >
+              {distanceUnit.toUpperCase()}
             </button>
           ))}
         </div>
