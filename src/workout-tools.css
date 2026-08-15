@@ -109,8 +109,8 @@
 }
 
 .wt-tabs button[aria-selected='true'] {
-  color: #fff;
-  background: var(--ink, #171914);
+  color: var(--button-dark-ink);
+  background: var(--button-dark);
   box-shadow: 0 5px 14px rgba(18, 20, 16, 0.13);
 }
 
@@ -172,7 +172,7 @@
 }
 
 .wt-field:focus-within {
-  background: #fffefa;
+  background: var(--surface-raised, #fbfaf5);
   border-color: var(--ink, #171914);
 }
 
@@ -296,7 +296,7 @@
   justify-content: space-between;
   padding: 13px 10px 10px;
   color: var(--muted, #72766d);
-  background: #efeee7;
+  background: var(--surface-alt, #e9e8df);
   border: 1px solid transparent;
   border-radius: 14px;
   scroll-snap-align: start;
@@ -347,7 +347,7 @@
 }
 
 .wt-stepper button:active:not(:disabled) {
-  background: rgba(23, 25, 20, 0.08);
+  background: var(--accent-soft);
 }
 
 .wt-stepper button:disabled {
@@ -364,8 +364,8 @@
   margin-top: 25px;
   padding: 18px 16px 15px;
   overflow: hidden;
-  color: #fff;
-  background: var(--ink, #171914);
+  color: var(--sidebar-text);
+  background: var(--sidebar);
   border-radius: 18px;
   isolation: isolate;
 }
@@ -378,7 +378,7 @@
   right: -52px;
   width: 190px;
   height: 190px;
-  background: radial-gradient(circle, rgba(217, 255, 79, 0.13), transparent 68%);
+  background: radial-gradient(circle, var(--accent-soft), transparent 68%);
   pointer-events: none;
 }
 
@@ -407,7 +407,7 @@
 
 .wt-result-badge-exact {
   color: var(--accent, #d9ff4f);
-  background: rgba(217, 255, 79, 0.12);
+  background: var(--accent-soft);
 }
 
 .wt-result-number {
@@ -475,7 +475,7 @@
   width: 11px;
   height: var(--wt-plate-height);
   flex: 0 0 auto;
-  background: #f1f0e8;
+  background: var(--surface-raised, #fbfaf5);
   border: 1px solid rgba(255, 255, 255, 0.17);
   border-radius: 3px;
   box-shadow: inset -2px 0 rgba(0, 0, 0, 0.19);
@@ -527,7 +527,7 @@
   height: 25px;
   place-items: center;
   color: var(--accent, #d9ff4f);
-  background: rgba(217, 255, 79, 0.1);
+  background: var(--accent-soft);
   border-radius: 50%;
   font: normal 500 12px/1 var(--mono, ui-monospace, monospace);
 }
@@ -618,7 +618,7 @@
 }
 
 .wt-working-stepper button:active {
-  background: rgba(23, 25, 20, 0.08);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
 .wt-working-stepper span {
@@ -776,7 +776,7 @@
 }
 
 .wt-type-row:active {
-  background: rgba(23, 25, 20, 0.035);
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
 }
 
 .wt-type-icon {
@@ -855,18 +855,18 @@
 .wt-tools input:focus-visible,
 .wt-set-options button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(23, 25, 20, 0.16);
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
 @media (hover: hover) {
   .wt-close:hover {
     color: var(--ink, #171914);
-    background: #deddd5;
+    background: var(--control-strong);
   }
 
   .wt-type-row:hover {
     padding-inline: 8px;
-    background: rgba(23, 25, 20, 0.025);
+    background: color-mix(in srgb, var(--ink) 3%, transparent);
   }
 
   .wt-delete-set:hover {

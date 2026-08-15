@@ -23,6 +23,7 @@ import {
   Link2,
   Minus,
   MoreVertical,
+  Palette,
   Pause,
   Play,
   Plus,
@@ -40,6 +41,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { exercises, equipmentOptions, muscleGroups } from './data/exercises.js'
+import { getTheme, normalizeTheme, THEMES } from './data/themes.js'
 import {
   clearAppState,
   exportAppState,
@@ -191,6 +193,7 @@ function createInitialState() {
   return {
     version: 1,
     settings: {
+      theme: 'graphite',
       unit: 'kg',
       distanceUnit: 'km',
       restSeconds: 90,
@@ -284,7 +287,11 @@ function normalizeState(state) {
     customExercises: Array.isArray(state.customExercises) ? state.customExercises : [],
     hasStarterData: Boolean(state.hasStarterData),
     activeWorkout: state.activeWorkout || null,
-    settings: { ...fallback.settings, ...(state.settings || {}) },
+    settings: {
+      ...fallback.settings,
+      ...(state.settings || {}),
+      theme: normalizeTheme(state.settings?.theme),
+    },
   }
 }
 
@@ -480,6 +487,13 @@ function App() {
   useEffect(() => {
     saveAppState(appState)
   }, [appState])
+
+  useEffect(() => {
+    const theme = getTheme(appState.settings.theme)
+    document.documentElement.dataset.theme = theme.id
+    document.documentElement.style.colorScheme = theme.id === 'midnight' ? 'dark' : 'light'
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.browserColor)
+  }, [appState.settings.theme])
 
   useEffect(() => {
     const captureInstallPrompt = (event) => {
@@ -1089,6 +1103,17 @@ function App() {
     notify('Running distances shown in ' + (distanceUnit === 'mi' ? 'miles' : 'kilometres'))
   }
 
+  const changeTheme = (themeId) => {
+    const theme = getTheme(themeId)
+    if (theme.id === appState.settings.theme) return
+    document.documentElement.dataset.theme = theme.id
+    setAppState((state) => ({
+      ...state,
+      settings: { ...state.settings, theme: theme.id },
+    }))
+    notify(theme.name + ' applied')
+  }
+
   const handleImport = async (event) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -1257,6 +1282,7 @@ function App() {
                 workoutCount={appState.workouts.length}
                 changeUnit={changeUnit}
                 changeDistanceUnit={changeDistanceUnit}
+                changeTheme={changeTheme}
                 changeRest={(seconds) =>
                   setAppState((state) => ({
                     ...state,
@@ -2997,6 +3023,7 @@ function SettingsSheet({
   workoutCount,
   changeUnit,
   changeDistanceUnit,
+  changeTheme,
   changeRest,
   changeKeepAwake,
   changeTimerSound,
@@ -3015,6 +3042,41 @@ function SettingsSheet({
         title="Settings & data"
         body="Everything stays in this browser unless you export it."
       />
+
+      <section className="setting-section theme-setting">
+        <div className="setting-label">
+          <div><Palette size={18} /><span>App theme</span></div>
+          <small>Applied everywhere and saved on this device.</small>
+        </div>
+        <div className="theme-picker" role="radiogroup" aria-label="App theme">
+          {THEMES.map((theme) => {
+            const selected = normalizeTheme(settings.theme) === theme.id
+            return (
+              <button
+                key={theme.id}
+                type="button"
+                className={'theme-option ' + (selected ? 'is-active' : '')}
+                onClick={() => changeTheme(theme.id)}
+                role="radio"
+                aria-checked={selected}
+              >
+                <span className="theme-option-preview" aria-hidden="true">
+                  {theme.swatches.map((swatch, index) => (
+                    <i key={swatch} style={{ background: swatch, '--swatch-index': index }} />
+                  ))}
+                </span>
+                <span className="theme-option-copy">
+                  <strong>{theme.name}</strong>
+                  <small>{theme.description}</small>
+                </span>
+                <span className="theme-option-check" aria-hidden="true">
+                  {selected && <Check size={13} strokeWidth={3} />}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </section>
 
       <section className="setting-section">
         <div className="setting-label">

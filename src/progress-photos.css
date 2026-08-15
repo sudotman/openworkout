@@ -21,7 +21,7 @@
 .photo-module button:focus-visible,
 .photo-module input:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(23, 25, 20, 0.15);
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
 .photo-header {
@@ -80,12 +80,12 @@
 }
 
 .photo-button--dark {
-  color: white;
-  background: var(--photo-ink);
+  color: var(--button-dark-ink);
+  background: var(--button-dark);
 }
 
 .photo-button--accent {
-  color: var(--photo-ink);
+  color: var(--accent-ink);
   background: var(--photo-accent);
 }
 
@@ -126,9 +126,9 @@
   align-items: center;
   padding: 10px 18px;
   gap: 10px;
-  color: #526216;
-  background: rgba(217, 255, 79, 0.14);
-  border-bottom: 1px solid rgba(151, 175, 60, 0.24);
+  color: var(--photo-ink);
+  background: var(--accent-soft);
+  border-bottom: 1px solid var(--accent-ring);
 }
 
 .photo-privacy-note svg {
@@ -148,7 +148,7 @@
 
 .photo-add-form {
   overflow: hidden;
-  background: #f0efe7;
+  background: var(--photo-surface-alt);
   border-bottom: 1px solid var(--photo-line);
 }
 
@@ -169,9 +169,9 @@
   place-items: center;
   overflow: hidden;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.65), rgba(233, 232, 223, 0.7)),
+    linear-gradient(135deg, color-mix(in srgb, var(--photo-surface) 75%, transparent), color-mix(in srgb, var(--photo-surface-alt) 80%, transparent)),
     var(--photo-surface-alt);
-  border: 1px dashed #bfc1b7;
+  border: 1px dashed var(--photo-line);
   border-radius: 14px;
 }
 
@@ -255,7 +255,7 @@
   left: 0;
   height: 3px;
   overflow: hidden;
-  background: rgba(23, 25, 20, 0.08);
+  background: color-mix(in srgb, var(--photo-ink) 8%, transparent);
 }
 
 .photo-processing-bar::after {
@@ -306,8 +306,8 @@
 }
 
 .photo-field input:focus {
-  border-color: #999c91;
-  box-shadow: 0 0 0 3px rgba(23, 25, 20, 0.08);
+  border-color: var(--photo-muted-2);
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
 .photo-file-input {
@@ -703,7 +703,7 @@
   padding: 14px 17px;
   gap: 10px;
   color: var(--photo-muted);
-  background: #efeee7;
+  background: var(--photo-surface-alt);
   border-top: 1px solid var(--photo-line);
 }
 

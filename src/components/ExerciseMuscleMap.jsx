@@ -52,11 +52,11 @@ function Figure({ side, data }) {
           data={data}
           side={side}
           gender="male"
-          colors={['#8c956f', '#d9ff4f']}
-          defaultFill="#31342d"
-          defaultStroke="#131510"
+          colors={['var(--muscle-secondary)', 'var(--accent)']}
+          defaultFill="var(--muscle-body)"
+          defaultStroke="var(--muscle-stroke)"
           defaultStrokeWidth={1.4}
-          border="#6c7163"
+          border="var(--muscle-border)"
         />
       </div>
       <figcaption>{side}</figcaption>

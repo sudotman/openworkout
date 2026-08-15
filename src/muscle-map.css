@@ -1,8 +1,12 @@
 .muscle-map {
+  --muscle-secondary: color-mix(in srgb, var(--accent) 42%, var(--sidebar-text));
+  --muscle-body: color-mix(in srgb, var(--sidebar-text) 14%, var(--sidebar));
+  --muscle-stroke: color-mix(in srgb, var(--sidebar) 82%, black);
+  --muscle-border: color-mix(in srgb, var(--sidebar-text) 38%, var(--sidebar));
   margin-top: 24px;
   overflow: hidden;
-  color: white;
-  background: #151711;
+  color: var(--sidebar-text);
+  background: var(--sidebar);
   border-radius: 17px;
 }
 
@@ -11,7 +15,7 @@
   align-items: flex-end;
   justify-content: space-between;
   padding: 17px 17px 13px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.11);
+  border-bottom: 1px solid color-mix(in srgb, var(--sidebar-text) 11%, transparent);
 }
 
 .muscle-map-head > div {
@@ -40,7 +44,7 @@
 }
 
 .muscle-map-head > p {
-  color: rgba(255, 255, 255, 0.42);
+  color: color-mix(in srgb, var(--sidebar-text) 42%, transparent);
 }
 
 .muscle-map-body {
@@ -55,8 +59,8 @@
   padding: 18px 26px 8px;
   gap: 18px;
   background:
-    radial-gradient(circle at 25% 45%, rgba(217, 255, 79, 0.055), transparent 36%),
-    radial-gradient(circle at 75% 45%, rgba(217, 255, 79, 0.055), transparent 36%);
+    radial-gradient(circle at 25% 45%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 36%),
+    radial-gradient(circle at 75% 45%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 36%);
 }
 
 .muscle-map-figure {
@@ -84,12 +88,12 @@
   transition: fill 260ms ease, filter 260ms ease;
 }
 
-.muscle-map-figure path[fill="#d9ff4f"] {
-  filter: drop-shadow(0 0 5px rgba(217, 255, 79, 0.24));
+.muscle-map-figure path[fill="var(--accent)"] {
+  filter: drop-shadow(0 0 5px var(--accent-ring));
 }
 
 .muscle-map-figure figcaption {
-  color: rgba(255, 255, 255, 0.42);
+  color: color-mix(in srgb, var(--sidebar-text) 42%, transparent);
 }
 
 .muscle-map-key {
@@ -104,11 +108,11 @@
   align-items: baseline;
   min-height: 35px;
   gap: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid color-mix(in srgb, var(--sidebar-text) 10%, transparent);
 }
 
 .muscle-map-key span {
-  color: rgba(255, 255, 255, 0.42);
+  color: color-mix(in srgb, var(--sidebar-text) 42%, transparent);
 }
 
 .muscle-map-key strong {
@@ -130,13 +134,13 @@
 }
 
 .muscle-map-swatch--secondary {
-  background: #8c956f;
+  background: var(--muscle-secondary);
 }
 
 .muscle-map-note {
   padding: 11px 16px 13px;
-  color: rgba(255, 255, 255, 0.32);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: color-mix(in srgb, var(--sidebar-text) 32%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--sidebar-text) 10%, transparent);
   letter-spacing: 0;
   line-height: 1.45;
   text-transform: none;

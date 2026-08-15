@@ -79,12 +79,12 @@ body.routine-modal-open {
 }
 
 .routine-button-dark {
-  color: #fff;
-  background: var(--ink);
+  color: var(--button-dark-ink);
+  background: var(--button-dark);
 }
 
 .routine-button-dark:hover {
-  background: var(--ink-soft);
+  background: color-mix(in srgb, var(--button-dark) 86%, var(--surface-raised));
 }
 
 .routine-button-quiet {
@@ -274,7 +274,7 @@ body.routine-modal-open {
 
 .routine-icon-button:hover {
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.55);
+  background: color-mix(in srgb, var(--surface-raised) 65%, transparent);
 }
 
 .routine-icon-button:active {
@@ -295,7 +295,7 @@ body.routine-modal-open {
   margin-left: auto;
   padding: 0 16px;
   gap: 7px;
-  color: var(--ink);
+  color: var(--accent-ink);
   background: var(--accent);
   border: 0;
   border-radius: 999px;
@@ -305,7 +305,7 @@ body.routine-modal-open {
 }
 
 .routine-start-button:hover {
-  background: #e0ff71;
+  background: color-mix(in srgb, var(--accent) 86%, white);
   transform: translateY(-1px);
 }
 
@@ -358,8 +358,8 @@ body.routine-modal-open {
 .routine-program-library {
   min-width: 0;
   overflow: hidden;
-  color: #fff;
-  background: #171914;
+  color: var(--sidebar-text);
+  background: var(--sidebar);
   border-radius: 22px;
 }
 
@@ -373,7 +373,7 @@ body.routine-modal-open {
   width: 37px;
   height: 37px;
   margin-bottom: 25px;
-  color: var(--ink);
+  color: var(--accent-ink);
   background: var(--accent);
   border-radius: 50%;
 }
@@ -473,7 +473,7 @@ body.routine-modal-open {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(10, 11, 9, 0.64);
+  background: var(--overlay);
   backdrop-filter: blur(5px);
 }
 
@@ -492,7 +492,7 @@ body.routine-modal-open {
   width: 39px;
   height: 4px;
   margin: 9px auto 0;
-  background: #ccccc4;
+  background: var(--control-strong);
   border-radius: 10px;
 }
 
@@ -567,7 +567,7 @@ body.routine-modal-open {
   color: var(--ink);
   background: transparent;
   border: 0;
-  border-bottom: 1px solid #bfc0b7;
+  border-bottom: 1px solid var(--control-strong);
   border-radius: 0;
   font-size: 13px;
   transition: border-color 160ms ease, box-shadow 160ms ease;
@@ -874,7 +874,7 @@ body.routine-modal-open {
 
 .routine-exercise-search:focus-within {
   background: var(--surface-raised);
-  border-color: #bfc0b7;
+  border-color: var(--control-strong);
 }
 
 .routine-exercise-search > svg {
@@ -920,7 +920,7 @@ body.routine-modal-open {
 
 .routine-search-result:hover {
   padding-inline: 9px;
-  background: rgba(255, 255, 255, 0.55);
+  background: color-mix(in srgb, var(--surface-raised) 65%, transparent);
 }
 
 .routine-search-result > span {
@@ -964,7 +964,7 @@ body.routine-modal-open {
   flex-direction: column;
   padding: 13px 18px calc(16px + env(safe-area-inset-bottom));
   gap: 9px;
-  background: rgba(251, 250, 245, 0.96);
+  background: color-mix(in srgb, var(--surface-raised) 96%, transparent);
   border-top: 1px solid var(--line);
   backdrop-filter: blur(14px);
 }
@@ -1186,7 +1186,7 @@ body.routine-modal-open {
   .routine-row:hover {
     padding-right: 9px;
     padding-left: 9px;
-    background: rgba(255, 255, 255, 0.42);
+    background: color-mix(in srgb, var(--surface-raised) 52%, transparent);
   }
 }
 

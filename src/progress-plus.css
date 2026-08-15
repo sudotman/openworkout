@@ -21,7 +21,7 @@
 .pp-module button:focus-visible,
 .pp-module input:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(23, 25, 20, 0.14);
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
 .pp-module-head {
@@ -78,12 +78,12 @@
 }
 
 .pp-button--dark {
-  color: white;
-  background: var(--pp-ink);
+  color: var(--button-dark-ink);
+  background: var(--button-dark);
 }
 
 .pp-button--accent {
-  color: var(--pp-ink);
+  color: var(--accent-ink);
   background: var(--pp-accent);
 }
 
@@ -247,7 +247,7 @@
 }
 
 .pp-calendar-day:not(:disabled):hover {
-  background: rgba(23, 25, 20, 0.045);
+  background: color-mix(in srgb, var(--pp-ink) 4.5%, transparent);
 }
 
 .pp-calendar-day:disabled {
@@ -255,7 +255,7 @@
 }
 
 .pp-calendar-day--outside {
-  color: #b9bbb3;
+  color: var(--pp-muted-2);
 }
 
 .pp-calendar-day--today > span {
@@ -264,8 +264,8 @@
   height: 25px;
   margin: -5px 0 -3px;
   place-items: center;
-  color: white;
-  background: var(--pp-ink);
+  color: var(--sidebar-text);
+  background: var(--sidebar);
   border-radius: 50%;
 }
 
@@ -284,7 +284,7 @@
   display: block;
   width: 4px;
   height: 4px;
-  background: #9fbe30;
+  background: var(--accent-dark);
   border-radius: 50%;
 }
 
@@ -299,14 +299,14 @@
   padding: 0 17px;
   gap: 8px;
   color: var(--pp-muted);
-  background: rgba(233, 232, 223, 0.45);
+  background: color-mix(in srgb, var(--pp-surface-alt) 62%, transparent);
   border-top: 1px solid var(--pp-line);
   font-size: 9px;
 }
 
 .pp-measurement-form {
   overflow: hidden;
-  background: #f1f0e8;
+  background: var(--pp-surface-alt);
   border-bottom: 1px solid var(--pp-line);
 }
 
@@ -354,8 +354,8 @@
 }
 
 .pp-field input:focus {
-  border-color: #9da094;
-  box-shadow: 0 0 0 3px rgba(23, 25, 20, 0.08);
+  border-color: var(--pp-muted-2);
+  box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
 .pp-field--date {
@@ -489,7 +489,7 @@
 }
 
 .pp-chart-area {
-  fill: rgba(217, 255, 79, 0.22);
+  fill: var(--accent-soft);
 }
 
 .pp-chart-line {
@@ -728,7 +728,7 @@
   height: 100%;
   background: var(--pp-accent);
   border-radius: inherit;
-  box-shadow: inset 0 0 0 1px rgba(23, 25, 20, 0.08);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
 .pp-footnote {

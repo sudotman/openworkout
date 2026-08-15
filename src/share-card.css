@@ -16,7 +16,7 @@
   width: 10px;
   height: 10px;
   margin: 0 auto 20px;
-  background: #cf4433;
+  background: var(--accent);
   border-radius: 50%;
 }
 
@@ -164,7 +164,7 @@
   width: 28px;
   height: 28px;
   border: 2px solid rgba(23, 23, 19, 0.14);
-  border-top-color: #cf4433;
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: share-card-spin 800ms linear infinite;
 }
