@@ -65,21 +65,24 @@ import {
 const RoutinesView = lazy(() =>
   import('./components/RoutinesView.jsx').then((module) => ({ default: module.RoutinesView })),
 )
+const loadProgressPlus = () => import('./components/ProgressPlus.jsx')
+const loadProgressPhotos = () => import('./components/ProgressPhotos.jsx')
+
 const TrainingCalendar = lazy(() =>
-  import('./components/ProgressPlus.jsx').then((module) => ({ default: module.TrainingCalendar })),
+  loadProgressPlus().then((module) => ({ default: module.TrainingCalendar })),
 )
 const MeasurementsPanel = lazy(() =>
-  import('./components/ProgressPlus.jsx').then((module) => ({ default: module.MeasurementsPanel })),
+  loadProgressPlus().then((module) => ({ default: module.MeasurementsPanel })),
 )
 const MuscleBreakdown = lazy(() =>
-  import('./components/ProgressPlus.jsx').then((module) => ({ default: module.MuscleBreakdown })),
+  loadProgressPlus().then((module) => ({ default: module.MuscleBreakdown })),
 )
 const ExercisePerformance = lazy(() =>
-  import('./components/ProgressPlus.jsx').then((module) => ({ default: module.ExercisePerformance })),
+  loadProgressPlus().then((module) => ({ default: module.ExercisePerformance })),
 )
 const ExerciseMuscleMap = lazy(() => import('./components/ExerciseMuscleMap.jsx'))
 const ProgressPhotos = lazy(() =>
-  import('./components/ProgressPhotos.jsx').then((module) => ({ default: module.ProgressPhotos })),
+  loadProgressPhotos().then((module) => ({ default: module.ProgressPhotos })),
 )
 const WorkoutTools = lazy(() =>
   import('./components/WorkoutTools.jsx').then((module) => ({ default: module.WorkoutTools })),
@@ -572,6 +575,10 @@ function App() {
   }
 
   const navigate = (nextView) => {
+    if (nextView === 'progress') {
+      void loadProgressPlus()
+      void loadProgressPhotos()
+    }
     setView(nextView)
     setSheet(null)
     window.scrollTo({ top: 0, behavior: 'auto' })
@@ -2317,27 +2324,33 @@ function ProgressView({
                 </div>
               </section>
             </div>
-            <MuscleBreakdown workouts={workouts} exerciseMap={exerciseMap} />
+            <Suspense fallback={<FeatureLoader compact />}>
+              <MuscleBreakdown workouts={workouts} exerciseMap={exerciseMap} />
+            </Suspense>
           </motion.div>
         )}
         {section === 'calendar' && (
           <motion.div key="calendar" {...MOTION}>
-            <TrainingCalendar workouts={workouts} onSelectWorkout={openWorkout} />
+            <Suspense fallback={<FeatureLoader compact />}>
+              <TrainingCalendar workouts={workouts} onSelectWorkout={openWorkout} />
+            </Suspense>
           </motion.div>
         )}
         {section === 'body' && (
           <motion.div key="body" {...MOTION}>
-            <MeasurementsPanel
-              measurements={measurements}
-              onAdd={addMeasurement}
-              onDelete={deleteMeasurement}
-              unit={unit}
-            />
-            <ProgressPhotos
-              photos={photos}
-              onAdd={addProgressPhoto}
-              onDelete={deleteProgressPhoto}
-            />
+            <Suspense fallback={<FeatureLoader compact />}>
+              <MeasurementsPanel
+                measurements={measurements}
+                onAdd={addMeasurement}
+                onDelete={deleteMeasurement}
+                unit={unit}
+              />
+              <ProgressPhotos
+                photos={photos}
+                onAdd={addProgressPhoto}
+                onDelete={deleteProgressPhoto}
+              />
+            </Suspense>
           </motion.div>
         )}
       </AnimatePresence>
