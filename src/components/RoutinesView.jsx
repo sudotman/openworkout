@@ -16,7 +16,6 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
-  Sparkles,
   Trash2,
   X,
 } from 'lucide-react'
@@ -853,7 +852,7 @@ function RoutinesView({
 
         <aside className="routine-program-library">
           <header className="routine-program-header">
-            <span className="routine-program-icon"><Sparkles size={17} /></span>
+            <span className="routine-program-icon"><Layers3 size={17} /></span>
             <span className="routine-program-kicker">BUILT-IN PROGRAMS</span>
             <h2>A strong place to start.</h2>
             <p>Save a ready-made session, then edit it around your equipment and goals.</p>

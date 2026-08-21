@@ -31,7 +31,6 @@ import {
   Settings,
   Share2,
   ShieldCheck,
-  Sparkles,
   Target,
   TimerReset,
   Trash2,
@@ -1671,7 +1670,7 @@ function TrainView({ workouts, routines, unit, distanceUnit, exerciseMap, hasSta
 
       {hasStarterData && (
         <div className="starter-banner">
-          <Sparkles size={16} />
+          <Database size={16} />
           <p><strong>Preview data is on.</strong> Explore the app, or clear it before your first session.</p>
           <button onClick={clearStarterData}>Clear preview</button>
         </div>

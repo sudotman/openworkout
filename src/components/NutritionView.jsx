@@ -16,7 +16,6 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
-  Sparkles,
   Target,
   Trash2,
   TrendingUp,
@@ -127,7 +126,7 @@ function DayHero({ entries, target, recommendation, onLog }) {
     <section className={`nutrition-hero ${reached ? 'is-complete' : ''}`}>
       <div className="nutrition-hero-top">
         <div>
-          <span className="nutrition-kicker"><Sparkles size={12} /> DAILY PROTEIN</span>
+          <span className="nutrition-kicker"><CircleGauge size={12} /> DAILY PROTEIN</span>
           <div className="protein-score">
             <strong>{numberLabel(totals.protein)}</strong>
             <span>g <i>/ {target}</i></span>
@@ -207,7 +206,7 @@ function SmartSuggestions({ remaining, profile, recentFoodIds, foods, onQuickAdd
     <section className="smart-suggestions">
       <div className="nutrition-section-head">
         <div>
-          <span className="nutrition-kicker"><Sparkles size={12} /> SMART PICKS</span>
+          <span className="nutrition-kicker"><Target size={12} /> SMART PICKS</span>
           <h2>{remaining > 0 ? `Easy ways to close the ${remaining}g gap` : 'Good choices for later'}</h2>
         </div>
         <small>Based on your goal and diet</small>
@@ -520,7 +519,7 @@ function GoalSetup({ profile, recommendation, onSave, linkedWeight }) {
       </section>
 
       <aside className="recommendation-card">
-        <span className="nutrition-kicker"><Sparkles size={12} /> LIVE RECOMMENDATION</span>
+        <span className="nutrition-kicker"><CircleGauge size={12} /> LIVE RECOMMENDATION</span>
         <div className="recommendation-number"><strong>{preview.target}</strong><span>grams<br />per day</span></div>
         <div className="recommendation-range"><span>Useful range</span><strong>{preview.range.low}–{preview.range.high}g</strong></div>
         <div className="formula-stack">
