@@ -58,13 +58,6 @@ export function WorkoutShareCard({ workout, unit, distanceUnit, exerciseMap, onD
   ), 0)
   const hasCardio = cardio.distanceKm > 0
   const mode = hasCardio && strengthSetCount > 0 ? 'hybrid' : hasCardio ? 'cardio' : 'strength'
-  const completedMovementCount = useMemo(() => (workout?.exercises || []).filter((item) => {
-    const exercise = exerciseMap?.get(item.exerciseId)
-    return (item.sets || []).some((set) => (
-      set.completed && (isCardioExercise(exercise) || set.type !== 'warmup')
-    ))
-  }).length, [exerciseMap, workout])
-  const hiddenMovementCount = Math.max(0, completedMovementCount - 4)
   const shareFacts = mode === 'hybrid'
     ? [
         ['DISTANCE', `${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit}`],
@@ -85,7 +78,7 @@ export function WorkoutShareCard({ workout, unit, distanceUnit, exerciseMap, onD
   const shareCopy = {
     kicker: `STORY EXPORT · ${mode.toUpperCase()}`,
     title: workout?.name || 'Workout',
-    body: `Includes your logged metrics, performance plot, and up to four named movements${hiddenMovementCount ? ` with +${hiddenMovementCount} more noted` : ''}.`,
+    body: 'Includes your logged metrics, performance plot, and a complete movement register whenever the layout has room.',
   }
 
   const filename = useMemo(() => workoutShareFilename(workout), [workout])

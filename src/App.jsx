@@ -1278,6 +1278,7 @@ function App() {
         {sheet && (
           <Sheet
             onClose={() => setSheet(null)}
+            kind={sheet.type}
             wide={sheet.type === 'picker' || sheet.type === 'exercise' || sheet.type === 'share'}
             share={sheet.type === 'share'}
             hideClose={sheet.type === 'tools' || sheet.type === 'set-options'}
@@ -2442,7 +2443,9 @@ function VolumeChart({ data }) {
   )
 }
 
-function Sheet({ children, onClose, wide = false, share = false, hideClose = false }) {
+function Sheet({ children, onClose, kind = '', wide = false, share = false, hideClose = false }) {
+  const backdropRef = useRef(null)
+
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === 'Escape') onClose()
@@ -2450,9 +2453,33 @@ function Sheet({ children, onClose, wide = false, share = false, hideClose = fal
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [onClose])
+
+  useEffect(() => {
+    if (kind !== 'picker') return undefined
+
+    const viewport = window.visualViewport
+    const syncVisualViewport = () => {
+      const backdrop = backdropRef.current
+      if (!backdrop) return
+      backdrop.style.setProperty('--visual-viewport-height', `${viewport?.height || window.innerHeight}px`)
+      backdrop.style.setProperty('--visual-viewport-top', `${viewport?.offsetTop || 0}px`)
+    }
+
+    syncVisualViewport()
+    viewport?.addEventListener('resize', syncVisualViewport)
+    viewport?.addEventListener('scroll', syncVisualViewport)
+    window.addEventListener('resize', syncVisualViewport)
+    return () => {
+      viewport?.removeEventListener('resize', syncVisualViewport)
+      viewport?.removeEventListener('scroll', syncVisualViewport)
+      window.removeEventListener('resize', syncVisualViewport)
+    }
+  }, [kind])
+
   return (
     <motion.div
-      className="sheet-backdrop"
+      ref={backdropRef}
+      className={'sheet-backdrop ' + (kind === 'picker' ? 'sheet-backdrop--picker' : '')}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -2461,7 +2488,7 @@ function Sheet({ children, onClose, wide = false, share = false, hideClose = fal
       }}
     >
       <motion.div
-        className={'sheet ' + (wide ? 'sheet--wide ' : '') + (share ? 'sheet--share' : '')}
+        className={'sheet ' + (wide ? 'sheet--wide ' : '') + (share ? 'sheet--share ' : '') + (kind === 'picker' ? 'sheet--picker' : '')}
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}

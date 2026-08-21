@@ -15,7 +15,9 @@ const INK = '#171713'
 const MUTED = '#766f62'
 const RULE = '#aaa191'
 const ACCENT = '#cf4433'
-const MAX_VISIBLE_MOVEMENTS = 4
+const MAX_PLOT_MOVEMENTS = 4
+const REGISTER_BOTTOM = 1765
+const REGISTER_ROW_HEIGHT = 68
 const KM_PER_MILE = 1.609344
 
 function fitFontSize(context, text, maxWidth, startSize, minimumSize = 32, weight = 760) {
@@ -239,7 +241,7 @@ function strengthPlotValues(data) {
   const usesVolume = data.strengthExercises.some((item) => item.volume > 0)
   return {
     usesVolume,
-    entries: data.strengthExercises.slice(0, MAX_VISIBLE_MOVEMENTS).map((item) => ({
+    entries: data.strengthExercises.slice(0, MAX_PLOT_MOVEMENTS).map((item) => ({
       label: item.name,
       value: usesVolume ? item.volume : item.setCount,
     })),
@@ -436,7 +438,12 @@ function workRows(data) {
 
 function drawWorkRegister(context, data, top) {
   const rows = workRows(data)
-  const visibleRows = rows.slice(0, MAX_VISIBLE_MOVEMENTS)
+  const firstRuleBottom = top + 99
+  const rowCapacity = Math.max(
+    1,
+    Math.floor((REGISTER_BOTTOM - firstRuleBottom) / REGISTER_ROW_HEIGHT) + 1,
+  )
+  const visibleRows = rows.slice(0, rowCapacity)
   const hiddenCount = Math.max(0, rows.length - visibleRows.length)
 
   context.fillStyle = MUTED
@@ -448,7 +455,7 @@ function drawWorkRegister(context, data, top) {
   context.textAlign = 'left'
 
   visibleRows.forEach((row, index) => {
-    const y = top + 72 + index * 68
+    const y = top + 72 + index * REGISTER_ROW_HEIGHT
     context.fillStyle = ACCENT
     context.font = '500 18px "DM Mono", monospace'
     context.fillText(String(index + 1).padStart(2, '0'), 80, y)
