@@ -4,14 +4,18 @@ import {
   ArrowLeft,
   CalendarDays,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CircleGauge,
   Flame,
   Info,
+  Leaf,
   Minus,
+  Pencil,
   Plus,
   Search,
+  SlidersHorizontal,
   Sparkles,
   Target,
   Trash2,
@@ -22,19 +26,23 @@ import {
 import {
   calculateProteinRecommendation,
   FOOD_CATALOG,
+  getNutritionFoods,
   getSmartFoodSuggestions,
   localDateKey,
   MEAL_SLOTS,
+  NUTRIENT_TARGETS,
   offsetDateKey,
   suggestedMealSlot,
   totalForEntries,
+  totalNutrientsForEntries,
 } from '../lib/nutrition.js'
 import '../nutrition.css'
 
 const TABS = [
   { id: 'today', label: 'Day' },
   { id: 'trends', label: 'Patterns' },
-  { id: 'goal', label: 'Goal setup' },
+  { id: 'foods', label: 'Foods' },
+  { id: 'goal', label: 'Goal' },
 ]
 
 const GOALS = [
@@ -144,8 +152,57 @@ function DayHero({ entries, target, recommendation, onLog }) {
   )
 }
 
-function SmartSuggestions({ remaining, profile, recentFoodIds, onQuickAdd }) {
-  const suggestions = getSmartFoodSuggestions(remaining, profile.diet, recentFoodIds)
+function nutrientValue(value, unit) {
+  if (unit === 'g') return `${Math.round(value * 10) / 10}g`
+  return `${value < 10 ? Math.round(value * 10) / 10 : Math.round(value)}mg`
+}
+
+function NutrientLens({ entries, foods }) {
+  const [expanded, setExpanded] = useState(false)
+  const totals = totalNutrientsForEntries(entries, foods)
+  const fiber = NUTRIENT_TARGETS.find((nutrient) => nutrient.id === 'fiber')
+
+  return (
+    <section className={`nutrient-lens ${expanded ? 'is-open' : ''}`}>
+      <button className="nutrient-lens-toggle" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>
+        <span className="nutrient-lens-icon"><Leaf size={16} /></span>
+        <span>
+          <strong>Micronutrients</strong>
+          <small>Fiber {nutrientValue(totals.fiber, fiber.unit)} · and more</small>
+        </span>
+        <span className="nutrient-lens-action">{expanded ? 'Hide' : 'View'} <ChevronDown size={15} /></span>
+      </button>
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            className="nutrient-lens-details"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="nutrient-lens-grid">
+              {NUTRIENT_TARGETS.map((nutrient) => {
+                const value = totals[nutrient.id] || 0
+                const progress = Math.min(100, (value / nutrient.target) * 100)
+                return (
+                  <div className="nutrient-meter" key={nutrient.id}>
+                    <div><strong>{nutrient.label}</strong><span>{nutrientValue(value, nutrient.unit)} <i>/ {nutrient.target}{nutrient.unit}</i></span></div>
+                    <span className="nutrient-meter-track"><i style={{ width: `${progress}%` }} /></span>
+                  </div>
+                )
+              })}
+            </div>
+            <p>General daily reference values. Foods without nutrient details simply leave these estimates incomplete.</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  )
+}
+
+function SmartSuggestions({ remaining, profile, recentFoodIds, foods, onQuickAdd }) {
+  const suggestions = getSmartFoodSuggestions(remaining, profile.diet, recentFoodIds, foods)
   return (
     <section className="smart-suggestions">
       <div className="nutrition-section-head">
@@ -230,13 +287,14 @@ function MealTimeline({ entries, onLog, onDelete }) {
   )
 }
 
-function DayView({ date, entries, target, recommendation, nutrition, onLog, onQuickAdd, onDelete, onCopyYesterday }) {
+function DayView({ date, entries, foods, target, recommendation, nutrition, onLog, onQuickAdd, onDelete, onCopyYesterday }) {
   const totals = totalForEntries(entries)
   const remaining = Math.max(0, target - totals.protein)
   return (
     <div className="nutrition-day-layout">
       <div className="nutrition-day-main">
         <DayHero entries={entries} target={target} recommendation={recommendation} onLog={onLog} />
+        <NutrientLens entries={entries} foods={foods} />
         {entries.length === 0 && (
           <button className="copy-yesterday" onClick={onCopyYesterday}>
             <CalendarDays size={18} />
@@ -251,6 +309,7 @@ function DayView({ date, entries, target, recommendation, nutrition, onLog, onQu
           remaining={remaining}
           profile={nutrition.profile}
           recentFoodIds={nutrition.recentFoodIds}
+          foods={foods}
           onQuickAdd={onQuickAdd}
         />
         <div className="nutrition-note">
@@ -320,6 +379,71 @@ function PatternsView({ nutrition, target }) {
           <div><small>NEXT EXPERIMENT</small><strong>Front-load 25–35g</strong><p>A stronger breakfast makes the target easier to reach without a large late meal.</p></div>
         </article>
       </section>
+    </div>
+  )
+}
+
+function FoodsView({ foods, recentFoodIds, onCreate, onEdit, onQuickLog }) {
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState('all')
+  const recent = new Set(recentFoodIds)
+  const visibleFoods = [...foods]
+    .filter((food) => {
+      const query = search.trim().toLowerCase()
+      const matchesSearch = !query || food.name.toLowerCase().includes(query) || food.detail?.toLowerCase().includes(query)
+      const matchesFilter = filter === 'all' || food.custom || food.modified
+      return matchesSearch && matchesFilter
+    })
+    .sort((left, right) => {
+      const leftRank = left.custom ? 3 : left.modified ? 2 : recent.has(left.id) ? 1 : 0
+      const rightRank = right.custom ? 3 : right.modified ? 2 : recent.has(right.id) ? 1 : 0
+      return rightRank - leftRank || left.name.localeCompare(right.name)
+    })
+
+  return (
+    <div className="foods-workspace">
+      <section className="foods-intro">
+        <div>
+          <span className="nutrition-kicker"><SlidersHorizontal size={12} /> YOUR FOOD PRESETS</span>
+          <h2>List of meals, just remember to eat.</h2>
+          <p>Edit any serving or nutrition value here for preset or custom foods.</p>
+        </div>
+        <button className="button button--accent" onClick={onCreate}><Plus size={17} /> Add food</button>
+      </section>
+
+      <div className="foods-tools">
+        <label className="food-search foods-search">
+          <Search size={18} />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search your foods" />
+          {search && <button onClick={() => setSearch('')} aria-label="Clear food search"><X size={15} /></button>}
+        </label>
+        <div className="foods-filters">
+          <button className={filter === 'all' ? 'is-active' : ''} onClick={() => setFilter('all')}>All foods</button>
+          <button className={filter === 'personal' ? 'is-active' : ''} onClick={() => setFilter('personal')}>Personalized</button>
+        </div>
+      </div>
+
+      <div className="foods-list-head"><span>{visibleFoods.length} presets</span><span>Serving nutrition</span></div>
+      <div className="foods-list">
+        {visibleFoods.map((food) => (
+          <article className="food-preset-row" key={food.id}>
+            <span className="food-monogram">{food.name.slice(0, 2).toUpperCase()}</span>
+            <div className="food-preset-main">
+              <div><strong>{food.name}</strong>{food.custom && <i>CUSTOM</i>}{food.modified && <i>EDITED</i>}</div>
+              <small>{food.detail} · {food.serving}</small>
+            </div>
+            <div className="food-preset-values">
+              <strong>{food.protein}g <span>protein</span></strong>
+              <small>{food.calories} kcal{Number(food.fiber) > 0 ? ` · ${food.fiber}g fiber` : ''}</small>
+            </div>
+            <button className="food-preset-log" onClick={() => onQuickLog(food)} aria-label={`Log ${food.name} today`}><Plus size={16} /><span>Log</span></button>
+            <button className="food-preset-edit" onClick={() => onEdit(food)} aria-label={`Edit ${food.name}`}><Pencil size={15} /></button>
+          </article>
+        ))}
+        {!visibleFoods.length && (
+          <div className="foods-empty"><Search size={22} /><strong>No foods found</strong><span>Try another search or add your own food.</span><button onClick={onCreate}>Add food</button></div>
+        )}
+      </div>
     </div>
   )
 }
@@ -413,14 +537,100 @@ function GoalSetup({ profile, recommendation, onSave, linkedWeight }) {
   )
 }
 
-function FoodLogger({ meal, onClose, onAdd, diet }) {
+function FoodEditor({ food, onClose, onSave, onDelete, onReset }) {
+  const dietLevel = food?.diets?.includes('vegan')
+    ? 'vegan'
+    : food?.diets?.includes('vegetarian')
+      ? 'vegetarian'
+      : 'omnivore'
+  const [draft, setDraft] = useState({
+    name: food?.name || '',
+    detail: food?.detail || '',
+    serving: food?.serving || '1 serving',
+    protein: food?.protein ?? '',
+    calories: food?.calories ?? '',
+    fiber: food?.fiber ?? '',
+    calcium: food?.calcium ?? '',
+    iron: food?.iron ?? '',
+    potassium: food?.potassium ?? '',
+    dietLevel,
+  })
+  const [showNutrients, setShowNutrients] = useState(Boolean(food && NUTRIENT_TARGETS.some((nutrient) => Number(food[nutrient.id]) > 0)))
+  const update = (key, value) => setDraft((current) => ({ ...current, [key]: value }))
+  const save = () => {
+    const diets = draft.dietLevel === 'vegan'
+      ? ['omnivore', 'vegetarian', 'vegan']
+      : draft.dietLevel === 'vegetarian'
+        ? ['omnivore', 'vegetarian']
+        : ['omnivore']
+    onSave({
+      ...(food || {}),
+      name: draft.name.trim(),
+      detail: draft.detail.trim() || 'Personal food',
+      serving: draft.serving.trim() || '1 serving',
+      protein: Math.max(0, Number(draft.protein) || 0),
+      calories: Math.max(0, Number(draft.calories) || 0),
+      fiber: Math.max(0, Number(draft.fiber) || 0),
+      calcium: Math.max(0, Number(draft.calcium) || 0),
+      iron: Math.max(0, Number(draft.iron) || 0),
+      potassium: Math.max(0, Number(draft.potassium) || 0),
+      diets,
+    })
+  }
+
+  return (
+    <motion.div className="food-logger-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <motion.section className="food-logger food-editor" initial={{ opacity: 0, y: 28, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 18, scale: 0.98 }} role="dialog" aria-modal="true" aria-labelledby="food-editor-title">
+        <button className="food-logger-close" onClick={onClose} aria-label="Close food editor"><X size={20} /></button>
+        <div className="food-logger-head">
+          <span className="nutrition-kicker">{food ? 'EDIT FOOD PRESET' : 'NEW FOOD PRESET'}</span>
+          <h2 id="food-editor-title">{food ? `Tune ${food.name}` : 'Add food once. Reuse it.'}</h2>
+          <p>{food?.builtIn ? 'Your changes only affect future logs; previous days stay intact.' : 'Use the values on the package or recipe.'}</p>
+        </div>
+
+        <div className="food-editor-fields">
+          <label className="food-editor-wide"><span>Food name</span><input autoFocus value={draft.name} onChange={(event) => update('name', event.target.value)} placeholder="e.g. Impact whey" /></label>
+          <label className="food-editor-wide"><span>Brand or detail</span><input value={draft.detail} onChange={(event) => update('detail', event.target.value)} placeholder="e.g. Chocolate smooth" /></label>
+          <label className="food-editor-wide"><span>Serving</span><input value={draft.serving} onChange={(event) => update('serving', event.target.value)} placeholder="e.g. 1 scoop (30 g)" /></label>
+          <label><span>Protein</span><div><input type="number" min="0" step="0.1" value={draft.protein} onChange={(event) => update('protein', event.target.value)} /><b>g</b></div></label>
+          <label><span>Calories</span><div><input type="number" min="0" value={draft.calories} onChange={(event) => update('calories', event.target.value)} /><b>kcal</b></div></label>
+        </div>
+
+        <fieldset className="food-editor-diet">
+          <legend>Fits</legend>
+          <div>{DIETS.map((diet) => <button type="button" key={diet.id} className={draft.dietLevel === diet.id ? 'is-active' : ''} onClick={() => update('dietLevel', diet.id)}>{diet.label}</button>)}</div>
+        </fieldset>
+
+        <button className="food-editor-nutrient-toggle" onClick={() => setShowNutrients((value) => !value)} aria-expanded={showNutrients}>
+          <span><Leaf size={16} /><span><strong>Fiber & micronutrients</strong><small>Optional—add them when the label provides them.</small></span></span>
+          <ChevronDown size={17} />
+        </button>
+        <AnimatePresence initial={false}>
+          {showNutrients && (
+            <motion.div className="food-editor-nutrients" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+              {NUTRIENT_TARGETS.map((nutrient) => (
+                <label key={nutrient.id}><span>{nutrient.label}</span><div><input type="number" min="0" step="0.1" value={draft[nutrient.id]} onChange={(event) => update(nutrient.id, event.target.value)} /><b>{nutrient.unit}</b></div></label>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="food-editor-actions">
+          {food?.custom && <button className="food-editor-danger" onClick={() => onDelete(food.id)}><Trash2 size={15} /> Delete preset</button>}
+          {food?.modified && <button className="food-editor-reset" onClick={() => onReset(food.id)}>Restore default</button>}
+          <button className="button button--dark" onClick={save} disabled={!draft.name.trim() || draft.protein === ''}>Save food</button>
+        </div>
+      </motion.section>
+    </motion.div>
+  )
+}
+
+function FoodLogger({ meal, onClose, onAdd, onManageFoods, diet, foods }) {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState(null)
   const [servings, setServings] = useState(1)
-  const [manual, setManual] = useState(false)
-  const [manualData, setManualData] = useState({ name: '', serving: '1 serving', protein: '', calories: '' })
   const slot = MEAL_SLOTS.find((item) => item.id === meal) || MEAL_SLOTS[0]
-  const foods = FOOD_CATALOG.filter((food) => {
+  const visibleFoods = foods.filter((food) => {
     const matchesDiet = food.diets.includes(diet)
     const query = search.trim().toLowerCase()
     return matchesDiet && (!query || food.name.toLowerCase().includes(query) || food.detail.toLowerCase().includes(query))
@@ -436,19 +646,10 @@ function FoodLogger({ meal, onClose, onAdd, diet }) {
       servings,
       protein: Math.round(selected.protein * servings),
       calories: Math.round(selected.calories * servings),
-    })
-  }
-
-  const addManual = () => {
-    if (!manualData.name.trim() || !Number(manualData.protein)) return
-    onAdd({
-      foodId: null,
-      name: manualData.name.trim(),
-      detail: 'Custom food',
-      serving: manualData.serving.trim() || '1 serving',
-      servings: 1,
-      protein: Math.round(Number(manualData.protein)),
-      calories: Math.round(Number(manualData.calories) || 0),
+      fiber: Math.round((Number(selected.fiber) || 0) * servings * 10) / 10,
+      calcium: Math.round((Number(selected.calcium) || 0) * servings),
+      iron: Math.round((Number(selected.iron) || 0) * servings * 10) / 10,
+      potassium: Math.round((Number(selected.potassium) || 0) * servings),
     })
   }
 
@@ -475,30 +676,17 @@ function FoodLogger({ meal, onClose, onAdd, diet }) {
             </div>
             <button className="button button--accent button--wide" onClick={addSelected}>Add to {slot.label.toLowerCase()}</button>
           </div>
-        ) : manual ? (
-          <div className="manual-food-step">
-            <button className="food-logger-back" onClick={() => setManual(false)}><ArrowLeft size={17} /> Food search</button>
-            <span className="nutrition-kicker">CUSTOM FOOD</span>
-            <h2 id="food-logger-title">Enter what you know</h2>
-            <p>You only need a name and protein amount.</p>
-            <label><span>Food name</span><input autoFocus value={manualData.name} onChange={(event) => setManualData((value) => ({ ...value, name: event.target.value }))} placeholder="e.g. Homemade dal" /></label>
-            <label><span>Portion</span><input value={manualData.serving} onChange={(event) => setManualData((value) => ({ ...value, serving: event.target.value }))} placeholder="e.g. 1 bowl" /></label>
-            <div className="manual-macro-fields">
-              <label><span>Protein</span><div><input type="number" min="0" value={manualData.protein} onChange={(event) => setManualData((value) => ({ ...value, protein: event.target.value }))} /><b>g</b></div></label>
-              <label><span>Calories</span><div><input type="number" min="0" value={manualData.calories} onChange={(event) => setManualData((value) => ({ ...value, calories: event.target.value }))} /><b>kcal</b></div></label>
-            </div>
-            <button className="button button--dark button--wide" onClick={addManual} disabled={!manualData.name.trim() || !Number(manualData.protein)}>Add custom food</button>
-          </div>
         ) : (
           <>
             <div className="food-logger-head">
               <span className="nutrition-kicker">LOG {slot.label.toUpperCase()}</span>
               <h2 id="food-logger-title">What did you eat?</h2>
-              <p>Search common high-protein foods or enter your own.</p>
+              <p>Search your foods, or tune the list whenever a label differs.</p>
             </div>
+            <button className="food-logger-manage" onClick={onManageFoods}><SlidersHorizontal size={16} /><span><strong>Add or edit foods</strong><small>Brands, servings and nutrition values</small></span><ChevronRight size={16} /></button>
             <label className="food-search"><Search size={18} /><input autoFocus value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search foods" />{search && <button onClick={() => setSearch('')}><X size={15} /></button>}</label>
             <div className="food-results">
-              {foods.map((food) => (
+              {visibleFoods.map((food) => (
                 <button key={food.id} onClick={() => { setSelected(food); setServings(1) }}>
                   <span className="food-monogram food-monogram--small">{food.name.slice(0, 2).toUpperCase()}</span>
                   <span><strong>{food.name}</strong><small>{food.detail} · {food.serving}</small></span>
@@ -506,9 +694,8 @@ function FoodLogger({ meal, onClose, onAdd, diet }) {
                   <ChevronRight size={16} />
                 </button>
               ))}
-              {!foods.length && <div className="food-no-results"><Search size={22} /><strong>No matching foods</strong><span>Add it as a custom food instead.</span></div>}
+              {!visibleFoods.length && <div className="food-no-results"><Search size={22} /><strong>No matching foods</strong><span>Create a reusable preset in Foods.</span></div>}
             </div>
-            <button className="manual-food-button" onClick={() => setManual(true)}><Plus size={16} /> Enter a custom food</button>
           </>
         )}
       </motion.section>
@@ -520,7 +707,9 @@ export function NutritionView({ nutrition, updateNutrition, latestWeightKg, noti
   const [tab, setTab] = useState('today')
   const [date, setDate] = useState(localDateKey())
   const [loggerMeal, setLoggerMeal] = useState(null)
+  const [foodEditor, setFoodEditor] = useState(null)
   const recommendation = useMemo(() => calculateProteinRecommendation(nutrition.profile), [nutrition.profile])
+  const foods = useMemo(() => getNutritionFoods(nutrition), [nutrition])
   const target = recommendation.target
   const dayEntries = useMemo(
     () => nutrition.entries.filter((entry) => entry.date === date),
@@ -534,8 +723,8 @@ export function NutritionView({ nutrition, updateNutrition, latestWeightKg, noti
     if (nextKey <= localDateKey()) setDate(nextKey)
   }
 
-  const addFood = (food, meal = loggerMeal || suggestedMealSlot()) => {
-    const entry = { ...food, id: makeId('food'), date, meal, createdAt: new Date().toISOString() }
+  const addFood = (food, meal = loggerMeal || suggestedMealSlot(), entryDate = date) => {
+    const entry = { ...food, id: makeId('food'), date: entryDate, meal, createdAt: new Date().toISOString() }
     updateNutrition((current) => ({
       ...current,
       entries: [...current.entries, entry],
@@ -548,6 +737,53 @@ export function NutritionView({ nutrition, updateNutrition, latestWeightKg, noti
   }
 
   const quickAdd = (food) => addFood({ ...food, foodId: food.id, servings: 1 }, suggestedMealSlot())
+
+  const quickLogPreset = (food) => {
+    const today = localDateKey()
+    addFood({ ...food, foodId: food.id, servings: 1 }, suggestedMealSlot(), today)
+    setDate(today)
+    setTab('today')
+  }
+
+  const saveFoodPreset = (food) => {
+    const id = food.id || makeId('food-preset')
+    const { builtIn, custom, modified, ...savedFood } = { ...food, id }
+    const isBuiltIn = FOOD_CATALOG.some((item) => item.id === id)
+    updateNutrition((current) => isBuiltIn
+      ? {
+          ...current,
+          foodOverrides: { ...current.foodOverrides, [id]: savedFood },
+        }
+      : {
+          ...current,
+          customFoods: current.customFoods.some((item) => item.id === id)
+            ? current.customFoods.map((item) => item.id === id ? savedFood : item)
+            : [savedFood, ...current.customFoods],
+        })
+    setFoodEditor(null)
+    notify(isBuiltIn ? `${food.name} updated for future logs` : `${food.name} saved to your foods`)
+  }
+
+  const resetFoodPreset = (id) => {
+    const name = foods.find((food) => food.id === id)?.name || 'Food'
+    updateNutrition((current) => {
+      const foodOverrides = { ...current.foodOverrides }
+      delete foodOverrides[id]
+      return { ...current, foodOverrides }
+    })
+    setFoodEditor(null)
+    notify(`${name} restored to default`)
+  }
+
+  const deleteFoodPreset = (id) => {
+    updateNutrition((current) => ({
+      ...current,
+      customFoods: current.customFoods.filter((food) => food.id !== id),
+      recentFoodIds: current.recentFoodIds.filter((foodId) => foodId !== id),
+    }))
+    setFoodEditor(null)
+    notify('Food preset deleted; past logs were kept')
+  }
 
   const deleteFood = (id) => {
     updateNutrition((current) => ({ ...current, entries: current.entries.filter((entry) => entry.id !== id) }))
@@ -579,7 +815,12 @@ export function NutritionView({ nutrition, updateNutrition, latestWeightKg, noti
           <h1>Protein, on track.</h1>
           <p>Build meals around one useful number and keep the rest refreshingly simple.</p>
         </div>
-        <button className="button button--dark nutrition-log-desktop" onClick={() => setLoggerMeal(suggestedMealSlot())}><Plus size={17} /> Log food</button>
+        <button
+          className="button button--dark nutrition-log-desktop"
+          onClick={() => tab === 'foods' ? setFoodEditor({ food: null }) : setLoggerMeal(suggestedMealSlot())}
+        >
+          <Plus size={17} /> {tab === 'foods' ? 'Add food' : 'Log food'}
+        </button>
       </header>
 
       <div className="nutrition-toolbar">
@@ -601,6 +842,7 @@ export function NutritionView({ nutrition, updateNutrition, latestWeightKg, noti
             <DayView
               date={date}
               entries={dayEntries}
+              foods={foods}
               target={target}
               recommendation={recommendation}
               nutrition={nutrition}
@@ -611,6 +853,15 @@ export function NutritionView({ nutrition, updateNutrition, latestWeightKg, noti
             />
           )}
           {tab === 'trends' && <PatternsView nutrition={nutrition} target={target} />}
+          {tab === 'foods' && (
+            <FoodsView
+              foods={foods}
+              recentFoodIds={nutrition.recentFoodIds}
+              onCreate={() => setFoodEditor({ food: null })}
+              onEdit={(food) => setFoodEditor({ food })}
+              onQuickLog={quickLogPreset}
+            />
+          )}
           {tab === 'goal' && <GoalSetup profile={nutrition.profile} recommendation={recommendation} onSave={saveProfile} linkedWeight={latestWeightKg} />}
         </motion.div>
       </AnimatePresence>
@@ -618,7 +869,28 @@ export function NutritionView({ nutrition, updateNutrition, latestWeightKg, noti
       <button className="nutrition-fab" onClick={() => setLoggerMeal(suggestedMealSlot())}><Plus size={20} /><span>Log food</span></button>
 
       <AnimatePresence>
-        {loggerMeal && <FoodLogger meal={loggerMeal} diet={nutrition.profile.diet} onClose={() => setLoggerMeal(null)} onAdd={(food) => addFood(food, loggerMeal)} />}
+        {loggerMeal && (
+          <FoodLogger
+            meal={loggerMeal}
+            diet={nutrition.profile.diet}
+            foods={foods}
+            onClose={() => setLoggerMeal(null)}
+            onAdd={(food) => addFood(food, loggerMeal)}
+            onManageFoods={() => { setLoggerMeal(null); setTab('foods') }}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {foodEditor && (
+          <FoodEditor
+            key={foodEditor.food?.id || 'new-food'}
+            food={foodEditor.food}
+            onClose={() => setFoodEditor(null)}
+            onSave={saveFoodPreset}
+            onDelete={deleteFoodPreset}
+            onReset={resetFoodPreset}
+          />
+        )}
       </AnimatePresence>
     </div>
   )
