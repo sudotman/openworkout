@@ -36,6 +36,7 @@ import {
   TimerReset,
   Trash2,
   Upload,
+  Utensils,
   Wrench,
   X,
   Zap,
@@ -61,6 +62,7 @@ import {
   isCardioExercise,
   workoutIsCardioOnly,
 } from './lib/cardio.js'
+import { createInitialNutritionState, normalizeNutritionState } from './lib/nutrition.js'
 
 const RoutinesView = lazy(() =>
   import('./components/RoutinesView.jsx').then((module) => ({ default: module.RoutinesView })),
@@ -96,12 +98,16 @@ const WorkoutShareCard = lazy(() =>
 const CardioTracker = lazy(() =>
   import('./components/CardioTracker.jsx').then((module) => ({ default: module.CardioTracker })),
 )
+const NutritionView = lazy(() =>
+  import('./components/NutritionView.jsx').then((module) => ({ default: module.NutritionView })),
+)
 
 const NAV_ITEMS = [
   { id: 'train', label: 'Train', icon: Dumbbell },
   { id: 'routines', label: 'Routines', icon: ClipboardList },
   { id: 'history', label: 'History', icon: History },
   { id: 'library', label: 'Exercises', icon: BookOpen },
+  { id: 'nutrition', label: 'Protein', icon: Utensils },
   { id: 'progress', label: 'Progress', icon: BarChart3 },
 ]
 
@@ -214,6 +220,7 @@ function createInitialState() {
       { id: uid('measure'), date: daysAgoIso(0, 8, 0).slice(0, 10), weight: 75.8, bodyFat: 15.8, waist: 81.5, chest: 101.5, arm: 35.3, thigh: 57.2 },
     ],
     progressPhotos: [],
+    nutrition: createInitialNutritionState(),
     customExercises: [],
     hasStarterData: true,
     activeWorkout: null,
@@ -279,14 +286,36 @@ function createInitialState() {
 function normalizeState(state) {
   const fallback = createInitialState()
   if (!state || typeof state !== 'object') return fallback
+  const measurements = Array.isArray(state.measurements) ? state.measurements : fallback.measurements
+  let nutrition = state.nutrition
+    ? normalizeNutritionState(state.nutrition)
+    : state.hasStarterData === false
+      ? { ...fallback.nutrition, entries: [], recentFoodIds: [] }
+      : fallback.nutrition
+
+  if (!state.nutrition) {
+    const latestMeasurement = measurements
+      .filter((entry) => Number(entry.weight) > 0)
+      .sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())[0]
+    if (latestMeasurement) {
+      const storedWeight = Number(latestMeasurement.weight)
+      const weightKg = state.settings?.unit === 'lb' ? storedWeight / 2.2046226218 : storedWeight
+      nutrition = {
+        ...nutrition,
+        profile: { ...nutrition.profile, weightKg: Math.round(weightKg * 10) / 10 },
+      }
+    }
+  }
+
   return {
     ...fallback,
     ...state,
     version: 1,
     workouts: Array.isArray(state.workouts) ? state.workouts : fallback.workouts,
     routines: Array.isArray(state.routines) ? state.routines : fallback.routines,
-    measurements: Array.isArray(state.measurements) ? state.measurements : fallback.measurements,
+    measurements,
     progressPhotos: Array.isArray(state.progressPhotos) ? state.progressPhotos : [],
+    nutrition,
     customExercises: Array.isArray(state.customExercises) ? state.customExercises : [],
     hasStarterData: Boolean(state.hasStarterData),
     activeWorkout: state.activeWorkout || null,
@@ -486,6 +515,14 @@ function App() {
     [allExercises],
   )
   const elapsedSeconds = calculateElapsed(activeWorkout, now)
+  const latestWeightKg = useMemo(() => {
+    const measurement = appState.measurements
+      .filter((entry) => Number(entry.weight) > 0)
+      .sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())[0]
+    if (!measurement) return null
+    const value = Number(measurement.weight)
+    return Math.round((appState.settings.unit === 'lb' ? value / 2.2046226218 : value) * 10) / 10
+  }, [appState.measurements, appState.settings.unit])
 
   useEffect(() => {
     saveAppState(appState)
@@ -876,6 +913,9 @@ function App() {
         hasStarterData: false,
         workouts: [finished, ...state.workouts.filter((workout) => !workout.isSample)],
         measurements: state.hasStarterData ? [] : state.measurements,
+        nutrition: state.hasStarterData
+          ? { ...state.nutrition, entries: state.nutrition.entries.filter((entry) => !entry.isSample) }
+          : state.nutrition,
       }
     })
     setRestRemaining(null)
@@ -938,8 +978,24 @@ function App() {
     setAppState((state) => ({
       ...state,
       measurements: [{ ...entry, id: uid('measure') }, ...state.measurements],
+      nutrition: Number(entry.weight) > 0
+        ? {
+            ...state.nutrition,
+            profile: {
+              ...state.nutrition.profile,
+              weightKg: Math.round((state.settings.unit === 'lb' ? Number(entry.weight) / 2.2046226218 : Number(entry.weight)) * 10) / 10,
+            },
+          }
+        : state.nutrition,
     }))
     notify('Measurement saved')
+  }
+
+  const updateNutrition = (updater) => {
+    setAppState((state) => ({
+      ...state,
+      nutrition: typeof updater === 'function' ? updater(state.nutrition) : updater,
+    }))
   }
 
   const deleteMeasurement = (id) => {
@@ -1156,6 +1212,10 @@ function App() {
       hasStarterData: false,
       workouts: state.workouts.filter((workout) => !workout.isSample),
       measurements: [],
+      nutrition: {
+        ...state.nutrition,
+        entries: state.nutrition.entries.filter((entry) => !entry.isSample),
+      },
     }))
     notify('Starter data cleared')
   }
@@ -1237,6 +1297,14 @@ function App() {
                   allExercises={allExercises}
                   openExercise={(exerciseId) => setSheet({ type: 'exercise', exerciseId })}
                   openCreate={() => setSheet({ type: 'custom-exercise' })}
+                />
+              )}
+              {view === 'nutrition' && (
+                <NutritionView
+                  nutrition={appState.nutrition}
+                  updateNutrition={updateNutrition}
+                  latestWeightKg={latestWeightKg}
+                  notify={notify}
                 />
               )}
               {view === 'progress' && (

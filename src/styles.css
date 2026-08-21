@@ -465,7 +465,7 @@ p {
   bottom: 0;
   left: 0;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   height: calc(70px + env(safe-area-inset-bottom));
   padding: 7px 7px env(safe-area-inset-bottom);
   color: color-mix(in srgb, var(--sidebar-text) 55%, transparent);
@@ -486,7 +486,7 @@ p {
   background: transparent;
   border: 0;
   border-radius: 10px;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 600;
   letter-spacing: 0.01em;
 }
