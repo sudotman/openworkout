@@ -28,7 +28,7 @@
 .muscle-map-key span,
 .muscle-map-figure figcaption,
 .muscle-map-note {
-  font: 500 8px/1.2 var(--mono);
+  font: 500 9px/1.2 var(--mono);
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
@@ -85,7 +85,7 @@
 
 .muscle-map-figure path {
   cursor: default !important;
-  transition: fill 260ms ease, filter 260ms ease;
+  transition: fill 240ms ease, filter 240ms ease;
 }
 
 .muscle-map-figure path[fill="var(--accent)"] {

@@ -1,14 +1,7 @@
 .photo-module {
-  --photo-ink: var(--ink, #171914);
-  --photo-muted: var(--muted, #72766d);
-  --photo-muted-2: var(--muted-2, #a1a49c);
-  --photo-surface: var(--surface-raised, #fbfaf5);
-  --photo-surface-alt: var(--surface-alt, #e9e8df);
-  --photo-line: var(--line, #d9d9d0);
-  --photo-accent: var(--accent, #d9ff4f);
-  color: var(--photo-ink);
-  background: var(--photo-surface);
-  border: 1px solid var(--photo-line);
+  color: var(--ink);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
   border-radius: 19px;
   overflow: hidden;
 }
@@ -31,7 +24,7 @@
   justify-content: space-between;
   padding: 21px 18px 17px;
   gap: 14px;
-  border-bottom: 1px solid var(--photo-line);
+  border-bottom: 1px solid var(--line);
 }
 
 .photo-header > div {
@@ -48,16 +41,9 @@
 .photo-header p {
   max-width: 280px;
   margin: 7px 0 0;
-  color: var(--photo-muted);
+  color: var(--muted);
   font-size: 9px;
   line-height: 1.4;
-}
-
-.photo-kicker {
-  display: block;
-  color: var(--photo-muted);
-  font: 500 7px/1 var(--mono, ui-monospace, monospace);
-  letter-spacing: 0.1em;
 }
 
 .photo-button,
@@ -69,7 +55,7 @@
   justify-content: center;
   padding: 0 14px;
   gap: 7px;
-  color: var(--photo-ink);
+  color: var(--ink);
   background: transparent;
   border: 0;
   border-radius: 11px;
@@ -86,12 +72,12 @@
 
 .photo-button--accent {
   color: var(--accent-ink);
-  background: var(--photo-accent);
+  background: var(--accent);
 }
 
 .photo-button--outline {
-  background: var(--photo-surface);
-  border: 1px solid var(--photo-line);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
 }
 
 .photo-button--wide {
@@ -100,8 +86,8 @@
 }
 
 .photo-button:disabled {
-  color: var(--photo-muted-2);
-  background: var(--photo-surface-alt);
+  color: var(--muted-2);
+  background: var(--surface-alt);
   border-color: transparent;
   cursor: not-allowed;
 }
@@ -109,8 +95,8 @@
 .photo-icon-button {
   width: 40px;
   padding: 0;
-  color: var(--photo-muted);
-  background: var(--photo-surface-alt);
+  color: var(--muted);
+  background: var(--surface-alt);
 }
 
 .photo-button:not(:disabled):active,
@@ -126,7 +112,7 @@
   align-items: center;
   padding: 10px 18px;
   gap: 10px;
-  color: var(--photo-ink);
+  color: var(--ink);
   background: var(--accent-soft);
   border-bottom: 1px solid var(--accent-ring);
 }
@@ -136,20 +122,20 @@
 }
 
 .photo-privacy-note span {
-  font-size: 8px;
+  font-size: 9px;
   line-height: 1.45;
 }
 
 .photo-privacy-note strong {
   display: block;
-  color: var(--photo-ink);
+  color: var(--ink);
   font-size: 9px;
 }
 
 .photo-add-form {
   overflow: hidden;
-  background: var(--photo-surface-alt);
-  border-bottom: 1px solid var(--photo-line);
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
 }
 
 .photo-add-inner {
@@ -169,16 +155,16 @@
   place-items: center;
   overflow: hidden;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--photo-surface) 75%, transparent), color-mix(in srgb, var(--photo-surface-alt) 80%, transparent)),
-    var(--photo-surface-alt);
-  border: 1px dashed var(--photo-line);
+    linear-gradient(135deg, color-mix(in srgb, var(--surface-raised) 75%, transparent), color-mix(in srgb, var(--surface-alt) 80%, transparent)),
+    var(--surface-alt);
+  border: 1px dashed var(--line);
   border-radius: 14px;
 }
 
 .photo-picker--ready {
-  background: #161814;
+  background: var(--sidebar);
   border-style: solid;
-  border-color: #161814;
+  border-color: var(--sidebar);
 }
 
 .photo-picker > img {
@@ -188,7 +174,7 @@
   max-height: 480px;
   aspect-ratio: 3 / 4;
   object-fit: contain;
-  background: #161814;
+  background: var(--sidebar);
 }
 
 .photo-picker-empty {
@@ -205,7 +191,7 @@
   height: 53px;
   margin-bottom: 13px;
   place-items: center;
-  background: var(--photo-accent);
+  background: var(--accent);
   border-radius: 50%;
 }
 
@@ -215,8 +201,8 @@
 
 .photo-picker-empty small {
   margin-top: 5px;
-  color: var(--photo-muted);
-  font-size: 8px;
+  color: var(--muted);
+  font-size: 9px;
 }
 
 .photo-picker-hitbox {
@@ -255,7 +241,7 @@
   left: 0;
   height: 3px;
   overflow: hidden;
-  background: color-mix(in srgb, var(--photo-ink) 8%, transparent);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
 .photo-processing-bar::after {
@@ -263,7 +249,7 @@
   display: block;
   width: 40%;
   height: 100%;
-  background: var(--photo-accent);
+  background: var(--accent);
   animation: photo-processing 1s ease-in-out infinite;
 }
 
@@ -288,8 +274,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--photo-muted);
-  font-size: 8px;
+  color: var(--muted);
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -298,15 +284,15 @@
   width: 100%;
   height: 45px;
   padding: 0 11px;
-  color: var(--photo-ink);
-  background: var(--photo-surface);
-  border: 1px solid var(--photo-line);
+  color: var(--ink);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
   border-radius: 10px;
-  font: 500 11px/1 var(--mono, ui-monospace, monospace);
+  font: 500 11px/1 var(--mono);
 }
 
 .photo-field input:focus {
-  border-color: var(--photo-muted-2);
+  border-color: var(--muted-2);
   box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
@@ -328,10 +314,10 @@
   align-items: center;
   padding: 8px 10px;
   gap: 8px;
-  color: var(--photo-muted);
+  color: var(--muted);
   background: rgba(233, 232, 223, 0.65);
   border-radius: 9px;
-  font-size: 7px;
+  font-size: 9px;
   line-height: 1.4;
 }
 
@@ -342,18 +328,18 @@
 .photo-error {
   margin: 12px 0 0;
   padding: 9px 11px;
-  color: #963f36;
-  background: rgba(201, 79, 67, 0.08);
-  border: 1px solid rgba(201, 79, 67, 0.14);
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 16%, transparent);
   border-radius: 9px;
-  font-size: 8px;
+  font-size: 9px;
   line-height: 1.4;
 }
 
 .photo-error--standalone {
   margin: 0;
   border: 0;
-  border-top: 1px solid rgba(201, 79, 67, 0.14);
+  border-top: 1px solid color-mix(in srgb, var(--danger) 14%, transparent);
   border-radius: 0;
 }
 
@@ -364,7 +350,7 @@
   justify-content: space-between;
   padding: 12px 16px;
   gap: 14px;
-  border-bottom: 1px solid var(--photo-line);
+  border-bottom: 1px solid var(--line);
 }
 
 .photo-gallery-toolbar > div {
@@ -379,26 +365,26 @@
 }
 
 .photo-gallery-toolbar span {
-  color: var(--photo-muted);
-  font: 500 7px/1 var(--mono, ui-monospace, monospace);
+  color: var(--muted);
+  font: 500 9px/1 var(--mono);
   text-transform: uppercase;
 }
 
 .photo-compare-toggle {
   min-height: 36px;
-  color: var(--photo-muted);
-  background: var(--photo-surface-alt);
+  color: var(--muted);
+  background: var(--surface-alt);
 }
 
 .photo-compare-toggle--active {
-  color: var(--photo-ink);
-  background: var(--photo-accent);
+  color: var(--ink);
+  background: var(--accent);
 }
 
 .photo-compare-panel {
   overflow: hidden;
-  background: #171914;
-  color: white;
+  background: var(--sidebar);
+  color: var(--sidebar-text);
 }
 
 .photo-compare-head {
@@ -427,8 +413,8 @@
 }
 
 .photo-compare-head > span {
-  color: var(--photo-accent);
-  font: 500 7px/1 var(--mono, ui-monospace, monospace);
+  color: var(--accent);
+  font: 500 9px/1 var(--mono);
   white-space: nowrap;
 }
 
@@ -443,7 +429,7 @@
   position: relative;
   min-width: 0;
   margin: 0;
-  background: #11130f;
+  background: var(--sidebar);
 }
 
 .photo-compare-grid img {
@@ -463,7 +449,7 @@
   background: rgba(17, 19, 15, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 7px;
-  font: 500 7px/1 var(--mono, ui-monospace, monospace);
+  font: 500 9px/1 var(--mono);
   text-align: center;
   backdrop-filter: blur(8px);
 }
@@ -478,7 +464,7 @@
   color: rgba(255, 255, 255, 0.34);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.035), transparent),
-    #11130f;
+    var(--sidebar);
 }
 
 .photo-compare-placeholder span {
@@ -489,11 +475,11 @@
   place-items: center;
   border: 1px dashed rgba(255, 255, 255, 0.25);
   border-radius: 50%;
-  font: 500 9px/1 var(--mono, ui-monospace, monospace);
+  font: 500 9px/1 var(--mono);
 }
 
 .photo-compare-placeholder small {
-  font-size: 7px;
+  font-size: 9px;
 }
 
 .photo-gallery {
@@ -501,7 +487,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   padding: 1px;
   gap: 1px;
-  background: var(--photo-line);
+  background: var(--line);
 }
 
 .photo-tile {
@@ -509,7 +495,7 @@
   min-width: 0;
   margin: 0;
   overflow: hidden;
-  background: var(--photo-surface);
+  background: var(--surface-raised);
 }
 
 .photo-image-button {
@@ -518,7 +504,7 @@
   width: 100%;
   padding: 0;
   overflow: hidden;
-  background: #191b17;
+  background: var(--sidebar);
   border: 0;
   cursor: default;
 }
@@ -536,7 +522,7 @@
   width: 100%;
   aspect-ratio: 3 / 4;
   object-fit: cover;
-  transition: transform 240ms ease, opacity 180ms ease;
+  transition: transform 240ms ease, opacity 170ms ease;
 }
 
 .photo-gallery--selecting .photo-image-button img {
@@ -560,14 +546,14 @@
   background: rgba(17, 19, 15, 0.54);
   border: 1px solid rgba(255, 255, 255, 0.64);
   border-radius: 50%;
-  font: 700 9px/1 var(--mono, ui-monospace, monospace);
+  font: 700 9px/1 var(--mono);
   backdrop-filter: blur(8px);
 }
 
 .photo-select-mark--active {
-  color: var(--photo-ink);
-  background: var(--photo-accent);
-  border-color: var(--photo-accent);
+  color: var(--ink);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .photo-tile figcaption {
@@ -591,8 +577,8 @@
 }
 
 .photo-tile figcaption small {
-  color: var(--photo-muted);
-  font: 500 7px/1 var(--mono, ui-monospace, monospace);
+  color: var(--muted);
+  font: 500 9px/1 var(--mono);
 }
 
 .photo-tile figcaption > button {
@@ -601,7 +587,7 @@
   height: 33px;
   padding: 0;
   place-items: center;
-  color: var(--photo-muted-2);
+  color: var(--muted-2);
   background: transparent;
   border: 0;
   border-radius: 9px;
@@ -609,8 +595,8 @@
 }
 
 .photo-tile figcaption > button:hover {
-  color: #c94f43;
-  background: rgba(201, 79, 67, 0.07);
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
 }
 
 .photo-delete-confirm {
@@ -635,7 +621,7 @@
 .photo-delete-confirm > span {
   margin-top: 5px;
   color: rgba(255, 255, 255, 0.55);
-  font-size: 7px;
+  font-size: 9px;
 }
 
 .photo-delete-confirm > div {
@@ -651,15 +637,15 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 8px;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
   cursor: pointer;
 }
 
 .photo-delete-confirm button:last-child {
-  color: white;
-  background: #b64c42;
-  border-color: #b64c42;
+  color: var(--danger-ink);
+  background: var(--danger);
+  border-color: var(--danger);
 }
 
 .photo-empty {
@@ -678,8 +664,8 @@
   height: 52px;
   margin-bottom: 14px;
   place-items: center;
-  color: var(--photo-ink);
-  background: var(--photo-accent);
+  color: var(--ink);
+  background: var(--accent);
   border-radius: 50%;
 }
 
@@ -691,7 +677,7 @@
 .photo-empty p {
   max-width: 310px;
   margin: 7px 0 17px;
-  color: var(--photo-muted);
+  color: var(--muted);
   font-size: 9px;
   line-height: 1.5;
 }
@@ -702,9 +688,9 @@
   align-items: flex-start;
   padding: 14px 17px;
   gap: 10px;
-  color: var(--photo-muted);
-  background: var(--photo-surface-alt);
-  border-top: 1px solid var(--photo-line);
+  color: var(--muted);
+  background: var(--surface-alt);
+  border-top: 1px solid var(--line);
 }
 
 .photo-storage-note svg {
@@ -714,15 +700,15 @@
 
 .photo-storage-note p {
   margin: 0;
-  font-size: 7px;
+  font-size: 9px;
   line-height: 1.55;
 }
 
 .photo-storage-note strong {
   display: block;
   margin-bottom: 2px;
-  color: var(--photo-ink);
-  font-size: 8px;
+  color: var(--ink);
+  font-size: 9px;
 }
 
 @media (min-width: 560px) {

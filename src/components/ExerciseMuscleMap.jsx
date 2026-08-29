@@ -80,7 +80,6 @@ export default function ExerciseMuscleMap({ exercise }) {
     >
       <header className="muscle-map-head">
         <div>
-          <span>TARGET MAP</span>
           <h3 id={'muscle-map-' + exercise.id}>Muscles worked</h3>
         </div>
         <p>Front + back</p>
@@ -107,7 +106,7 @@ export default function ExerciseMuscleMap({ exercise }) {
       </div>
 
       <p className="muscle-map-note">
-        Simplified training reference—not a diagnostic or medical illustration.
+        A simplified training reference, not a medical illustration.
       </p>
     </motion.section>
   )

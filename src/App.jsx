@@ -2,7 +2,9 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
   Activity,
+  ArrowDown,
   ArrowLeft,
+  ArrowUp,
   BarChart3,
   BookOpen,
   Check,
@@ -19,10 +21,8 @@ import {
   History,
   Info,
   ListPlus,
-  LockKeyhole,
   Link2,
   Minus,
-  MoreVertical,
   Palette,
   Pause,
   Play,
@@ -31,11 +31,11 @@ import {
   Settings,
   Share2,
   ShieldCheck,
-  Target,
   TimerReset,
   Trash2,
   Upload,
   Utensils,
+  Volume2,
   Wrench,
   X,
   Zap,
@@ -500,6 +500,7 @@ function App() {
   const [toast, setToast] = useState('')
   const [now, setNow] = useState(Date.now())
   const [restRemaining, setRestRemaining] = useState(null)
+  const [restTotal, setRestTotal] = useState(90)
   const [installPrompt, setInstallPrompt] = useState(null)
   const importInputRef = useRef(null)
   const wakeLockRef = useRef(null)
@@ -743,7 +744,9 @@ function App() {
 
     if (willComplete) {
       if (!isCardioExercise(exerciseMap.get(item?.exerciseId))) {
-        setRestRemaining(item?.restSeconds || appState.settings.restSeconds)
+        const restLength = item?.restSeconds || appState.settings.restSeconds
+        setRestTotal(restLength)
+        setRestRemaining(restLength)
       }
       window.navigator?.vibrate?.(35)
       const weight = Number(targetSet?.weight) || 0
@@ -1009,7 +1012,7 @@ function App() {
     const nextPhotos = [{ ...photo, id: photo.id || uid('photo') }, ...appState.progressPhotos].slice(0, 12)
     const candidate = { ...appState, progressPhotos: nextPhotos }
     if (JSON.stringify(candidate).length > 4_500_000) {
-      notify('Photo storage is full—export a backup, then remove an older photo')
+      notify('Photo storage is full. Export a backup, then remove an older photo.')
       return
     }
     setAppState(candidate)
@@ -1336,7 +1339,9 @@ function App() {
         {restRemaining !== null && (
           <RestTimer
             remaining={restRemaining}
+            total={restTotal}
             setRemaining={setRestRemaining}
+            setTotal={setRestTotal}
           />
         )}
       </AnimatePresence>
@@ -1571,15 +1576,15 @@ function Sidebar({ view, navigate, activeWorkout, openSettings }) {
         <div className="privacy-note">
           <ShieldCheck size={17} />
           <div>
-            <strong>Private by design</strong>
-            <span>Saved on this device</span>
+            <strong>Saved on this device</strong>
+            <span>No account, no sync</span>
           </div>
         </div>
         <button className="side-nav-item" onClick={openSettings}>
           <Settings size={19} strokeWidth={1.8} />
           <span>Settings & data</span>
         </button>
-        <div className="sidebar-signature">SATYAM.LOL · LOCAL FIRST</div>
+        <div className="sidebar-signature">SATYAM.LOL</div>
       </div>
     </aside>
   )
@@ -1591,7 +1596,7 @@ function MobileTopBar({ openSettings, activeWorkout }) {
       <Brand compact />
       <div className="mobile-topbar-actions">
         {activeWorkout && (
-          <span className="mobile-live"><i /> LIVE</span>
+          <span className="mobile-live"><i /> session ongoing</span>
         )}
         <button className="icon-button" onClick={openSettings} aria-label="Open settings">
           <Settings size={20} />
@@ -1654,13 +1659,17 @@ function TrainView({ workouts, routines, unit, distanceUnit, exerciseMap, hasSta
     }
   }, { distanceKm: 0 })
   const latestCardio = latestWorkout ? getCardioSummary(latestWorkout, exerciseMap) : null
+  const featuredRoutine = getStoredRoutine(TEMPLATES[0])
+  const featuredCount = featuredRoutine.exerciseIds?.length || 0
+  const featuredLast = workouts.find(
+    (workout) => workout.sourceRoutineId === featuredRoutine.id || workout.name === featuredRoutine.name,
+  )
 
   return (
     <div className="train-view content-width">
       <ViewHeader
         eyebrow={formatDate(new Date(), { weekday: 'long', day: 'numeric', month: 'long' })}
         title={getGreeting() + '.'}
-        subtitle="Your next session is ready. Adjust anything as you go."
         action={
           <button className="button button--dark desktop-action" onClick={() => startWorkout(null)}>
             <Plus size={17} /> Empty workout
@@ -1671,33 +1680,30 @@ function TrainView({ workouts, routines, unit, distanceUnit, exerciseMap, hasSta
       {hasStarterData && (
         <div className="starter-banner">
           <Database size={16} />
-          <p><strong>Preview data is on.</strong> Explore the app, or clear it before your first session.</p>
-          <button onClick={clearStarterData}>Clear preview</button>
+          <p><strong>Sample data is loaded.</strong> Clear it before you log your first session.</p>
+          <button onClick={clearStarterData}>Clear</button>
         </div>
       )}
 
       <div className="train-layout">
         <div className="train-primary">
-          <motion.section
-            className="session-hero"
-            whileHover={{ y: -2 }}
-            transition={{ duration: 0.22 }}
-          >
-            <div className="session-hero-image" aria-hidden="true" />
-            <div className="session-hero-shade" />
+          <section className="session-hero">
             <div className="session-hero-content">
-              <div className="hero-label"><Zap size={14} fill="currentColor" /> NEXT WORKOUT</div>
-              <h2>Upper<br />strength</h2>
+              <h2>{featuredRoutine.name}</h2>
               <div className="hero-meta">
-                <span>4 exercises</span>
-                <span>~55 min</span>
+                <span>{featuredCount} {featuredCount === 1 ? 'exercise' : 'exercises'}</span>
+                <span>
+                  {featuredLast
+                    ? 'Last trained ' + formatDate(featuredLast.startedAt, { day: 'numeric', month: 'short' })
+                    : 'Not trained yet'}
+                </span>
               </div>
-              <button className="button button--accent button--large" onClick={() => startWorkout(getStoredRoutine(TEMPLATES[0]))}>
+              <button className="button button--accent button--large" onClick={() => startWorkout(featuredRoutine)}>
                 <Play size={18} fill="currentColor" />
                 Start workout
               </button>
             </div>
-          </motion.section>
+          </section>
 
           <section className="section-block">
             <div className="section-heading">
@@ -1768,7 +1774,6 @@ function TrainView({ workouts, routines, unit, distanceUnit, exerciseMap, hasSta
           <section className="recent-panel">
             <div className="section-heading section-heading--small">
               <div>
-                <span className="section-kicker">RECENT</span>
                 <h2>Last workout</h2>
               </div>
             </div>
@@ -1830,7 +1835,7 @@ function LiveWorkout({
     <div className="live-workout content-width content-width--narrow">
       <div className="live-header">
         <div className="live-status">
-          <span><i /> WORKOUT IN PROGRESS</span>
+          <span><i /> Workout in progress</span>
           <button className="live-timer-button" onClick={toggleWorkoutTimer}>
             {workout.pausedAt ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
             <strong>{formatDuration(elapsedSeconds)}</strong>
@@ -1849,7 +1854,7 @@ function LiveWorkout({
               <Wrench size={19} />
             </button>
             <button className="icon-button icon-button--light" onClick={openDiscard} aria-label="Workout options">
-              <MoreVertical size={21} />
+              <Ellipsis size={21} />
             </button>
           </div>
         </div>
@@ -1927,7 +1932,7 @@ function LiveWorkout({
                 <span>SET</span>
                 <span>PREVIOUS</span>
                 <span>{trackingType === 'duration' ? 'SECONDS' : unit.toUpperCase()}</span>
-                <span>{trackingType === 'distance' ? 'METERS' : trackingType === 'duration' ? '—' : 'REPS'}</span>
+                <span>{trackingType === 'distance' ? 'METERS' : trackingType === 'duration' ? '' : 'REPS'}</span>
                 <span>RPE</span>
                 <span />
               </div>
@@ -1975,7 +1980,7 @@ function LiveWorkout({
                         />
                       )}
                       {trackingType === 'duration' ? (
-                        <span className="set-static-value">TIME</span>
+                        <span className="set-static-value" />
                       ) : trackingType === 'distance' ? (
                         <input
                           inputMode="decimal"
@@ -2051,7 +2056,7 @@ function LiveWorkout({
         <div className="empty-workout">
           <span className="empty-icon"><Dumbbell size={28} /></span>
           <h2>Add your first exercise</h2>
-          <p>Choose from {exerciseMap.size} movements with setup instructions and coaching cues.</p>
+          <p>Pick from {exerciseMap.size} exercises, or create your own.</p>
         </div>
       )}
 
@@ -2061,7 +2066,7 @@ function LiveWorkout({
           rows={2}
           value={workout.notes || ''}
           onChange={(event) => updateActiveWorkout({ ...workout, notes: event.target.value })}
-          placeholder="How did the session feel? Add context for next time…"
+          placeholder="How did it go?"
         />
       </label>
 
@@ -2095,9 +2100,8 @@ function HistoryView({ workouts, unit, distanceUnit, exerciseMap, openWorkout, s
   return (
     <div className="content-width">
       <ViewHeader
-        eyebrow="TRAINING LOG"
         title="Workout history"
-        subtitle={workouts.length + ' sessions saved on this device.'}
+        subtitle={workouts.length + (workouts.length === 1 ? ' completed session.' : ' completed sessions.')}
         action={
           <button className="button button--dark desktop-action" onClick={() => startWorkout(null)}>
             <Plus size={17} /> New workout
@@ -2190,9 +2194,8 @@ function LibraryView({ allExercises, openExercise, openCreate }) {
   return (
     <div className="content-width">
       <ViewHeader
-        eyebrow={allExercises.length + ' GUIDED MOVEMENTS'}
         title="Exercise library"
-        subtitle="Clear setup, movement steps, and coaching cues for every exercise."
+        subtitle={allExercises.length + ' exercises, each with setup steps and cues.'}
         action={
           <button className="button button--dark library-create" onClick={openCreate}>
             <Plus size={17} /> Custom exercise
@@ -2306,9 +2309,8 @@ function ProgressView({
   return (
     <div className="content-width">
       <ViewHeader
-        eyebrow="TRAINING INTELLIGENCE"
         title="Training progress"
-        subtitle="Consistency, muscle balance, strength records, and body metrics—kept private."
+        subtitle="Consistency, muscle balance, strength records, and body metrics."
       />
 
       <div className="progress-tabs" role="tablist" aria-label="Progress views">
@@ -2334,14 +2336,14 @@ function ProgressView({
           <motion.div key="overview" {...MOTION}>
             <section className="metric-band">
               <div>
-                <span>SESSIONS · 30D</span>
+                <span>SESSIONS</span>
                 <strong>{last30.length}</strong>
-                <small>{last30.length >= 8 ? 'Strong consistency' : 'Keep building rhythm'}</small>
+                <small>last 30 days</small>
               </div>
               <div>
                 <span>WORKING SETS</span>
                 <strong>{totalSets}</strong>
-                <small>Completed sets</small>
+                <small>last 30 days</small>
               </div>
               <div>
                 <span>VOLUME</span>
@@ -2359,7 +2361,6 @@ function ProgressView({
               <section className="chart-section">
                 <div className="section-heading">
                   <div>
-                    <span className="section-kicker">TRAINING LOAD</span>
                     <h2>Weekly volume</h2>
                   </div>
                   <span className="chart-unit">{unit}</span>
@@ -2370,7 +2371,6 @@ function ProgressView({
               <section className="records-section">
                 <div className="section-heading">
                   <div>
-                    <span className="section-kicker">BEST SETS</span>
                     <h2>Personal records</h2>
                   </div>
                 </div>
@@ -2583,7 +2583,7 @@ function SheetHeading({ eyebrow, title, body, back }) {
           <ArrowLeft size={17} /> Back
         </button>
       )}
-      <span className="section-kicker">{eyebrow}</span>
+      {eyebrow && <span className="section-kicker">{eyebrow}</span>}
       <h2>{title}</h2>
       {body && <p>{body}</p>}
     </div>
@@ -2606,9 +2606,8 @@ function ExercisePicker({ allExercises, currentIds, addExercise, openDetails }) 
   return (
     <div className="sheet-content picker-content">
       <SheetHeading
-        eyebrow="EXERCISE LIBRARY"
         title="Add an exercise"
-        body={'Search all ' + allExercises.length + ' guided movements.'}
+        body={'Search all ' + allExercises.length + ' exercises.'}
       />
       <label className="search-box search-box--sheet">
         <Search size={19} />
@@ -2674,13 +2673,6 @@ function ExerciseDetail({
         back={goBack}
       />
 
-      {exercise.id === 'barbell-back-squat' && (
-        <div className="instruction-image">
-          <img src="./training-hero.jpg" alt="Athlete preparing for a barbell back squat" />
-          <span>BARBELL BACK SQUAT · SETUP</span>
-        </div>
-      )}
-
       <ExerciseMuscleMap exercise={exercise} />
 
       <div className="instruction-layout">
@@ -2740,9 +2732,8 @@ function WorkoutDaySheet({ workouts, unit, distanceUnit, exerciseMap, openWorkou
   return (
     <div className="sheet-content workout-day-sheet">
       <SheetHeading
-        eyebrow="TRAINING DAY"
         title={formatDate(date, { weekday: 'long', day: 'numeric', month: 'long' })}
-        body={workouts.length + ' sessions were completed on this day.'}
+        body={workouts.length + ' sessions completed.'}
       />
       <div className="workout-day-list">
         {workouts.map((workout) => {
@@ -2878,7 +2869,6 @@ function WorkoutDetail({
           <p>{workout.notes}</p>
         </div>
       )}
-      <div className="local-badge"><LockKeyhole size={15} /> Stored locally on this device</div>
       {!deleteArmed ? (
         <button className="delete-history-button" onClick={() => setDeleteArmed(true)}>
           <Trash2 size={15} /> Delete workout
@@ -2910,11 +2900,10 @@ function FinishWorkoutSheet({ workout, elapsedSeconds, unit, distanceUnit, exerc
     <div className="sheet-content compact-sheet">
       <span className="confirm-icon confirm-icon--success"><Check size={25} /></span>
       <SheetHeading
-        eyebrow={hybrid ? 'HYBRID COMPLETE' : cardioOnly ? 'RUN COMPLETE' : 'SESSION COMPLETE'}
         title="Finish workout?"
         body={routineChanged
-          ? 'You changed the exercise lineup. Choose what should happen to your routine.'
-          : 'Review the session summary before saving it to your local history.'}
+          ? 'You changed the exercise lineup. Choose what should happen to the routine.'
+          : 'Review the summary before you save.'}
       />
       <div className="finish-summary">
         {hybrid ? (
@@ -2978,7 +2967,7 @@ function ConfirmSheet({ icon: Icon, title, body, confirmLabel, onConfirm, onCanc
   return (
     <div className="sheet-content compact-sheet">
       <span className={'confirm-icon ' + (danger ? 'confirm-icon--danger' : '')}><Icon size={24} /></span>
-      <SheetHeading eyebrow="PLEASE CONFIRM" title={title} body={body} />
+      <SheetHeading title={title} body={body} />
       <button className={'button button--wide ' + (danger ? 'button--danger' : 'button--dark')} onClick={onConfirm}>
         {confirmLabel}
       </button>
@@ -3001,16 +2990,15 @@ function ExerciseActionsSheet({
   return (
     <div className="sheet-content compact-menu-sheet">
       <SheetHeading
-        eyebrow="EXERCISE OPTIONS"
         title="Adjust exercise"
-        body="Reorder the session, create a superset, or remove this movement."
+        body="Reorder the session, create a superset, or remove this exercise."
       />
       <div className="exercise-action-list">
         <button onClick={() => moveExercise(workoutExerciseId, -1)} disabled={index <= 0}>
-          <span>↑</span><div><strong>Move up</strong><small>Earlier in this workout</small></div><ChevronRight size={18} />
+          <span><ArrowUp size={17} /></span><div><strong>Move up</strong><small>Earlier in this workout</small></div><ChevronRight size={18} />
         </button>
         <button onClick={() => moveExercise(workoutExerciseId, 1)} disabled={index < 0 || index >= workout.exercises.length - 1}>
-          <span>↓</span><div><strong>Move down</strong><small>Later in this workout</small></div><ChevronRight size={18} />
+          <span><ArrowDown size={17} /></span><div><strong>Move down</strong><small>Later in this workout</small></div><ChevronRight size={18} />
         </button>
         <button onClick={() => toggleSuperset(workoutExerciseId)} disabled={workout?.exercises.length < 2}>
           <span><Link2 size={17} /></span>
@@ -3069,9 +3057,8 @@ function CustomExerciseSheet({ initial, onSave }) {
   return (
     <div className="sheet-content custom-exercise-sheet">
       <SheetHeading
-        eyebrow="CUSTOM MOVEMENT"
         title={initial ? 'Edit exercise' : 'Create exercise'}
-        body="Add a movement that is not in the built-in library. It stays on this device."
+        body="Add an exercise that is not in the built-in library."
       />
       <div className="custom-form-grid">
         <label className="custom-form-wide">
@@ -3145,9 +3132,7 @@ function SettingsSheet({
   return (
     <div className="sheet-content settings-sheet">
       <SheetHeading
-        eyebrow="PREFERENCES"
         title="Settings & data"
-        body="Everything stays in this browser unless you export it."
       />
 
       <section className="setting-section theme-setting">
@@ -3256,7 +3241,7 @@ function SettingsSheet({
 
       <section className="setting-section setting-toggle-row">
         <div className="setting-label">
-          <div><Activity size={18} /><span>Timer sound</span></div>
+          <div><Volume2 size={18} /><span>Timer sound</span></div>
           <small>Play a short cue when rest ends.</small>
         </div>
         <button
@@ -3308,8 +3293,8 @@ function SettingsSheet({
       <div className="privacy-callout">
         <ShieldCheck size={20} />
         <div>
-          <strong>No account. No cloud. No tracking.</strong>
-          <p>Your workout data never leaves this device unless you choose to export it.</p>
+          <strong>Nothing leaves this device.</strong>
+          <p>No account, no server, no analytics. Export a backup to move your data somewhere else.</p>
         </div>
       </div>
 
@@ -3330,8 +3315,13 @@ function SettingsSheet({
   )
 }
 
-function RestTimer({ remaining, setRemaining }) {
-  const progress = Math.max(0, Math.min(1, remaining / 180))
+function RestTimer({ remaining, total, setRemaining, setTotal }) {
+  const progress = Math.max(0, Math.min(1, remaining / Math.max(total, 1)))
+  const adjust = (delta) => {
+    const next = Math.max(0, remaining + delta)
+    setRemaining(next)
+    setTotal((current) => Math.max(current, next))
+  }
   return (
     <motion.div
       className="rest-timer"
@@ -3349,10 +3339,10 @@ function RestTimer({ remaining, setRemaining }) {
         <span>REST TIMER</span>
         <strong>{formatDuration(remaining)}</strong>
       </div>
-      <button onClick={() => setRemaining(Math.max(0, remaining - 15))} aria-label="Subtract 15 seconds">
+      <button onClick={() => adjust(-15)} aria-label="Subtract 15 seconds">
         <Minus size={17} />
       </button>
-      <button onClick={() => setRemaining(remaining + 15)} aria-label="Add 15 seconds">
+      <button onClick={() => adjust(15)} aria-label="Add 15 seconds">
         <Plus size={17} />
       </button>
       <button className="skip-rest" onClick={() => setRemaining(null)}>Skip</button>
@@ -3375,7 +3365,7 @@ function FeatureLoader({ compact = false }) {
   return (
     <div className={'feature-loader ' + (compact ? 'feature-loader--compact' : '')} role="status">
       <span />
-      <p>Loading your training space…</p>
+      <p>Loading…</p>
     </div>
   )
 }

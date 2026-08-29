@@ -28,6 +28,9 @@
   --control-strong: #d5d4cd;
   --overlay: rgba(12, 13, 10, 0.58);
   --danger: #c94f43;
+  --danger-ink: #ffffff;
+  --trend-down: #5d7412;
+  --trend-up: #9a5a33;
   --mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --radius: 18px;
   --shadow-sheet: 0 -24px 70px rgba(12, 13, 10, 0.25);
@@ -168,6 +171,9 @@
   --control-strong: #2e3d47;
   --overlay: rgba(2, 7, 10, 0.74);
   --danger: #ff8176;
+  --danger-ink: #2b100c;
+  --trend-down: #a8d16a;
+  --trend-up: #e0a06a;
   --shadow-sheet: 0 -24px 70px rgba(0, 0, 0, 0.46);
 }
 
@@ -188,7 +194,7 @@ body {
   min-height: 100svh;
   background: var(--surface);
   overscroll-behavior-y: none;
-  transition: background-color 220ms ease, color 220ms ease;
+  transition: background-color 240ms ease, color 240ms ease;
 }
 
 .app-shell,
@@ -204,7 +210,7 @@ body {
 .segmented-control,
 .rest-options button {
   transition-property: background-color, border-color, color, box-shadow;
-  transition-duration: 220ms;
+  transition-duration: 240ms;
   transition-timing-function: ease;
 }
 
@@ -486,7 +492,7 @@ p {
   background: transparent;
   border: 0;
   border-radius: 10px;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.01em;
 }
@@ -535,10 +541,22 @@ p {
   line-height: 1.55;
 }
 
+/* One label device for the whole app. Every all-caps mono kicker resolves here
+   so the size and tracking cannot drift apart per view. */
 .eyebrow,
-.section-kicker {
+.section-kicker,
+.nutrition-kicker,
+.photo-kicker,
+.wt-kicker,
+.pp-kicker,
+.routine-program-kicker,
+.routine-editor-header > div > span,
+.routine-builder-heading > div > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font: 500 10px/1.2 var(--mono);
-  letter-spacing: 0.13em;
+  letter-spacing: 0.12em;
   color: var(--muted);
 }
 
@@ -553,7 +571,7 @@ p {
   font-weight: 700;
   border: 1px solid transparent;
   border-radius: 999px;
-  transition: transform 180ms ease, background-color 180ms ease, color 180ms ease, opacity 180ms ease;
+  transition: transform 170ms ease, background-color 170ms ease, color 170ms ease, opacity 170ms ease;
 }
 
 .button:hover {
@@ -590,7 +608,7 @@ p {
 }
 
 .button--danger {
-  color: white;
+  color: var(--danger-ink);
   background: var(--danger);
 }
 
@@ -649,7 +667,7 @@ p {
   background: color-mix(in srgb, var(--surface-raised) 75%, transparent);
   border: 0;
   border-radius: 999px;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
 }
 
@@ -660,73 +678,40 @@ p {
   color: var(--ink);
   background: var(--accent-soft);
   border-radius: 4px;
-  font: 500 6px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   font-style: normal;
   letter-spacing: 0.05em;
   vertical-align: middle;
 }
 
 .session-hero {
-  position: relative;
-  min-height: 382px;
-  overflow: hidden;
-  color: white;
-  background: #151713;
+  color: var(--sidebar-text);
+  background: var(--sidebar);
   border-radius: 22px;
-  isolation: isolate;
-}
-
-.session-hero-image {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  background: url('/training-hero.jpg') 60% center / cover no-repeat;
-  transform: scale(1.015);
-  transition: transform 800ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.session-hero:hover .session-hero-image {
-  transform: scale(1.035);
-}
-
-.session-hero-shade {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(90deg, rgba(9, 10, 8, 0.88) 0%, rgba(9, 10, 8, 0.64) 44%, rgba(9, 10, 8, 0.12) 79%),
-    linear-gradient(0deg, rgba(9, 10, 8, 0.48) 0%, transparent 45%);
 }
 
 .session-hero-content {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  min-height: 382px;
-  padding: 27px 23px 24px;
-}
-
-.hero-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font: 500 10px/1 var(--mono);
-  letter-spacing: 0.13em;
-  color: var(--accent);
+  padding: 26px 23px 24px;
 }
 
 .session-hero h2 {
-  margin: auto 0 10px;
-  font-size: clamp(46px, 13vw, 78px);
-  line-height: 0.82;
-  letter-spacing: -0.075em;
+  margin: 0;
+  font-size: clamp(40px, 11vw, 62px);
+  line-height: 0.88;
+  letter-spacing: -0.055em;
   font-weight: 750;
+  text-wrap: balance;
 }
 
 .hero-meta {
   display: flex;
-  gap: 15px;
-  margin: 8px 0 19px;
-  color: rgba(255, 255, 255, 0.65);
+  flex-wrap: wrap;
+  gap: 6px 15px;
+  margin: 16px 0 22px;
+  color: color-mix(in srgb, var(--sidebar-text) 62%, transparent);
   font: 400 10px/1 var(--mono);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -783,7 +768,7 @@ p {
   background: transparent;
   border: 0;
   border-bottom: 1px solid var(--line);
-  transition: padding 180ms ease, background-color 180ms ease;
+  transition: padding 170ms ease, background-color 170ms ease;
 }
 
 .template-row:hover {
@@ -899,7 +884,7 @@ p {
 
 .week-bars span {
   color: var(--muted);
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
 }
 
 .recent-panel {
@@ -956,7 +941,7 @@ p {
 }
 
 .date-tile span {
-  font: 500 8px/1 var(--mono) !important;
+  font: 500 9px/1 var(--mono) !important;
   color: var(--accent) !important;
   text-transform: uppercase;
 }
@@ -1038,7 +1023,7 @@ p {
 .live-timer-button span {
   display: none;
   color: rgba(255, 255, 255, 0.48);
-  font: 500 7px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.06em;
 }
 
@@ -1121,7 +1106,7 @@ p {
   color: #4d5e0b;
   background: var(--accent);
   border-radius: 5px;
-  font: 500 6px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.07em;
 }
 
@@ -1178,7 +1163,7 @@ p {
   min-height: 30px;
   padding: 0 10px;
   color: var(--muted);
-  font: 500 7px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.06em;
   text-align: center;
 }
@@ -1188,7 +1173,7 @@ p {
   min-height: 53px;
   padding: 5px 10px;
   border-top: 1px solid var(--line);
-  transition: background-color 180ms ease;
+  transition: background-color 170ms ease;
 }
 
 .set-row.is-complete {
@@ -1231,7 +1216,7 @@ p {
 .previous-value {
   overflow: hidden;
   color: var(--muted);
-  font: 400 8px/1 var(--mono);
+  font: 400 9px/1 var(--mono);
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1249,7 +1234,7 @@ p {
   font: 500 13px/1 var(--mono);
   text-align: center;
   -moz-appearance: textfield;
-  transition: background-color 160ms ease, border-color 160ms ease;
+  transition: background-color 170ms ease, border-color 170ms ease;
 }
 
 .set-row input::-webkit-outer-spin-button,
@@ -1272,7 +1257,7 @@ p {
   color: var(--muted);
   background: var(--surface-alt);
   border-radius: 9px;
-  font: 500 7px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.07em;
 }
 
@@ -1291,7 +1276,7 @@ p {
   background: var(--control);
   border: 0;
   border-radius: 10px;
-  transition: transform 160ms ease, color 160ms ease, background-color 160ms ease;
+  transition: transform 170ms ease, color 170ms ease, background-color 170ms ease;
 }
 
 .set-row.is-complete .complete-set {
@@ -1390,7 +1375,7 @@ p {
 }
 
 .feature-loader p {
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -1424,7 +1409,7 @@ p {
 .session-notes > span,
 .session-note-detail > span {
   color: var(--muted);
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.08em;
 }
 
@@ -1515,7 +1500,7 @@ p {
 .history-date span {
   margin-top: 4px;
   color: var(--muted);
-  font: 400 8px/1 var(--mono);
+  font: 400 9px/1 var(--mono);
   text-transform: uppercase;
 }
 
@@ -1771,7 +1756,7 @@ p {
 
 .metric-band span {
   color: var(--muted);
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.08em;
 }
 
@@ -1874,7 +1859,7 @@ p {
 .record-main small,
 .record-value small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .record-value {
@@ -2066,39 +2051,6 @@ p {
   background: var(--control);
 }
 
-.instruction-image {
-  position: relative;
-  height: 230px;
-  margin: 23px -18px 0;
-  overflow: hidden;
-  background: var(--ink);
-}
-
-.instruction-image::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(0deg, rgba(11, 12, 10, 0.7), transparent 54%);
-}
-
-.instruction-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 63% center;
-}
-
-.instruction-image span {
-  position: absolute;
-  z-index: 2;
-  right: 18px;
-  bottom: 15px;
-  left: 18px;
-  color: var(--accent);
-  font: 500 9px/1 var(--mono);
-  letter-spacing: 0.1em;
-}
-
 .instruction-layout {
   display: grid;
   margin-top: 29px;
@@ -2271,7 +2223,7 @@ p {
 .workout-day-list small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2309,7 +2261,7 @@ p {
 
 .workout-cardio-summary span {
   color: var(--muted);
-  font: 500 7px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
 }
 
 .workout-cardio-summary strong {
@@ -2320,7 +2272,7 @@ p {
 
 .workout-cardio-summary small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .workout-edit-form label,
@@ -2333,7 +2285,7 @@ p {
 .workout-edit-form label span,
 .custom-form-grid label > span {
   color: var(--muted);
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.07em;
 }
 
@@ -2404,7 +2356,7 @@ p {
 .readonly-sets span,
 .readonly-sets small {
   color: var(--muted);
-  font: 400 8px/1 var(--mono);
+  font: 400 9px/1 var(--mono);
 }
 
 .readonly-sets strong {
@@ -2419,16 +2371,6 @@ p {
   border-radius: 9px;
   font-size: 9px;
   line-height: 1.5;
-}
-
-.local-badge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 27px;
-  gap: 7px;
-  color: var(--muted);
-  font-size: 9px;
 }
 
 .delete-history-button {
@@ -2451,7 +2393,7 @@ p {
   margin-top: 15px;
   gap: 7px;
   color: var(--danger);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .delete-history-confirm button {
@@ -2460,12 +2402,12 @@ p {
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 999px;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
 }
 
 .delete-history-confirm button:last-child {
-  color: white;
+  color: var(--danger-ink);
   background: var(--danger);
   border-color: var(--danger);
 }
@@ -2528,7 +2470,7 @@ p {
 
 .finish-summary span {
   color: var(--muted);
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
 }
 
 .finish-summary strong {
@@ -2552,7 +2494,7 @@ p {
 .finish-routine-actions > span {
   margin-bottom: 2px;
   color: var(--muted);
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.08em;
 }
 
@@ -2609,7 +2551,7 @@ p {
 
 .exercise-action-list small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .exercise-action-list > button > svg {
@@ -2654,7 +2596,7 @@ p {
 
 .exercise-rest-option small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .exercise-rest-option > div:last-child {
@@ -2670,7 +2612,7 @@ p {
   background: var(--control);
   border: 1px solid transparent;
   border-radius: 8px;
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
 }
 
 .exercise-rest-option > div:last-child button.is-active {
@@ -2706,7 +2648,7 @@ p {
   background: var(--control);
   border: 0;
   border-radius: 999px;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
 }
 
@@ -2743,7 +2685,7 @@ p {
 .setting-label small {
   max-width: 170px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
   line-height: 1.45;
   text-align: right;
 }
@@ -2767,7 +2709,7 @@ p {
   background: color-mix(in srgb, var(--surface-alt) 60%, var(--surface-raised));
   border: 1px solid transparent;
   border-radius: 13px;
-  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+  transition: border-color 170ms ease, background-color 170ms ease, transform 170ms ease;
 }
 
 .theme-option:hover {
@@ -2832,7 +2774,7 @@ p {
 .theme-option-copy small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2909,7 +2851,7 @@ p {
   background: var(--control-strong);
   border: 0;
   border-radius: 999px;
-  transition: background-color 180ms ease;
+  transition: background-color 170ms ease;
 }
 
 .toggle-switch span {
@@ -2919,7 +2861,7 @@ p {
   background: var(--surface-raised);
   border-radius: 50%;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16);
-  transition: transform 180ms ease;
+  transition: transform 170ms ease;
 }
 
 .toggle-switch.is-active {
@@ -2990,7 +2932,7 @@ p {
 
 .data-actions small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .data-actions > button > svg {
@@ -3017,7 +2959,7 @@ p {
 
 .privacy-callout p {
   margin-top: 3px;
-  font-size: 8px;
+  font-size: 9px;
   line-height: 1.45;
 }
 
@@ -3064,7 +3006,7 @@ p {
 }
 
 .reset-confirm button:last-child {
-  color: white;
+  color: var(--danger-ink);
   background: var(--danger);
   border-color: var(--danger);
 }
@@ -3110,7 +3052,7 @@ p {
 
 .rest-copy span {
   color: rgba(255, 255, 255, 0.5);
-  font: 500 7px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.09em;
 }
 
@@ -3175,7 +3117,7 @@ p {
   }
 
   .session-hero-content {
-    padding: 31px 29px 28px;
+    padding: 32px 29px 30px;
   }
 
   .template-row {
@@ -3213,7 +3155,7 @@ p {
   .muscle-label {
     display: inline;
     color: var(--muted);
-    font: 500 8px/1 var(--mono);
+    font: 500 9px/1 var(--mono);
     text-transform: uppercase;
   }
 }
@@ -3240,12 +3182,6 @@ p {
     bottom: -34px;
     margin: 26px -34px -34px;
     padding: 14px 34px 20px;
-  }
-
-  .instruction-image {
-    height: 300px;
-    margin-right: -34px;
-    margin-left: -34px;
   }
 
   .instruction-layout {
@@ -3388,14 +3324,14 @@ p {
   }
 
   .privacy-note span {
-    font-size: 7px;
+    font-size: 9px;
   }
 
   .sidebar-signature {
     margin-top: 9px;
     padding: 0 12px;
     color: color-mix(in srgb, var(--sidebar-text) 23%, transparent);
-    font: 500 7px/1 var(--mono);
+    font: 500 9px/1 var(--mono);
     letter-spacing: 0.09em;
   }
 
@@ -3449,13 +3385,8 @@ p {
     gap: 39px;
   }
 
-  .session-hero,
   .session-hero-content {
-    min-height: 425px;
-  }
-
-  .session-hero-content {
-    padding: 34px 36px 33px;
+    padding: 40px 38px 36px;
   }
 
   .session-hero h2 {
@@ -3533,7 +3464,7 @@ p {
   .difficulty {
     width: max-content;
     padding: 5px 8px;
-    font: 500 7px/1 var(--mono);
+    font: 500 9px/1 var(--mono);
     border-radius: 20px;
     text-transform: uppercase;
   }
@@ -3610,7 +3541,7 @@ p {
 
   .set-grid--header {
     min-height: 35px;
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .set-row {

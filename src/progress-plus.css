@@ -1,14 +1,7 @@
 .pp-module {
-  --pp-ink: var(--ink, #171914);
-  --pp-muted: var(--muted, #72766d);
-  --pp-muted-2: var(--muted-2, #a1a49c);
-  --pp-surface: var(--surface-raised, #fbfaf5);
-  --pp-surface-alt: var(--surface-alt, #e9e8df);
-  --pp-line: var(--line, #d9d9d0);
-  --pp-accent: var(--accent, #d9ff4f);
-  color: var(--pp-ink);
-  background: var(--pp-surface);
-  border: 1px solid var(--pp-line);
+  color: var(--ink);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
   border-radius: 19px;
   overflow: hidden;
 }
@@ -31,7 +24,7 @@
   min-height: 87px;
   padding: 21px 19px 17px;
   gap: 16px;
-  border-bottom: 1px solid var(--pp-line);
+  border-bottom: 1px solid var(--line);
 }
 
 .pp-module-head > div {
@@ -47,15 +40,8 @@
 
 .pp-module-head p {
   margin: 6px 0 0;
-  color: var(--pp-muted);
+  color: var(--muted);
   font-size: 10px;
-}
-
-.pp-kicker {
-  display: block;
-  color: var(--pp-muted);
-  font: 500 8px/1 var(--mono, ui-monospace, monospace);
-  letter-spacing: 0.1em;
 }
 
 .pp-button,
@@ -67,7 +53,7 @@
   min-height: 40px;
   padding: 0 14px;
   gap: 7px;
-  color: var(--pp-ink);
+  color: var(--ink);
   background: transparent;
   border: 0;
   border-radius: 11px;
@@ -84,7 +70,7 @@
 
 .pp-button--accent {
   color: var(--accent-ink);
-  background: var(--pp-accent);
+  background: var(--accent);
 }
 
 .pp-button--wide {
@@ -93,22 +79,22 @@
 }
 
 .pp-button:disabled {
-  color: var(--pp-muted-2);
-  background: var(--pp-surface-alt);
+  color: var(--muted-2);
+  background: var(--surface-alt);
   cursor: not-allowed;
 }
 
 .pp-icon-button {
   width: 40px;
   padding: 0;
-  color: var(--pp-muted);
-  background: var(--pp-surface-alt);
+  color: var(--muted);
+  background: var(--surface-alt);
 }
 
 .pp-text-button {
   min-height: 32px;
   padding: 0 5px;
-  color: var(--pp-muted);
+  color: var(--muted);
 }
 
 .pp-button:not(:disabled):active,
@@ -122,7 +108,7 @@
 .pp-calendar-summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-bottom: 1px solid var(--pp-line);
+  border-bottom: 1px solid var(--line);
 }
 
 .pp-calendar-summary > div {
@@ -135,7 +121,7 @@
 }
 
 .pp-calendar-summary > div + div {
-  border-left: 1px solid var(--pp-line);
+  border-left: 1px solid var(--line);
 }
 
 .pp-calendar-summary > div > span:last-child {
@@ -146,13 +132,13 @@
 }
 
 .pp-calendar-summary strong {
-  font: 550 18px/1 var(--mono, ui-monospace, monospace);
+  font: 550 18px/1 var(--mono);
 }
 
 .pp-calendar-summary small {
   overflow: hidden;
-  color: var(--pp-muted);
-  font-size: 7px;
+  color: var(--muted);
+  font-size: 9px;
   line-height: 1.25;
   text-overflow: ellipsis;
 }
@@ -163,14 +149,14 @@
   height: 34px;
   flex: 0 0 34px;
   place-items: center;
-  color: var(--pp-muted);
-  background: var(--pp-surface-alt);
+  color: var(--muted);
+  background: var(--surface-alt);
   border-radius: 10px;
 }
 
 .pp-summary-icon--accent {
-  color: var(--pp-ink);
-  background: var(--pp-accent);
+  color: var(--ink);
+  background: var(--accent);
 }
 
 .pp-month-controls {
@@ -192,7 +178,7 @@
   height: 40px;
   padding: 0;
   place-items: center;
-  color: var(--pp-muted);
+  color: var(--muted);
   background: transparent;
   border: 0;
   border-radius: 10px;
@@ -210,8 +196,8 @@
 }
 
 .pp-weekdays span {
-  color: var(--pp-muted-2);
-  font: 500 7px/1 var(--mono, ui-monospace, monospace);
+  color: var(--muted-2);
+  font: 500 9px/1 var(--mono);
   text-align: center;
 }
 
@@ -235,11 +221,11 @@
   justify-content: center;
   padding: 3px 1px;
   gap: 4px;
-  color: var(--pp-ink);
+  color: var(--ink);
   background: transparent;
   border: 0;
   border-radius: 11px;
-  font: 500 10px/1 var(--mono, ui-monospace, monospace);
+  font: 500 10px/1 var(--mono);
 }
 
 .pp-calendar-day:not(:disabled) {
@@ -247,7 +233,7 @@
 }
 
 .pp-calendar-day:not(:disabled):hover {
-  background: color-mix(in srgb, var(--pp-ink) 4.5%, transparent);
+  background: color-mix(in srgb, var(--ink) 4.5%, transparent);
 }
 
 .pp-calendar-day:disabled {
@@ -255,7 +241,7 @@
 }
 
 .pp-calendar-day--outside {
-  color: var(--pp-muted-2);
+  color: var(--muted-2);
 }
 
 .pp-calendar-day--today > span {
@@ -289,7 +275,7 @@
 }
 
 .pp-calendar-day--today .pp-workout-dots b {
-  background: var(--pp-accent);
+  background: var(--accent);
 }
 
 .pp-inline-empty {
@@ -298,16 +284,16 @@
   align-items: center;
   padding: 0 17px;
   gap: 8px;
-  color: var(--pp-muted);
-  background: color-mix(in srgb, var(--pp-surface-alt) 62%, transparent);
-  border-top: 1px solid var(--pp-line);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface-alt) 62%, transparent);
+  border-top: 1px solid var(--line);
   font-size: 9px;
 }
 
 .pp-measurement-form {
   overflow: hidden;
-  background: var(--pp-surface-alt);
-  border-bottom: 1px solid var(--pp-line);
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
 }
 
 .pp-form-inner {
@@ -329,8 +315,8 @@
 }
 
 .pp-field > span {
-  color: var(--pp-muted);
-  font-size: 8px;
+  color: var(--muted);
+  font-size: 9px;
   font-weight: 650;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -346,15 +332,15 @@
   min-width: 0;
   height: 43px;
   padding: 0 11px;
-  color: var(--pp-ink);
-  background: var(--pp-surface);
-  border: 1px solid var(--pp-line);
+  color: var(--ink);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
   border-radius: 10px;
-  font: 500 12px/1 var(--mono, ui-monospace, monospace);
+  font: 500 12px/1 var(--mono);
 }
 
 .pp-field input:focus {
-  border-color: var(--pp-muted-2);
+  border-color: var(--muted-2);
   box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
@@ -363,7 +349,7 @@
 }
 
 .pp-latest-measurement {
-  border-bottom: 1px solid var(--pp-line);
+  border-bottom: 1px solid var(--line);
 }
 
 .pp-featured-value {
@@ -382,43 +368,43 @@
 
 .pp-featured-value small,
 .pp-muscle-lead small {
-  color: var(--pp-muted);
-  font: 500 7px/1 var(--mono, ui-monospace, monospace);
+  color: var(--muted);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.08em;
 }
 
 .pp-featured-value strong {
   margin: 6px 0 5px;
-  font: 600 27px/1 var(--mono, ui-monospace, monospace);
+  font: 600 27px/1 var(--mono);
   letter-spacing: -0.055em;
 }
 
 .pp-featured-value strong i {
-  color: var(--pp-muted);
+  color: var(--muted);
   font-size: 11px;
   font-style: normal;
   font-weight: 500;
 }
 
 .pp-change {
-  color: #5d7412;
-  font-size: 8px;
+  color: var(--trend-down);
+  font-size: 9px;
 }
 
 .pp-change--up {
-  color: #9a5a33;
+  color: var(--trend-up);
 }
 
 .pp-latest-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-top: 1px solid var(--pp-line);
+  border-top: 1px solid var(--line);
 }
 
 .pp-latest-grid > div {
   min-height: 72px;
   padding: 13px 11px;
-  border-right: 1px solid var(--pp-line);
+  border-right: 1px solid var(--line);
 }
 
 .pp-latest-grid > div:nth-child(3n) {
@@ -426,31 +412,31 @@
 }
 
 .pp-latest-grid > div:nth-child(n + 4) {
-  border-top: 1px solid var(--pp-line);
+  border-top: 1px solid var(--line);
 }
 
 .pp-latest-grid span {
   display: block;
   margin-bottom: 7px;
-  color: var(--pp-muted);
-  font-size: 7px;
+  color: var(--muted);
+  font-size: 9px;
   text-transform: uppercase;
 }
 
 .pp-latest-grid strong {
-  font: 550 15px/1 var(--mono, ui-monospace, monospace);
+  font: 550 15px/1 var(--mono);
 }
 
 .pp-latest-grid small {
   margin-left: 3px;
-  color: var(--pp-muted);
-  font-size: 7px;
+  color: var(--muted);
+  font-size: 9px;
 }
 
 .pp-trend-chart,
 .pp-performance-chart {
   padding: 17px 17px 13px;
-  border-bottom: 1px solid var(--pp-line);
+  border-bottom: 1px solid var(--line);
 }
 
 .pp-trend-title,
@@ -463,8 +449,8 @@
 
 .pp-trend-title span,
 .pp-subhead span {
-  color: var(--pp-muted);
-  font: 500 7px/1 var(--mono, ui-monospace, monospace);
+  color: var(--muted);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
@@ -484,7 +470,7 @@
 }
 
 .pp-chart-grid {
-  stroke: var(--pp-line);
+  stroke: var(--line);
   stroke-width: 1;
 }
 
@@ -494,15 +480,15 @@
 
 .pp-chart-line {
   fill: none;
-  stroke: var(--pp-ink);
+  stroke: var(--ink);
   stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .pp-chart-point {
-  fill: var(--pp-accent);
-  stroke: var(--pp-ink);
+  fill: var(--accent);
+  stroke: var(--ink);
   stroke-width: 1.8;
   transform-box: fill-box;
   transform-origin: center;
@@ -512,8 +498,8 @@
   display: flex;
   justify-content: space-between;
   margin-top: -2px;
-  color: var(--pp-muted);
-  font: 500 7px/1 var(--mono, ui-monospace, monospace);
+  color: var(--muted);
+  font: 500 9px/1 var(--mono);
 }
 
 .pp-trend-empty {
@@ -522,8 +508,8 @@
   align-items: center;
   padding: 0 17px;
   gap: 8px;
-  color: var(--pp-muted);
-  border-bottom: 1px solid var(--pp-line);
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
   font-size: 9px;
 }
 
@@ -538,7 +524,7 @@
   min-height: 61px;
   align-items: center;
   gap: 10px;
-  border-bottom: 1px solid var(--pp-line);
+  border-bottom: 1px solid var(--line);
 }
 
 .pp-measurement-row:last-child {
@@ -554,14 +540,14 @@
 }
 
 .pp-measurement-date strong {
-  font: 550 15px/1 var(--mono, ui-monospace, monospace);
+  font: 550 15px/1 var(--mono);
 }
 
 .pp-measurement-date small,
 .pp-measurement-detail small {
   overflow: hidden;
-  color: var(--pp-muted);
-  font-size: 7px;
+  color: var(--muted);
+  font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -576,7 +562,7 @@
   height: 34px;
   padding: 0;
   place-items: center;
-  color: var(--pp-muted-2);
+  color: var(--muted-2);
   background: transparent;
   border: 0;
   border-radius: 9px;
@@ -584,8 +570,8 @@
 }
 
 .pp-measurement-row button:hover {
-  color: #c94f43;
-  background: rgba(201, 79, 67, 0.07);
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
 }
 
 .pp-empty {
@@ -604,8 +590,8 @@
   height: 48px;
   margin-bottom: 14px;
   place-items: center;
-  color: var(--pp-ink);
-  background: var(--pp-accent);
+  color: var(--ink);
+  background: var(--accent);
   border-radius: 50%;
 }
 
@@ -617,7 +603,7 @@
 .pp-empty > p {
   max-width: 310px;
   margin: 7px 0 16px;
-  color: var(--pp-muted);
+  color: var(--muted);
   font-size: 9px;
   line-height: 1.5;
 }
@@ -627,10 +613,10 @@
   min-height: 28px;
   align-items: center;
   padding: 0 10px;
-  color: var(--pp-muted);
-  background: var(--pp-surface-alt);
+  color: var(--muted);
+  background: var(--surface-alt);
   border-radius: 999px;
-  font: 500 7px/1 var(--mono, ui-monospace, monospace);
+  font: 500 9px/1 var(--mono);
   white-space: nowrap;
 }
 
@@ -641,7 +627,7 @@
   align-items: center;
   padding: 16px 18px;
   gap: 12px;
-  border-bottom: 1px solid var(--pp-line);
+  border-bottom: 1px solid var(--line);
 }
 
 .pp-muscle-lead > div {
@@ -654,7 +640,7 @@
 .pp-muscle-lead > div:last-child {
   min-width: 70px;
   padding-left: 15px;
-  border-left: 1px solid var(--pp-line);
+  border-left: 1px solid var(--line);
 }
 
 .pp-muscle-lead strong {
@@ -666,12 +652,12 @@
 }
 
 .pp-muscle-lead > div:last-child strong {
-  font: 600 23px/1 var(--mono, ui-monospace, monospace);
+  font: 600 23px/1 var(--mono);
 }
 
 .pp-muscle-lead span:not(.pp-summary-icon) {
-  color: var(--pp-muted);
-  font-size: 8px;
+  color: var(--muted);
+  font-size: 9px;
 }
 
 .pp-muscle-list {
@@ -702,31 +688,31 @@
 .pp-muscle-label-row i {
   display: inline-block;
   width: 27px;
-  color: var(--pp-muted-2);
-  font: 500 7px/1 var(--mono, ui-monospace, monospace);
+  color: var(--muted-2);
+  font: 500 9px/1 var(--mono);
   font-style: normal;
 }
 
 .pp-muscle-label-row strong {
-  font: 550 10px/1 var(--mono, ui-monospace, monospace);
+  font: 550 10px/1 var(--mono);
 }
 
 .pp-muscle-label-row small {
-  color: var(--pp-muted);
-  font-size: 7px;
+  color: var(--muted);
+  font-size: 9px;
 }
 
 .pp-muscle-track {
   height: 6px;
   margin-left: 27px;
   overflow: hidden;
-  background: var(--pp-surface-alt);
+  background: var(--surface-alt);
   border-radius: 6px;
 }
 
 .pp-muscle-track > div {
   height: 100%;
-  background: var(--pp-accent);
+  background: var(--accent);
   border-radius: inherit;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent);
 }
@@ -734,14 +720,14 @@
 .pp-footnote {
   margin: 0;
   padding: 0 18px 16px;
-  color: var(--pp-muted-2);
-  font: 500 7px/1 var(--mono, ui-monospace, monospace);
+  color: var(--muted-2);
+  font: 500 9px/1 var(--mono);
 }
 
 .pp-performance-metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  border-bottom: 1px solid var(--pp-line);
+  border-bottom: 1px solid var(--line);
 }
 
 .pp-performance-metrics > div {
@@ -753,31 +739,31 @@
 }
 
 .pp-performance-metrics > div:nth-child(even) {
-  border-left: 1px solid var(--pp-line);
+  border-left: 1px solid var(--line);
 }
 
 .pp-performance-metrics > div:nth-child(n + 3) {
-  border-top: 1px solid var(--pp-line);
+  border-top: 1px solid var(--line);
 }
 
 .pp-performance-metrics span {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--pp-muted);
-  font: 500 7px/1 var(--mono, ui-monospace, monospace);
+  color: var(--muted);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.05em;
 }
 
 .pp-performance-metrics strong {
   margin-top: 8px;
-  font: 600 24px/1 var(--mono, ui-monospace, monospace);
+  font: 600 24px/1 var(--mono);
   letter-spacing: -0.05em;
 }
 
 .pp-performance-metrics small {
-  color: var(--pp-muted);
-  font-size: 8px;
+  color: var(--muted);
+  font-size: 9px;
   font-weight: 500;
   letter-spacing: 0;
 }
@@ -793,9 +779,9 @@
 .pp-set-history-head {
   min-height: 32px;
   margin-top: 8px;
-  color: var(--pp-muted-2);
-  border-bottom: 1px solid var(--pp-line);
-  font: 500 6px/1 var(--mono, ui-monospace, monospace);
+  color: var(--muted-2);
+  border-bottom: 1px solid var(--line);
+  font: 500 9px/1 var(--mono);
   text-transform: uppercase;
 }
 
@@ -805,7 +791,7 @@
 
 .pp-set-history-row {
   min-height: 53px;
-  border-bottom: 1px solid var(--pp-line);
+  border-bottom: 1px solid var(--line);
 }
 
 .pp-set-history-row:last-child {
@@ -826,15 +812,15 @@
 
 .pp-set-history-row strong {
   overflow: hidden;
-  font: 550 9px/1 var(--mono, ui-monospace, monospace);
+  font: 550 9px/1 var(--mono);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .pp-set-history-row small {
   overflow: hidden;
-  color: var(--pp-muted);
-  font-size: 6px;
+  color: var(--muted);
+  font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -851,7 +837,7 @@
   }
 
   .pp-calendar-summary small {
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .pp-calendar-day {
@@ -927,7 +913,7 @@
 
   .pp-latest-grid {
     border-top: 0;
-    border-left: 1px solid var(--pp-line);
+    border-left: 1px solid var(--line);
   }
 
   .pp-trend-chart,
@@ -963,7 +949,7 @@
   }
 
   .pp-performance-metrics > div + div {
-    border-left: 1px solid var(--pp-line);
+    border-left: 1px solid var(--line);
   }
 
   .pp-performance-metrics > div:nth-child(n + 3) {

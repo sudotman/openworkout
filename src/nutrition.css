@@ -55,7 +55,7 @@
   border-radius: 999px;
   font-size: 10px;
   font-weight: 700;
-  transition: 180ms ease;
+  transition: 170ms ease;
 }
 
 .nutrition-tabs button.is-active {
@@ -102,7 +102,7 @@
 .nutrition-date-nav span {
   overflow: hidden;
   color: var(--muted);
-  font: 400 8px/1.2 var(--mono);
+  font: 400 9px/1.2 var(--mono);
   text-overflow: ellipsis;
   white-space: nowrap;
   text-transform: uppercase;
@@ -120,31 +120,14 @@
 
 .nutrition-hero {
   position: relative;
-  min-height: 272px;
   padding: 24px 21px 20px;
-  overflow: hidden;
-  color: #f7f9ef;
-  background:
-    radial-gradient(circle at 88% 9%, color-mix(in srgb, var(--accent) 16%, transparent) 0 1px, transparent 2px) 0 0 / 15px 15px,
-    var(--sidebar);
-  border: 1px solid color-mix(in srgb, var(--sidebar-text) 9%, transparent);
+  color: var(--sidebar-text);
+  background: var(--sidebar);
   border-radius: 21px;
 }
 
-.nutrition-hero::after {
-  content: '';
-  position: absolute;
-  top: -68px;
-  right: -50px;
-  width: 210px;
-  height: 210px;
-  background: var(--accent);
-  border-radius: 50%;
-  opacity: .045;
-}
-
-.nutrition-hero.is-complete::after {
-  opacity: .1;
+.nutrition-hero.is-complete {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 .nutrition-hero-top {
@@ -154,15 +137,6 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-}
-
-.nutrition-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--muted);
-  font: 500 8px/1.2 var(--mono);
-  letter-spacing: .12em;
 }
 
 .nutrition-hero .nutrition-kicker {
@@ -194,7 +168,7 @@
 .protein-score i {
   margin-top: 5px;
   color: color-mix(in srgb, var(--sidebar-text) 42%, transparent);
-  font-size: 8px;
+  font-size: 9px;
   font-style: normal;
 }
 
@@ -231,7 +205,7 @@
 
 .protein-status small {
   color: color-mix(in srgb, var(--sidebar-text) 43%, transparent);
-  font-size: 7px;
+  font-size: 9px;
 }
 
 .protein-rail {
@@ -294,13 +268,13 @@
   background: var(--accent);
   border: 2px solid var(--sidebar);
   border-radius: 50%;
-  font: 600 6px/1 var(--mono);
+  font: 600 9px/1 var(--mono);
 }
 
 .protein-rail-stops small {
   margin-top: 2px;
   color: color-mix(in srgb, var(--sidebar-text) 46%, transparent);
-  font: 400 6px/1 var(--mono);
+  font: 400 9px/1 var(--mono);
 }
 
 .nutrition-hero-foot {
@@ -318,7 +292,7 @@
   align-items: center;
   gap: 6px;
   color: color-mix(in srgb, var(--sidebar-text) 46%, transparent);
-  font: 400 8px/1 var(--mono);
+  font: 400 9px/1 var(--mono);
 }
 
 .nutrition-hero-foot button {
@@ -381,7 +355,7 @@
 .nutrient-lens-toggle small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -391,13 +365,13 @@
   align-items: center;
   gap: 4px;
   color: var(--muted);
-  font: 500 7px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   text-transform: uppercase;
 }
 
 .nutrient-lens-action svg,
 .food-editor-nutrient-toggle > svg {
-  transition: transform 180ms ease;
+  transition: transform 170ms ease;
 }
 
 .nutrient-lens.is-open .nutrient-lens-action svg,
@@ -424,12 +398,12 @@
 }
 
 .nutrient-meter strong {
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .nutrient-meter span {
   color: var(--ink-soft);
-  font: 500 7px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
 }
 
 .nutrient-meter span i {
@@ -459,7 +433,7 @@
   padding: 10px 12px 12px;
   color: var(--muted);
   background: var(--surface-alt);
-  font-size: 6px;
+  font-size: 9px;
   line-height: 1.5;
 }
 
@@ -490,7 +464,7 @@
 
 .copy-yesterday small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .meal-timeline,
@@ -516,7 +490,7 @@
 .nutrition-section-head > span,
 .nutrition-section-head > small {
   color: var(--muted);
-  font: 400 8px/1.3 var(--mono);
+  font: 400 9px/1.3 var(--mono);
   text-align: right;
 }
 
@@ -590,7 +564,7 @@
 
 .meal-group-head small {
   color: var(--muted);
-  font: 400 7px/1 var(--mono);
+  font: 400 9px/1 var(--mono);
 }
 
 .meal-group-total {
@@ -601,7 +575,7 @@
 
 .meal-group-total > span {
   color: var(--muted);
-  font: 500 7px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   text-transform: uppercase;
 }
 
@@ -655,7 +629,7 @@
 .meal-item small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -693,7 +667,7 @@
   background: color-mix(in srgb, var(--surface-raised) 55%, transparent);
   border: 1px dashed var(--line);
   border-radius: 11px;
-  font-size: 8px;
+  font-size: 9px;
   text-align: left;
 }
 
@@ -760,14 +734,14 @@
 .suggestion-copy small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .suggestion-protein {
   color: var(--ink);
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
 }
 
 .suggestion-protein b {
@@ -787,7 +761,7 @@
   color: var(--accent-ink);
   background: var(--accent);
   border-radius: 10px;
-  font: 600 5px/1 var(--mono);
+  font: 600 9px/1 var(--mono);
   font-style: normal;
   letter-spacing: .08em;
 }
@@ -809,7 +783,7 @@
   width: 36px;
   height: 36px;
   border-radius: 10px 10px 4px 10px;
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .food-monogram--large {
@@ -818,30 +792,6 @@
   margin-bottom: 18px;
   border-radius: 20px 20px 7px 20px;
   font-size: 15px;
-}
-
-.nutrition-note {
-  display: flex;
-  margin-top: 16px;
-  padding: 14px;
-  gap: 10px;
-  color: var(--muted);
-  background: var(--surface-alt);
-  border-radius: 13px;
-}
-
-.nutrition-note svg {
-  flex: 0 0 auto;
-  color: var(--accent-dark);
-}
-
-.nutrition-note p {
-  font-size: 8px;
-  line-height: 1.6;
-}
-
-.nutrition-note strong {
-  color: var(--ink-soft);
 }
 
 .nutrition-fab {
@@ -899,7 +849,7 @@
   max-width: 530px;
   margin-top: 10px;
   color: color-mix(in srgb, var(--sidebar-text) 48%, transparent);
-  font-size: 8px;
+  font-size: 9px;
   line-height: 1.5;
 }
 
@@ -930,7 +880,7 @@
   background: transparent;
   border: 1px solid var(--line);
   border-radius: 999px;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
 }
 
@@ -946,7 +896,7 @@
   justify-content: space-between;
   padding: 0 5px;
   color: var(--muted);
-  font: 500 6px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: .09em;
   text-transform: uppercase;
 }
@@ -1005,7 +955,7 @@
   color: var(--accent-ink);
   background: var(--accent);
   border-radius: 8px;
-  font: 600 5px/1 var(--mono);
+  font: 600 9px/1 var(--mono);
   font-style: normal;
   letter-spacing: .07em;
 }
@@ -1013,7 +963,7 @@
 .food-preset-main small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1032,14 +982,14 @@
 
 .food-preset-values strong span {
   color: var(--muted);
-  font-size: 6px;
+  font-size: 9px;
   font-weight: 400;
   text-transform: uppercase;
 }
 
 .food-preset-values small {
   color: var(--muted);
-  font-size: 6px;
+  font-size: 9px;
 }
 
 .food-preset-log,
@@ -1060,7 +1010,7 @@
   gap: 5px;
   color: var(--accent-ink);
   background: var(--accent);
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 750;
 }
 
@@ -1090,7 +1040,7 @@
 
 .foods-empty span {
   margin-top: 4px;
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .foods-empty button {
@@ -1100,7 +1050,7 @@
   background: var(--accent);
   border: 0;
   border-radius: 999px;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
 }
 
@@ -1152,7 +1102,7 @@
 .pattern-summary span {
   max-width: 95px;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
   line-height: 1.3;
 }
 
@@ -1171,17 +1121,18 @@
   left: 0;
   z-index: 2;
   display: flex;
-  align-items: center;
-  gap: 7px;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 5px;
   color: var(--muted);
-  font: 400 6px/1 var(--mono);
+  font: 400 9px/1 var(--mono);
   pointer-events: none;
 }
 
 .chart-target i {
   display: block;
+  width: 100%;
   height: 1px;
-  flex: 1;
   background: color-mix(in srgb, var(--accent-dark) 60%, transparent);
 }
 
@@ -1215,7 +1166,7 @@
 
 .protein-chart-day > span {
   color: var(--muted);
-  font: 400 6px/1 var(--mono);
+  font: 400 9px/1 var(--mono);
   text-align: center;
 }
 
@@ -1252,7 +1203,7 @@
 
 .pattern-insight-grid small {
   color: var(--muted);
-  font: 500 6px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: .1em;
 }
 
@@ -1264,7 +1215,7 @@
 .pattern-insight-grid p {
   margin-top: 5px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
   line-height: 1.55;
 }
 
@@ -1291,7 +1242,7 @@
   display: block;
   margin-bottom: 9px;
   color: var(--muted);
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -1343,7 +1294,7 @@
   min-height: 12px;
   margin-top: 7px;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
   line-height: 1.35;
 }
 
@@ -1374,7 +1325,7 @@
 .goal-choice button small {
   margin-left: auto;
   color: var(--muted);
-  font: 400 7px/1 var(--mono);
+  font: 400 9px/1 var(--mono);
 }
 
 .goal-choice button svg {
@@ -1454,7 +1405,7 @@
 
 .target-choice > label > span small {
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
 }
 
 .target-choice > label > b {
@@ -1504,7 +1455,7 @@
 .recommendation-number span {
   padding-bottom: 1px;
   color: color-mix(in srgb, var(--sidebar-text) 50%, transparent);
-  font: 400 8px/1.4 var(--mono);
+  font: 400 9px/1.4 var(--mono);
   text-transform: uppercase;
 }
 
@@ -1519,7 +1470,7 @@
 
 .recommendation-range span {
   color: color-mix(in srgb, var(--sidebar-text) 48%, transparent);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .recommendation-range strong {
@@ -1541,7 +1492,7 @@
 
 .formula-stack span {
   color: color-mix(in srgb, var(--sidebar-text) 48%, transparent);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .formula-stack strong {
@@ -1550,7 +1501,7 @@
 
 .formula-stack > i {
   color: color-mix(in srgb, var(--sidebar-text) 25%, transparent);
-  font: 400 8px/1 var(--mono);
+  font: 400 9px/1 var(--mono);
   font-style: normal;
   text-align: right;
 }
@@ -1563,7 +1514,7 @@
   color: color-mix(in srgb, var(--sidebar-text) 58%, transparent);
   background: color-mix(in srgb, var(--sidebar-text) 5%, transparent);
   border-radius: 10px;
-  font-size: 7px;
+  font-size: 9px;
   line-height: 1.5;
 }
 
@@ -1576,7 +1527,7 @@
   display: block;
   margin-top: 17px;
   color: color-mix(in srgb, var(--sidebar-text) 28%, transparent);
-  font-size: 6px;
+  font-size: 9px;
   line-height: 1.5;
 }
 
@@ -1670,7 +1621,7 @@
 
 .food-logger-manage small {
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
 }
 
 .food-logger-manage > svg:last-child {
@@ -1755,7 +1706,7 @@
 .food-results small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1802,7 +1753,7 @@
 
 .food-no-results span {
   margin-top: 4px;
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .manual-food-step,
@@ -1909,7 +1860,7 @@
 
 .serving-stepper span {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .food-detail-macros {
@@ -1936,7 +1887,7 @@
 
 .food-detail-macros span {
   color: var(--muted);
-  font: 400 7px/1 var(--mono);
+  font: 400 9px/1 var(--mono);
   text-transform: uppercase;
 }
 
@@ -1976,7 +1927,7 @@
   display: block;
   margin-bottom: 8px;
   color: var(--muted);
-  font: 500 7px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: .07em;
   text-transform: uppercase;
 }
@@ -2009,7 +1960,7 @@
 .food-editor-fields b,
 .food-editor-nutrients b {
   color: var(--muted);
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
 }
 
 .food-editor-diet {
@@ -2030,7 +1981,7 @@
   background: transparent;
   border: 1px solid var(--line);
   border-radius: 999px;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
 }
 
@@ -2078,7 +2029,7 @@
 
 .food-editor-nutrient-toggle small {
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
 }
 
 .food-editor-nutrient-toggle > svg {
@@ -2113,7 +2064,7 @@
   background: transparent;
   border: 0;
   border-radius: 999px;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
 }
 

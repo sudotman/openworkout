@@ -18,20 +18,6 @@ body.routine-modal-open {
   min-width: 0;
 }
 
-.routine-kicker,
-.routine-program-kicker,
-.routine-modal-kicker,
-.routine-editor-header > div > span,
-.routine-builder-heading > div > span {
-  display: block;
-  font: 500 10px/1.2 var(--mono);
-  letter-spacing: 0.13em;
-}
-
-.routine-kicker {
-  color: var(--muted);
-}
-
 .routine-view-header h1 {
   margin-top: 6px;
   font-size: clamp(40px, 12vw, 54px);
@@ -98,12 +84,12 @@ body.routine-modal-open {
 }
 
 .routine-button-danger {
-  color: #fff;
+  color: var(--danger-ink);
   background: var(--danger);
 }
 
 .routine-button-danger:hover {
-  background: #b94137;
+  background: color-mix(in srgb, var(--danger) 88%, black);
 }
 
 .routine-header-action {
@@ -190,7 +176,7 @@ body.routine-modal-open {
 
 .routine-folder-heading small {
   color: var(--muted);
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
@@ -206,7 +192,7 @@ body.routine-modal-open {
   padding: 16px 1px;
   column-gap: 8px;
   border-bottom: 1px solid var(--line);
-  transition: padding 180ms ease, background-color 180ms ease;
+  transition: padding 170ms ease, background-color 170ms ease;
 }
 
 .routine-row-index {
@@ -244,7 +230,7 @@ body.routine-modal-open {
   display: block;
   margin-top: 7px;
   color: var(--muted-2);
-  font: 500 8px/1.2 var(--mono);
+  font: 500 9px/1.2 var(--mono);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -269,7 +255,7 @@ body.routine-modal-open {
   background: transparent;
   border: 0;
   border-radius: 50%;
-  transition: color 160ms ease, background-color 160ms ease, transform 160ms ease;
+  transition: color 170ms ease, background-color 170ms ease, transform 170ms ease;
 }
 
 .routine-icon-button:hover {
@@ -283,7 +269,7 @@ body.routine-modal-open {
 
 .routine-delete-button:hover {
   color: var(--danger);
-  background: rgba(201, 79, 67, 0.08);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
 }
 
 .routine-start-button {
@@ -437,7 +423,7 @@ body.routine-modal-open {
   margin-top: 13px;
   gap: 6px 12px;
   color: rgba(255, 255, 255, 0.62);
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.045em;
   text-transform: uppercase;
 }
@@ -457,7 +443,7 @@ body.routine-modal-open {
 }
 
 .routine-save-program:hover:not(:disabled) {
-  color: #e5ff82;
+  color: color-mix(in srgb, var(--accent) 70%, white);
 }
 
 .routine-save-program.routine-is-saved {
@@ -503,12 +489,6 @@ body.routine-modal-open {
   padding: 20px 18px 18px;
   gap: 14px;
   border-bottom: 1px solid var(--line);
-}
-
-.routine-editor-header > div > span,
-.routine-builder-heading > div > span,
-.routine-modal-kicker {
-  color: var(--muted);
 }
 
 .routine-editor-header h2 {
@@ -570,7 +550,7 @@ body.routine-modal-open {
   border-bottom: 1px solid var(--control-strong);
   border-radius: 0;
   font-size: 13px;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  transition: border-color 170ms ease, box-shadow 170ms ease;
 }
 
 .routine-field input {
@@ -599,7 +579,7 @@ body.routine-modal-open {
 
 .routine-field > small {
   color: var(--muted-2);
-  font-size: 8px;
+  font-size: 9px;
   line-height: 1.4;
 }
 
@@ -623,7 +603,7 @@ body.routine-modal-open {
   position: absolute;
   right: 0;
   bottom: 4px;
-  font: 500 7px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
 }
 
 .routine-builder-heading {
@@ -644,7 +624,7 @@ body.routine-modal-open {
 .routine-builder-heading > small {
   max-width: 150px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
   line-height: 1.4;
   text-align: right;
 }
@@ -673,7 +653,7 @@ body.routine-modal-open {
 
 .routine-order-number {
   color: var(--muted-2);
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
 }
 
 .routine-selected-copy {
@@ -693,7 +673,7 @@ body.routine-modal-open {
 .routine-selected-copy small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -729,7 +709,7 @@ body.routine-modal-open {
 
 .routine-order-actions .routine-remove-exercise:hover {
   color: var(--danger);
-  background: rgba(201, 79, 67, 0.08);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
 }
 
 .routine-prescription-toggle {
@@ -745,9 +725,9 @@ body.routine-modal-open {
   background: transparent;
   border: 0;
   border-radius: 8px;
-  font: 500 8px/1.2 var(--mono);
+  font: 500 9px/1.2 var(--mono);
   text-align: left;
-  transition: color 160ms ease, background-color 160ms ease;
+  transition: color 170ms ease, background-color 170ms ease;
 }
 
 .routine-prescription-toggle:hover,
@@ -763,7 +743,7 @@ body.routine-modal-open {
 }
 
 .routine-prescription-toggle > svg:last-child {
-  transition: transform 180ms ease;
+  transition: transform 170ms ease;
 }
 
 .routine-prescription-toggle > .routine-chevron-open {
@@ -789,7 +769,7 @@ body.routine-modal-open {
 
 .routine-prescription-grid label > span {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
 }
 
@@ -807,7 +787,7 @@ body.routine-modal-open {
   border: 1px solid var(--line);
   border-radius: 9px;
   font: 500 12px/1 var(--mono);
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  transition: border-color 170ms ease, box-shadow 170ms ease;
 }
 
 .routine-prescription-grid input:focus {
@@ -822,7 +802,7 @@ body.routine-modal-open {
   color: var(--muted);
   background: transparent;
   border: 0;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
 }
 
@@ -855,7 +835,7 @@ body.routine-modal-open {
 }
 
 .routine-selection-empty small {
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .routine-exercise-search {
@@ -869,7 +849,7 @@ body.routine-modal-open {
   background: var(--surface-alt);
   border: 1px solid transparent;
   border-radius: 13px;
-  transition: border-color 160ms ease, background-color 160ms ease;
+  transition: border-color 170ms ease, background-color 170ms ease;
 }
 
 .routine-exercise-search:focus-within {
@@ -915,7 +895,7 @@ body.routine-modal-open {
   background: transparent;
   border: 0;
   border-bottom: 1px solid var(--line);
-  transition: padding 160ms ease, background-color 160ms ease;
+  transition: padding 170ms ease, background-color 170ms ease;
 }
 
 .routine-search-result:hover {
@@ -939,7 +919,7 @@ body.routine-modal-open {
 
 .routine-search-result small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
 }
 
 .routine-search-result > svg {
@@ -971,7 +951,7 @@ body.routine-modal-open {
 
 .routine-editor-footer p {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
   text-align: center;
 }
 
@@ -1009,7 +989,7 @@ body.routine-modal-open {
   height: 46px;
   margin-bottom: 23px;
   color: var(--danger);
-  background: rgba(201, 79, 67, 0.1);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
   border-radius: 50%;
 }
 

@@ -2,14 +2,14 @@
   "id": "./",
   "name": "OpenWorkout",
   "short_name": "OpenWorkout",
-  "description": "A private, on-device workout log for training with clarity.",
+  "description": "A private, on-device workout log.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
-  "background_color": "#10120f",
-  "theme_color": "#10120f",
+  "background_color": "#11130f",
+  "theme_color": "#11130f",
   "categories": ["fitness", "health", "lifestyle", "utilities"],
   "icons": [
     {

@@ -76,9 +76,8 @@ export function WorkoutShareCard({ workout, unit, distanceUnit, exerciseMap, onD
           ['DURATION', formatCardioTime(workout?.durationSeconds)],
         ]
   const shareCopy = {
-    kicker: `STORY EXPORT · ${mode.toUpperCase()}`,
     title: workout?.name || 'Workout',
-    body: 'Includes your logged metrics, performance plot, and a complete movement register whenever the layout has room.',
+    body: 'A 1080 × 1920 card with this session\u2019s metrics, a per-movement chart, and the full set list.',
   }
 
   const filename = useMemo(() => workoutShareFilename(workout), [workout])
@@ -114,8 +113,8 @@ export function WorkoutShareCard({ workout, unit, distanceUnit, exerciseMap, onD
         files: [shareFile],
         title: `${workout.name} · OpenWorkout`,
         text: hasCardio
-          ? `${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit} · ${formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}${mode === 'hybrid' ? ` · ${strengthSetCount} lifting sets` : ''}. Session logged.`
-          : 'Session complete. Work put in.',
+          ? `${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit} · ${formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}${mode === 'hybrid' ? ` · ${strengthSetCount} lifting sets` : ''}`
+          : `${strengthSetCount} sets · ${formatCardioTime(workout?.durationSeconds)}.`,
       })
     } catch (shareError) {
       if (shareError?.name !== 'AbortError') notify?.('Could not open the share menu')
@@ -138,7 +137,6 @@ export function WorkoutShareCard({ workout, unit, distanceUnit, exerciseMap, onD
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       >
         <span className="share-record-mark" aria-hidden="true" />
-        <span className="section-kicker">{shareCopy.kicker}</span>
         <h2>{shareCopy.title}</h2>
         <p>{shareCopy.body}</p>
         <div className="share-session-facts">

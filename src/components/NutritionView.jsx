@@ -19,7 +19,6 @@ import {
   Target,
   Trash2,
   TrendingUp,
-  Utensils,
   X,
 } from 'lucide-react'
 import {
@@ -136,7 +135,7 @@ function DayHero({ entries, target, recommendation, onLog }) {
           <span>{reached ? <Check size={15} /> : <Target size={15} />}</span>
           <div>
             <strong>{reached ? 'Target reached' : `${remaining}g to go`}</strong>
-            <small>{reached ? 'Anything else is a bonus.' : `Built from ${recommendation.factor.toFixed(1)}g per kg.`}</small>
+            <small>{`${recommendation.factor.toFixed(1)}g per kg of body weight`}</small>
           </div>
         </div>
       </div>
@@ -167,7 +166,7 @@ function NutrientLens({ entries, foods }) {
         <span className="nutrient-lens-icon"><Leaf size={16} /></span>
         <span>
           <strong>Micronutrients</strong>
-          <small>Fiber {nutrientValue(totals.fiber, fiber.unit)} · and more</small>
+          <small>{NUTRIENT_TARGETS.length} tracked · fiber {nutrientValue(totals.fiber, fiber.unit)}</small>
         </span>
         <span className="nutrient-lens-action">{expanded ? 'Hide' : 'View'} <ChevronDown size={15} /></span>
       </button>
@@ -206,13 +205,12 @@ function SmartSuggestions({ remaining, profile, recentFoodIds, foods, onQuickAdd
     <section className="smart-suggestions">
       <div className="nutrition-section-head">
         <div>
-          <span className="nutrition-kicker"><Target size={12} /> SMART PICKS</span>
-          <h2>{remaining > 0 ? `Easy ways to close the ${remaining}g gap` : 'Good choices for later'}</h2>
+          <h2>{remaining > 0 ? `Foods that close the ${remaining}g gap` : 'Foods for the rest of the day'}</h2>
         </div>
-        <small>Based on your goal and diet</small>
+        <small>Matched to your goal and diet</small>
       </div>
       <div className="suggestion-grid">
-        {suggestions.map((food, index) => (
+        {suggestions.map((food) => (
           <button key={food.id} className="suggestion-card" onClick={() => onQuickAdd(food)}>
             <span className="food-monogram">{food.name.slice(0, 2).toUpperCase()}</span>
             <span className="suggestion-copy">
@@ -221,7 +219,7 @@ function SmartSuggestions({ remaining, profile, recentFoodIds, foods, onQuickAdd
             </span>
             <span className="suggestion-protein"><b>+{food.protein}</b>g</span>
             <Plus size={15} />
-            {index === 0 && <i className="best-fit">BEST FIT</i>}
+            {remaining > 0 && food.protein >= remaining && <i className="best-fit">CLOSES THE GAP</i>}
           </button>
         ))}
       </div>
@@ -234,8 +232,7 @@ function MealTimeline({ entries, onLog, onDelete }) {
     <section className="meal-timeline">
       <div className="nutrition-section-head">
         <div>
-          <span className="nutrition-kicker"><Utensils size={12} /> MEALS</span>
-          <h2>Your day, meal by meal</h2>
+          <h2>Meals</h2>
         </div>
         <span>{entries.length} {entries.length === 1 ? 'food' : 'foods'} logged</span>
       </div>
@@ -311,10 +308,6 @@ function DayView({ date, entries, foods, target, recommendation, nutrition, onLo
           foods={foods}
           onQuickAdd={onQuickAdd}
         />
-        <div className="nutrition-note">
-          <Info size={16} />
-          <p><strong>Consistency beats precision.</strong> Portions are estimates; getting within 10g of your target is a strong day.</p>
-        </div>
       </aside>
     </div>
   )
@@ -339,7 +332,14 @@ function PatternsView({ nutrition, target }) {
       .filter((entry) => days.includes(entry.date) && entry.meal === slot.id)
       .reduce((sum, entry) => sum + (Number(entry.protein) || 0), 0),
   }))
-  const anchorMeal = [...mealContributions].sort((left, right) => right.protein - left.protein)[0]
+  const totalLoggedProtein = mealContributions.reduce((sum, slot) => sum + slot.protein, 0)
+  const anchorMeal = totalLoggedProtein > 0
+    ? [...mealContributions].sort((left, right) => right.protein - left.protein)[0]
+    : null
+  const missDays = loggedDays.filter((day) => day.protein < target)
+  const averageShortfall = missDays.length
+    ? Math.round(missDays.reduce((sum, day) => sum + (target - day.protein), 0) / missDays.length)
+    : 0
 
   return (
     <div className="patterns-layout">
@@ -368,16 +368,28 @@ function PatternsView({ nutrition, target }) {
         </div>
       </section>
 
-      <section className="pattern-insight-grid">
-        <article>
-          <span className="insight-icon"><CircleGauge size={20} /></span>
-          <div><small>MOST CONSISTENT</small><strong>{anchorMeal.label} carries the day</strong><p>Your {anchorMeal.label.toLowerCase()} logs contribute the largest share of daily protein. Keep that anchor meal reliable.</p></div>
-        </article>
-        <article>
-          <span className="insight-icon"><Target size={20} /></span>
-          <div><small>NEXT EXPERIMENT</small><strong>Front-load 25–35g</strong><p>A stronger breakfast makes the target easier to reach without a large late meal.</p></div>
-        </article>
-      </section>
+      {anchorMeal && (
+        <section className="pattern-insight-grid">
+          <article>
+            <span className="insight-icon"><CircleGauge size={20} /></span>
+            <div>
+              <small>LARGEST SOURCE</small>
+              <strong>{anchorMeal.label}</strong>
+              <p>{anchorMeal.protein}g of the {totalLoggedProtein}g logged over these 14 days, or {Math.round((anchorMeal.protein / totalLoggedProtein) * 100)}%.</p>
+            </div>
+          </article>
+          <article>
+            <span className="insight-icon"><Target size={20} /></span>
+            <div>
+              <small>SHORTFALL ON MISSED DAYS</small>
+              <strong>{missDays.length ? `${averageShortfall}g` : 'None'}</strong>
+              <p>{missDays.length
+                ? `Averaged over the ${missDays.length} logged ${missDays.length === 1 ? 'day' : 'days'} that finished under ${target}g.`
+                : `Every logged day reached ${target}g.`}</p>
+            </div>
+          </article>
+        </section>
+      )}
     </div>
   )
 }
@@ -403,9 +415,8 @@ function FoodsView({ foods, recentFoodIds, onCreate, onEdit, onQuickLog }) {
     <div className="foods-workspace">
       <section className="foods-intro">
         <div>
-          <span className="nutrition-kicker"><SlidersHorizontal size={12} /> YOUR FOOD PRESETS</span>
-          <h2>List of meals, just remember to eat.</h2>
-          <p>Edit any serving or nutrition value here for preset or custom foods.</p>
+          <h2>Foods</h2>
+          <p>Edit the serving or nutrition values on any preset, or add your own.</p>
         </div>
         <button className="button button--accent" onClick={onCreate}><Plus size={17} /> Add food</button>
       </section>
@@ -466,7 +477,7 @@ function GoalSetup({ profile, recommendation, onSave, linkedWeight }) {
     <div className="goal-layout">
       <section className="goal-form">
         <div className="nutrition-section-head">
-          <div><span className="nutrition-kicker">YOUR BASELINE</span><h2>Make the target fit your life</h2></div>
+          <div><h2>Your baseline</h2></div>
         </div>
         <div className="goal-fields">
           <label>
@@ -506,7 +517,7 @@ function GoalSetup({ profile, recommendation, onSave, linkedWeight }) {
           <legend>Daily target</legend>
           <label className={draft.targetMode === 'smart' ? 'is-active' : ''}>
             <input type="radio" name="target-mode" checked={draft.targetMode === 'smart'} onChange={() => update('targetMode', 'smart')} />
-            <span><strong>Smart target</strong><small>Updates when your profile changes.</small></span><b>{preview.smartTarget}g</b>
+            <span><strong>Calculated</strong><small>Updates when your profile changes.</small></span><b>{preview.smartTarget}g</b>
           </label>
           <label className={draft.targetMode === 'custom' ? 'is-active' : ''}>
             <input type="radio" name="target-mode" checked={draft.targetMode === 'custom'} onChange={() => update('targetMode', 'custom')} />
@@ -519,7 +530,7 @@ function GoalSetup({ profile, recommendation, onSave, linkedWeight }) {
       </section>
 
       <aside className="recommendation-card">
-        <span className="nutrition-kicker"><CircleGauge size={12} /> LIVE RECOMMENDATION</span>
+        <span className="nutrition-kicker"><CircleGauge size={12} /> RECOMMENDED TARGET</span>
         <div className="recommendation-number"><strong>{preview.target}</strong><span>grams<br />per day</span></div>
         <div className="recommendation-range"><span>Useful range</span><strong>{preview.range.low}–{preview.range.high}g</strong></div>
         <div className="formula-stack">
@@ -529,8 +540,8 @@ function GoalSetup({ profile, recommendation, onSave, linkedWeight }) {
           <i>=</i>
           <div><span>Rounded target</span><strong>{preview.smartTarget}g</strong></div>
         </div>
-        {preview.adjustedForBmi && <p><Info size={15} /> We used an adjusted working weight so the estimate stays useful for your height.</p>}
-        <small className="recommendation-disclaimer">A practical fitness estimate for healthy adults—not medical nutrition advice.</small>
+        {preview.adjustedForBmi && <p><Info size={15} /> The working weight is adjusted for your height so the estimate stays useful.</p>}
+        <small className="recommendation-disclaimer">A general fitness estimate for healthy adults, not medical nutrition advice.</small>
       </aside>
     </div>
   )
@@ -583,7 +594,7 @@ function FoodEditor({ food, onClose, onSave, onDelete, onReset }) {
         <button className="food-logger-close" onClick={onClose} aria-label="Close food editor"><X size={20} /></button>
         <div className="food-logger-head">
           <span className="nutrition-kicker">{food ? 'EDIT FOOD PRESET' : 'NEW FOOD PRESET'}</span>
-          <h2 id="food-editor-title">{food ? `Tune ${food.name}` : 'Add food once. Reuse it.'}</h2>
+          <h2 id="food-editor-title">{food ? `Edit ${food.name}` : 'New food'}</h2>
           <p>{food?.builtIn ? 'Your changes only affect future logs; previous days stay intact.' : 'Use the values on the package or recipe.'}</p>
         </div>
 
@@ -601,7 +612,7 @@ function FoodEditor({ food, onClose, onSave, onDelete, onReset }) {
         </fieldset>
 
         <button className="food-editor-nutrient-toggle" onClick={() => setShowNutrients((value) => !value)} aria-expanded={showNutrients}>
-          <span><Leaf size={16} /><span><strong>Fiber & micronutrients</strong><small>Optional—add them when the label provides them.</small></span></span>
+          <span><Leaf size={16} /><span><strong>Fiber & micronutrients</strong><small>Optional. Add them when the label has them.</small></span></span>
           <ChevronDown size={17} />
         </button>
         <AnimatePresence initial={false}>
@@ -680,7 +691,7 @@ function FoodLogger({ meal, onClose, onAdd, onManageFoods, diet, foods }) {
             <div className="food-logger-head">
               <span className="nutrition-kicker">LOG {slot.label.toUpperCase()}</span>
               <h2 id="food-logger-title">What did you eat?</h2>
-              <p>Search your foods, or tune the list whenever a label differs.</p>
+              <p>Search your foods, or edit the list when a label differs.</p>
             </div>
             <button className="food-logger-manage" onClick={onManageFoods}><SlidersHorizontal size={16} /><span><strong>Add or edit foods</strong><small>Brands, servings and nutrition values</small></span><ChevronRight size={16} /></button>
             <label className="food-search"><Search size={18} /><input autoFocus value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search foods" />{search && <button onClick={() => setSearch('')}><X size={15} /></button>}</label>
@@ -810,9 +821,8 @@ export function NutritionView({ nutrition, updateNutrition, latestWeightKg, noti
     <div className="nutrition-view content-width">
       <header className="nutrition-header">
         <div>
-          <span className="eyebrow">NUTRITION, WITHOUT THE NOISE</span>
-          <h1>Protein, on track.</h1>
-          <p>Build meals around one useful number and keep the rest refreshingly simple.</p>
+          <h1>Protein</h1>
+          <p>One number to aim at, logged meal by meal.</p>
         </div>
         <button
           className="button button--dark nutrition-log-desktop"

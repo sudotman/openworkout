@@ -709,7 +709,6 @@ function RoutinesView({
             {...MODAL_MOTION}
           >
             <span className="routine-confirm-icon"><Trash2 size={22} /></span>
-            <span className="routine-modal-kicker">DELETE ROUTINE</span>
             <h2 id={deleteTitleId}>Remove “{deleteTarget.name}”?</h2>
             <p>This removes the routine from this device. Your completed workout history stays untouched.</p>
             <div className="routine-confirm-actions">
@@ -730,9 +729,8 @@ function RoutinesView({
     <div className="routine-view content-width">
       <header className="routine-view-header">
         <div>
-          <span className="routine-kicker">PROGRAM YOUR TRAINING</span>
           <h1>Routines</h1>
-          <p>Build repeatable sessions, organize them your way, and start training in one tap.</p>
+          <p>Repeatable sessions, grouped into folders.</p>
         </div>
         <button type="button" className="routine-button routine-button-dark routine-header-action" onClick={openCreate}>
           <Plus size={18} /> New routine
@@ -773,16 +771,18 @@ function RoutinesView({
                         .map((id) => exerciseMap.get(id)?.name)
                         .filter(Boolean)
                       const prescribedCount = exerciseIds.filter((id) => routine.prescriptions?.[id]).length
+                      const summary = routine.description || exerciseNames.slice(0, 3).join(' · ')
+                      const truncated = !routine.description && exerciseNames.length > 3
                       return (
                         <motion.article className="routine-row" key={routine.id} layout>
                           <span className="routine-row-index">{String(index + 1).padStart(2, '0')}</span>
                           <div className="routine-row-main">
                             <h3>{routine.name}</h3>
-                            <p>{routine.description || exerciseNames.slice(0, 3).join(' · ') || 'Ready for exercises'}</p>
+                            <p>{summary || 'No exercises yet'}</p>
                             <span>
                               {plural(exerciseIds.length, 'exercise')}
                               {prescribedCount ? ' · ' + prescribedCount + ' prescribed' : ''}
-                              {exerciseNames.length > 3 ? ' · +' + (exerciseNames.length - 3) + ' more' : ''}
+                              {truncated ? ' · +' + (exerciseNames.length - 3) + ' more' : ''}
                             </span>
                           </div>
                           <div className="routine-row-actions">
@@ -839,9 +839,8 @@ function RoutinesView({
             >
               <span><Layers3 size={25} strokeWidth={1.7} /></span>
               <div>
-                <span className="routine-kicker">NO ROUTINES YET</span>
-                <h2>Make every session easier to start.</h2>
-                <p>Build a routine from the full exercise library, or save one of the programs alongside it.</p>
+                <h2>No routines yet</h2>
+                <p>Build one from the exercise library, or save a built-in program.</p>
               </div>
               <button type="button" className="routine-button routine-button-dark" onClick={openCreate}>
                 <Plus size={17} /> Build a routine
@@ -853,9 +852,9 @@ function RoutinesView({
         <aside className="routine-program-library">
           <header className="routine-program-header">
             <span className="routine-program-icon"><Layers3 size={17} /></span>
-            <span className="routine-program-kicker">BUILT-IN PROGRAMS</span>
-            <h2>A strong place to start.</h2>
-            <p>Save a ready-made session, then edit it around your equipment and goals.</p>
+            <span className="routine-program-kicker">BUILT-IN</span>
+            <h2>Programs</h2>
+            <p>Save a ready-made session, then edit it around your equipment.</p>
           </header>
 
           <div className="routine-program-list">
@@ -865,7 +864,7 @@ function RoutinesView({
               )
               return (
                 <article className="routine-program" key={program.id}>
-                  <span className="routine-program-number">0{index + 1}</span>
+                  <span className="routine-program-number">{String(index + 1).padStart(2, '0')}</span>
                   <h3>{program.name}</h3>
                   <p>{program.description}</p>
                   <div className="routine-program-meta">

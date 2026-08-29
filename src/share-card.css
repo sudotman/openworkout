@@ -62,7 +62,7 @@
 .share-session-facts span {
   overflow: hidden;
   color: var(--muted);
-  font: 500 7px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
   letter-spacing: 0.05em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -84,7 +84,7 @@
   padding-top: 0;
   color: var(--muted);
   border-top: 0;
-  font: 500 8px/1 var(--mono);
+  font: 500 9px/1 var(--mono);
 }
 
 .share-workout-meta strong {
@@ -108,7 +108,7 @@
   max-width: 420px;
   margin: 9px auto 0;
   color: var(--muted-2);
-  font-size: 8px;
+  font-size: 9px;
   line-height: 1.45;
 }
 
@@ -166,7 +166,7 @@
   border: 2px solid rgba(23, 23, 19, 0.14);
   border-top-color: var(--accent);
   border-radius: 50%;
-  animation: share-card-spin 800ms linear infinite;
+  animation: share-card-spin 700ms linear infinite;
 }
 
 .share-card-error strong {

@@ -259,7 +259,7 @@ export function ProgressPhotos({ photos = [], onAdd, onDelete }) {
     <section className="photo-module" aria-labelledby="photo-title">
       <header className="photo-header">
         <div>
-          <span className="photo-kicker">PRIVATE &amp; ON DEVICE</span>
+          <span className="photo-kicker">ON THIS DEVICE</span>
           <h2 id="photo-title">Progress photos</h2>
           <p>Same pose and lighting make changes easier to see.</p>
         </div>

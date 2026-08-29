@@ -268,7 +268,6 @@ export function TrainingCalendar({ workouts = [], onSelectWorkout }) {
     <section className="pp-module pp-calendar" aria-labelledby="pp-calendar-title">
       <header className="pp-module-head">
         <div>
-          <span className="pp-kicker">CONSISTENCY</span>
           <h2 id="pp-calendar-title">Training calendar</h2>
         </div>
         {!isCurrentMonth && (
@@ -505,7 +504,6 @@ export function MeasurementsPanel({ measurements = [], onAdd, onDelete, unit = '
     <section className="pp-module pp-measurements" aria-labelledby="pp-measurements-title">
       <header className="pp-module-head">
         <div>
-          <span className="pp-kicker">BODY METRICS</span>
           <h2 id="pp-measurements-title">Measurements</h2>
         </div>
         <button
@@ -866,7 +864,6 @@ export function ExercisePerformance({ exercise, workouts = [], unit = 'kg', dist
     <section className="pp-module pp-performance" aria-labelledby="pp-performance-title">
       <header className="pp-module-head pp-module-head--performance">
         <div>
-          <span className="pp-kicker">EXERCISE HISTORY</span>
           <h2 id="pp-performance-title">{exerciseName}</h2>
           {typeof exercise !== 'string' && exercise?.primaryMuscle && (
             <p>{exercise.primaryMuscle} · {exercise.equipment}</p>

@@ -220,7 +220,6 @@ function ToolHeader({ onClose }) {
   return (
     <header className="wt-header">
       <div>
-        <span className="wt-kicker">LIFTING UTILITIES</span>
         <h2>Workout tools</h2>
       </div>
       {onClose && (
