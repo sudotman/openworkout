@@ -79,7 +79,7 @@
 }
 
 .pp-button:disabled {
-  color: var(--muted-2);
+  color: var(--muted);
   background: var(--surface-alt);
   cursor: not-allowed;
 }
@@ -196,7 +196,7 @@
 }
 
 .pp-weekdays span {
-  color: var(--muted-2);
+  color: var(--muted);
   font: 500 9px/1 var(--mono);
   text-align: center;
 }
@@ -241,7 +241,7 @@
 }
 
 .pp-calendar-day--outside {
-  color: var(--muted-2);
+  color: var(--muted);
 }
 
 .pp-calendar-day--today > span {
@@ -340,7 +340,7 @@
 }
 
 .pp-field input:focus {
-  border-color: var(--muted-2);
+  border-color: var(--muted);
   box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
@@ -562,7 +562,7 @@
   height: 34px;
   padding: 0;
   place-items: center;
-  color: var(--muted-2);
+  color: var(--muted);
   background: transparent;
   border: 0;
   border-radius: 9px;
@@ -688,7 +688,7 @@
 .pp-muscle-label-row i {
   display: inline-block;
   width: 27px;
-  color: var(--muted-2);
+  color: var(--muted);
   font: 500 9px/1 var(--mono);
   font-style: normal;
 }
@@ -720,7 +720,7 @@
 .pp-footnote {
   margin: 0;
   padding: 0 18px 16px;
-  color: var(--muted-2);
+  color: var(--muted);
   font: 500 9px/1 var(--mono);
 }
 
@@ -779,7 +779,7 @@
 .pp-set-history-head {
   min-height: 32px;
   margin-top: 8px;
-  color: var(--muted-2);
+  color: var(--muted);
   border-bottom: 1px solid var(--line);
   font: 500 9px/1 var(--mono);
   text-transform: uppercase;

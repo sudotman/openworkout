@@ -875,8 +875,6 @@ export function NutritionView({ nutrition, updateNutrition, latestWeightKg, noti
         </motion.div>
       </AnimatePresence>
 
-      <button className="nutrition-fab" onClick={() => setLoggerMeal(suggestedMealSlot())}><Plus size={20} /><span>Log food</span></button>
-
       <AnimatePresence>
         {loggerMeal && (
           <FoodLogger

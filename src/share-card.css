@@ -107,7 +107,7 @@
   display: block;
   max-width: 420px;
   margin: 9px auto 0;
-  color: var(--muted-2);
+  color: var(--muted);
   font-size: 9px;
   line-height: 1.45;
 }

@@ -1,3 +1,8 @@
+/**
+ * @typedef {import('../types.js').Workout} Workout
+ * @typedef {import('../types.js').Exercise} Exercise
+ */
+
 export const STORAGE_KEYS = Object.freeze({
   APP_STATE: 'openworkout:app-state',
 })

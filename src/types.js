@@ -1,6 +1,8 @@
 /**
  * @typedef {'Beginner' | 'Intermediate' | 'Advanced'} Difficulty
  * @typedef {'Barbell' | 'Dumbbell' | 'Cable' | 'Machine' | 'Bodyweight' | 'Kettlebell' | 'Bands'} Equipment
+ * @typedef {'weight-reps' | 'duration' | 'distance' | 'cardio'} TrackingType
+ * @typedef {'normal' | 'warmup' | 'drop' | 'failure'} SetType
  *
  * @typedef {Object} Exercise
  * @property {string} id
@@ -12,6 +14,8 @@
  * @property {string} pattern
  * @property {string[]} instructions
  * @property {string[]} cues
+ * @property {TrackingType} [trackingType]
+ * @property {boolean} [custom]
  *
  * @typedef {Object} WorkoutSet
  * @property {string} id
@@ -25,6 +29,7 @@
  * @property {number | ''} [incline]
  * @property {number | ''} [heartRate]
  * @property {number | ''} [calories]
+ * @property {SetType} type
  * @property {boolean} completed
  *
  * @typedef {Object} WorkoutExercise
@@ -32,6 +37,10 @@
  * @property {string} exerciseId
  * @property {WorkoutSet[]} sets
  * @property {string} notes
+ * @property {string} [supersetId]
+ * @property {number} [restSeconds]
+ * @property {number} [targetMinReps]
+ * @property {number} [targetMaxReps]
  *
  * @typedef {Object} Workout
  * @property {string} id
@@ -41,6 +50,10 @@
  * @property {string | null} completedAt
  * @property {number} durationSeconds
  * @property {WorkoutExercise[]} exercises
+ * @property {string} [notes]
+ * @property {string | null} [pausedAt]
+ * @property {number} [pausedDurationSeconds]
+ * @property {boolean} [isSample]
  */
 
 export {}

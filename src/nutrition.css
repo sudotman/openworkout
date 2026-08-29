@@ -167,7 +167,7 @@
 
 .protein-score i {
   margin-top: 5px;
-  color: color-mix(in srgb, var(--sidebar-text) 42%, transparent);
+  color: color-mix(in srgb, var(--sidebar-text) 68%, transparent);
   font-size: 9px;
   font-style: normal;
 }
@@ -273,7 +273,7 @@
 
 .protein-rail-stops small {
   margin-top: 2px;
-  color: color-mix(in srgb, var(--sidebar-text) 46%, transparent);
+  color: color-mix(in srgb, var(--sidebar-text) 72%, transparent);
   font: 400 9px/1 var(--mono);
 }
 
@@ -291,7 +291,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: color-mix(in srgb, var(--sidebar-text) 46%, transparent);
+  color: color-mix(in srgb, var(--sidebar-text) 72%, transparent);
   font: 400 9px/1 var(--mono);
 }
 
@@ -407,7 +407,7 @@
 }
 
 .nutrient-meter span i {
-  color: var(--muted-2);
+  color: var(--muted);
   font-style: normal;
 }
 
@@ -644,7 +644,7 @@
   width: 31px;
   height: 31px;
   padding: 0;
-  color: var(--muted-2);
+  color: var(--muted);
   background: transparent;
   border: 0;
   border-radius: 50%;
@@ -663,7 +663,7 @@
   min-height: 45px;
   margin-top: 6px;
   padding: 0 12px;
-  color: var(--muted-2);
+  color: var(--muted);
   background: color-mix(in srgb, var(--surface-raised) 55%, transparent);
   border: 1px dashed var(--line);
   border-radius: 11px;
@@ -745,7 +745,7 @@
 }
 
 .suggestion-protein b {
-  color: var(--accent-dark);
+  color: var(--ink);
   font-size: 12px;
 }
 
@@ -772,8 +772,7 @@
   width: 40px;
   height: 40px;
   color: var(--accent-ink);
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--accent) 72%, white), var(--accent));
+  background: var(--accent);
   border-radius: 12px 12px 5px 12px;
   font: 600 9px/1 var(--mono);
   letter-spacing: -.04em;
@@ -792,25 +791,6 @@
   margin-bottom: 18px;
   border-radius: 20px 20px 7px 20px;
   font-size: 15px;
-}
-
-.nutrition-fab {
-  position: fixed;
-  z-index: 20;
-  right: 17px;
-  bottom: calc(82px + env(safe-area-inset-bottom));
-  display: none;
-  align-items: center;
-  min-height: 47px;
-  padding: 0 17px;
-  gap: 7px;
-  color: var(--accent-ink);
-  background: var(--accent);
-  border: 0;
-  border-radius: 999px;
-  box-shadow: 0 10px 30px color-mix(in srgb, var(--sidebar) 25%, transparent);
-  font-size: 10px;
-  font-weight: 750;
 }
 
 /* Food presets */
@@ -1237,8 +1217,7 @@
 }
 
 .goal-form legend,
-.goal-fields > label > span,
-.manual-food-step label > span {
+.goal-fields > label > span {
   display: block;
   margin-bottom: 9px;
   color: var(--muted);
@@ -1261,16 +1240,14 @@
 }
 
 .goal-fields label > div,
-.target-choice label > div,
-.manual-macro-fields label > div {
+.target-choice label > div {
   display: flex;
   align-items: baseline;
   gap: 6px;
 }
 
 .goal-fields input,
-.target-choice label > div input,
-.manual-macro-fields input {
+.target-choice label > div input {
   min-width: 0;
   width: 100%;
   padding: 0;
@@ -1283,8 +1260,7 @@
 }
 
 .goal-fields b,
-.target-choice label > div b,
-.manual-macro-fields b {
+.target-choice label > div b {
   color: var(--muted);
   font: 500 9px/1 var(--mono);
 }
@@ -1573,7 +1549,6 @@
 }
 
 .food-logger-head h2,
-.manual-food-step h2,
 .food-detail-step h2 {
   margin-top: 8px;
   font-size: 29px;
@@ -1582,7 +1557,6 @@
 }
 
 .food-logger-head p,
-.manual-food-step > p,
 .food-detail-step > p {
   margin-top: 8px;
   color: var(--muted);
@@ -1719,7 +1693,6 @@
   color: var(--muted);
 }
 
-.manual-food-button,
 .food-logger-back {
   display: inline-flex;
   align-items: center;
@@ -1731,10 +1704,6 @@
   border: 0;
   font-size: 9px;
   font-weight: 700;
-}
-
-.manual-food-button {
-  margin-top: 8px;
 }
 
 .food-no-results {
@@ -1756,56 +1725,13 @@
   font-size: 9px;
 }
 
-.manual-food-step,
 .food-detail-step {
   padding-top: 6px;
 }
 
-.manual-food-step > .nutrition-kicker,
 .food-detail-step > .nutrition-kicker {
   display: flex;
   margin-top: 24px;
-}
-
-.manual-food-step > label {
-  display: block;
-  margin-top: 17px;
-}
-
-.manual-food-step > label input {
-  width: 100%;
-  height: 48px;
-  padding: 0 13px;
-  color: var(--ink);
-  background: var(--control);
-  border: 1px solid transparent;
-  border-radius: 11px;
-}
-
-.manual-food-step > label input:focus {
-  background: var(--surface-raised);
-  border-color: var(--accent-dark);
-}
-
-.manual-macro-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  margin: 17px 0 22px;
-  gap: 9px;
-}
-
-.manual-macro-fields label {
-  padding: 13px;
-  background: var(--control);
-  border-radius: 11px;
-}
-
-.manual-macro-fields label > span {
-  margin-bottom: 8px;
-}
-
-.manual-macro-fields input {
-  font-size: 20px;
 }
 
 .food-detail-step {
@@ -2178,10 +2104,6 @@
   .nutrition-day-aside {
     position: sticky;
     top: 0;
-  }
-
-  .nutrition-fab {
-    display: none;
   }
 
   .patterns-layout {

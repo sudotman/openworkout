@@ -7,14 +7,14 @@
   text-rendering: optimizeLegibility;
   --ink: #171914;
   --ink-soft: #2b2e27;
-  --muted: #72766d;
-  --muted-2: #a1a49c;
+  --muted: #666961;
   --surface: #f3f2eb;
   --surface-raised: #fbfaf5;
   --surface-alt: #e9e8df;
   --line: #d9d9d0;
   --line-dark: rgba(255, 255, 255, 0.11);
   --accent: #d9ff4f;
+  --accent-on-dark: #d9ff4f;
   --accent-dark: #b5dd29;
   --accent-ink: #151712;
   --accent-soft: rgba(217, 255, 79, 0.24);
@@ -41,18 +41,18 @@
   background: #2a1d17;
   --ink: #241b17;
   --ink-soft: #3b2e28;
-  --muted: #79695e;
-  --muted-2: #aa998b;
+  --muted: #6c5e54;
   --surface: #f1e8dc;
   --surface-raised: #fbf3e9;
   --surface-alt: #e7d9cb;
   --line: #d9c8b9;
   --line-dark: rgba(255, 248, 240, 0.11);
-  --accent: #d4543c;
+  --accent: #c24d37;
+  --accent-on-dark: #d17767;
   --accent-dark: #b73e2a;
   --accent-ink: #fff8f0;
-  --accent-soft: rgba(212, 84, 60, 0.18);
-  --accent-ring: rgba(212, 84, 60, 0.38);
+  --accent-soft: rgba(194, 77, 55, 0.18);
+  --accent-ring: rgba(194, 77, 55, 0.38);
   --sidebar: #2a1d17;
   --sidebar-text: #fff8f0;
   --sidebar-active: rgba(212, 84, 60, 0.16);
@@ -68,14 +68,14 @@
   background: #111a32;
   --ink: #121a2e;
   --ink-soft: #28344e;
-  --muted: #68738b;
-  --muted-2: #9aa5b9;
+  --muted: #5f687e;
   --surface: #f0f2f7;
   --surface-raised: #fbfcff;
   --surface-alt: #e4e8f1;
   --line: #d2d9e6;
   --line-dark: rgba(246, 248, 255, 0.11);
   --accent: #3156d9;
+  --accent-on-dark: #6c87e4;
   --accent-dark: #2343b8;
   --accent-ink: #ffffff;
   --accent-soft: rgba(49, 86, 217, 0.14);
@@ -95,14 +95,14 @@
   background: #13231b;
   --ink: #172018;
   --ink-soft: #2c3b30;
-  --muted: #657065;
-  --muted-2: #98a195;
+  --muted: #5c665c;
   --surface: #eceee6;
   --surface-raised: #f7f8f2;
   --surface-alt: #dde2d5;
   --line: #ccd3c8;
   --line-dark: rgba(242, 248, 239, 0.11);
   --accent: #9ac866;
+  --accent-on-dark: #9ac866;
   --accent-dark: #76a846;
   --accent-ink: #142014;
   --accent-soft: rgba(154, 200, 102, 0.2);
@@ -122,14 +122,14 @@
   background: #241416;
   --ink: #271719;
   --ink-soft: #432b2f;
-  --muted: #7c686b;
-  --muted-2: #aa9698;
+  --muted: #6f5d60;
   --surface: #f2ece8;
   --surface-raised: #fffaf7;
   --surface-alt: #e7dbd6;
   --line: #dbcacc;
   --line-dark: rgba(255, 245, 243, 0.11);
   --accent: #972d40;
+  --accent-on-dark: #bb7682;
   --accent-dark: #771d2e;
   --accent-ink: #fff7f5;
   --accent-soft: rgba(151, 45, 64, 0.16);
@@ -151,13 +151,13 @@
   --ink: #edf4f6;
   --ink-soft: #cfdae0;
   --muted: #91a3ad;
-  --muted-2: #667a86;
   --surface: #101820;
   --surface-raised: #17232c;
   --surface-alt: #1c2933;
   --line: #2e3d47;
   --line-dark: rgba(238, 248, 252, 0.11);
   --accent: #73d8ff;
+  --accent-on-dark: #73d8ff;
   --accent-dark: #42bce9;
   --accent-ink: #08141a;
   --accent-soft: rgba(115, 216, 255, 0.13);
@@ -203,8 +203,6 @@ body {
 .mobile-nav,
 .sheet,
 .panel,
-.stat-card,
-.exercise-card,
 .cardio-segment,
 .theme-option,
 .segmented-control,
@@ -376,7 +374,7 @@ p {
 }
 
 .brand-copy b {
-  color: var(--accent);
+  color: var(--accent-on-dark);
 }
 
 .sidebar {
@@ -498,7 +496,7 @@ p {
 }
 
 .mobile-nav button.is-active {
-  color: var(--accent);
+  color: var(--accent-on-dark);
 }
 
 .mobile-nav-icon {
@@ -784,7 +782,7 @@ p {
 
 .template-index {
   font: 500 10px/1 var(--mono);
-  color: var(--muted-2);
+  color: var(--muted);
 }
 
 .template-main {
@@ -942,7 +940,7 @@ p {
 
 .date-tile span {
   font: 500 9px/1 var(--mono) !important;
-  color: var(--accent) !important;
+  color: var(--accent-on-dark) !important;
   text-transform: uppercase;
 }
 
@@ -1144,7 +1142,7 @@ p {
 }
 
 .exercise-title-button > svg {
-  color: var(--muted-2);
+  color: var(--muted);
 }
 
 .exercise-number {
@@ -1245,7 +1243,7 @@ p {
 
 .set-row input:focus {
   background: var(--surface-raised);
-  border-color: var(--muted-2);
+  border-color: var(--muted);
   box-shadow: none;
 }
 
@@ -1318,7 +1316,7 @@ p {
 }
 
 .exercise-notes::placeholder {
-  color: var(--muted-2);
+  color: var(--muted);
 }
 
 .live-actions {
@@ -1568,7 +1566,7 @@ p {
 }
 
 .search-box input::placeholder {
-  color: var(--muted-2);
+  color: var(--muted);
 }
 
 .search-box button {
@@ -3272,7 +3270,7 @@ p {
   }
 
   .side-nav-item.is-active {
-    color: var(--accent);
+    color: var(--accent-on-dark);
     background: var(--sidebar-active);
   }
 

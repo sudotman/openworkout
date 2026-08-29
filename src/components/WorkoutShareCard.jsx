@@ -77,7 +77,7 @@ export function WorkoutShareCard({ workout, unit, distanceUnit, exerciseMap, onD
         ]
   const shareCopy = {
     title: workout?.name || 'Workout',
-    body: 'A 1080 × 1920 card with this session\u2019s metrics, a per-movement chart, and the full set list.',
+    body: 'Share this with your friends, real progress!',
   }
 
   const filename = useMemo(() => workoutShareFilename(workout), [workout])

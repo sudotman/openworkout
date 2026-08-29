@@ -86,7 +86,7 @@
 }
 
 .photo-button:disabled {
-  color: var(--muted-2);
+  color: var(--muted);
   background: var(--surface-alt);
   border-color: transparent;
   cursor: not-allowed;
@@ -292,7 +292,7 @@
 }
 
 .photo-field input:focus {
-  border-color: var(--muted-2);
+  border-color: var(--muted);
   box-shadow: 0 0 0 3px var(--accent-ring);
 }
 
@@ -587,7 +587,7 @@
   height: 33px;
   padding: 0;
   place-items: center;
-  color: var(--muted-2);
+  color: var(--muted);
   background: transparent;
   border: 0;
   border-radius: 9px;

@@ -130,6 +130,17 @@ body.routine-modal-open {
   border-left: 1px solid var(--line);
 }
 
+/* The row falls back to a scroller, but three short stats should simply fit. */
+@media (max-width: 359px) {
+  .routine-summary span {
+    padding-right: 9px;
+  }
+
+  .routine-summary span + span {
+    padding-left: 9px;
+  }
+}
+
 .routine-summary strong {
   color: var(--ink);
   font-size: 11px;
@@ -197,7 +208,7 @@ body.routine-modal-open {
 
 .routine-row-index {
   padding-top: 4px;
-  color: var(--muted-2);
+  color: var(--muted);
   font: 500 9px/1 var(--mono);
 }
 
@@ -229,7 +240,7 @@ body.routine-modal-open {
 .routine-row-main > span {
   display: block;
   margin-top: 7px;
-  color: var(--muted-2);
+  color: var(--muted);
   font: 500 9px/1.2 var(--mono);
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -365,7 +376,7 @@ body.routine-modal-open {
 }
 
 .routine-program-kicker {
-  color: var(--accent);
+  color: var(--accent-on-dark);
 }
 
 .routine-program-header h2 {
@@ -400,7 +411,7 @@ body.routine-modal-open {
   position: absolute;
   top: 25px;
   right: 22px;
-  color: rgba(255, 255, 255, 0.25);
+  color: color-mix(in srgb, var(--sidebar-text) 58%, transparent);
   font: 500 9px/1 var(--mono);
 }
 
@@ -536,7 +547,7 @@ body.routine-modal-open {
 }
 
 .routine-field > span i {
-  color: var(--muted-2);
+  color: var(--muted);
   font-style: normal;
   font-weight: 500;
 }
@@ -568,7 +579,7 @@ body.routine-modal-open {
 .routine-field input::placeholder,
 .routine-field textarea::placeholder,
 .routine-exercise-search input::placeholder {
-  color: var(--muted-2);
+  color: var(--muted);
 }
 
 .routine-field input:focus,
@@ -578,7 +589,7 @@ body.routine-modal-open {
 }
 
 .routine-field > small {
-  color: var(--muted-2);
+  color: var(--muted);
   font-size: 9px;
   line-height: 1.4;
 }
@@ -648,11 +659,11 @@ body.routine-modal-open {
 }
 
 .routine-selected-row > svg {
-  color: var(--muted-2);
+  color: var(--muted);
 }
 
 .routine-order-number {
-  color: var(--muted-2);
+  color: var(--muted);
   font: 500 9px/1 var(--mono);
 }
 
