@@ -4,6 +4,10 @@ A mobile-first, private workout tracker that runs entirely in the browser. Worko
 
 Every exercise detail includes a responsive front/back muscle map. Primary and assisting regions are derived from the exercise library and rendered locally with the MIT-licensed `react-muscle-highlighter` SVG paths; see [public/THIRD_PARTY_NOTICES.txt](./public/THIRD_PARTY_NOTICES.txt). The notice is copied into every production build.
 
+**[Try OpenWorkout](https://workout.satyam.lol/)**
+
+![OpenWorkout training dashboard with routines and recent workout stats](docs/images/openworkout-overview.jpg)
+
 ## Run locally
 
     npm install
