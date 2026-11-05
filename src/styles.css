@@ -1,180 +1,211 @@
+/* ---------------------------------------------------------------------------
+   OpenWorkout — "Rig"
+
+   A gym is a dark room with bright metal in it, and the phone comes out mid-set
+   with one hand, often with the screen at arm's length. So the palette is
+   dark-first and nearly monochrome: surfaces step up in small increments, type
+   carries the structure, and the single accent is reserved for state that
+   matters — a set completed, a timer running, a record broken. Numbers are the
+   content of this app, so they are set in a mono face with tabular figures and
+   given the largest type on the screen after the headings.
+   --------------------------------------------------------------------------- */
+
 :root,
-:root[data-theme='graphite'] {
-  font-family: 'Manrope', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #171914;
-  background: #11130f;
+:root[data-theme='carbon'] {
+  font-family: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+  color: #f1f2f1;
+  background: #090a0a;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --ink: #171914;
-  --ink-soft: #2b2e27;
-  --muted: #666961;
-  --surface: #f3f2eb;
-  --surface-raised: #fbfaf5;
-  --surface-alt: #e9e8df;
-  --line: #d9d9d0;
-  --line-dark: rgba(255, 255, 255, 0.11);
-  --accent: #d9ff4f;
-  --accent-on-dark: #d9ff4f;
-  --accent-dark: #b5dd29;
-  --accent-ink: #151712;
-  --accent-soft: rgba(217, 255, 79, 0.24);
-  --accent-ring: rgba(217, 255, 79, 0.42);
-  --sidebar: #11130f;
-  --sidebar-text: #ffffff;
-  --sidebar-active: rgba(217, 255, 79, 0.085);
-  --button-dark: #171914;
-  --button-dark-ink: #ffffff;
-  --control: #e8e7e0;
-  --control-strong: #d5d4cd;
-  --overlay: rgba(12, 13, 10, 0.58);
-  --danger: #c94f43;
-  --danger-ink: #ffffff;
-  --trend-down: #5d7412;
-  --trend-up: #9a5a33;
-  --mono: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --radius: 18px;
-  --shadow-sheet: 0 -24px 70px rgba(12, 13, 10, 0.25);
+  --ink: #f1f2f1;
+  --ink-soft: #c5c9c7;
+  --muted: #868c89;
+  --surface: #090a0a;
+  --surface-raised: #141616;
+  --surface-alt: #1d2020;
+  --line: #262a29;
+  --line-dark: rgba(255, 255, 255, 0.09);
+  --accent: #ff5a1f;
+  --accent-on-dark: #ff6f3c;
+  --accent-dark: #e84a12;
+  --accent-ink: #1a0700;
+  --accent-soft: rgba(255, 90, 31, 0.14);
+  --accent-ring: rgba(255, 90, 31, 0.4);
+  --sidebar: #050606;
+  --sidebar-text: #f1f2f1;
+  --sidebar-active: rgba(255, 90, 31, 0.13);
+  --button-dark: #f1f2f1;
+  --button-dark-ink: #0b0c0c;
+  --control: #1d2020;
+  --control-strong: #2b2f2e;
+  --overlay: rgba(0, 0, 0, 0.72);
+  --danger: #ff6a5c;
+  --danger-ink: #2a0b06;
+  --trend-down: #8fd36a;
+  --trend-up: #ff9c6a;
+  --warm: #ffb545;
+  --warm-soft: rgba(255, 181, 69, 0.15);
+  --cool: #7fb5d8;
+  --cool-soft: rgba(127, 181, 216, 0.14);
 }
 
-:root[data-theme='terracotta'] {
-  color: #241b17;
-  background: #2a1d17;
-  --ink: #241b17;
-  --ink-soft: #3b2e28;
-  --muted: #6c5e54;
-  --surface: #f1e8dc;
-  --surface-raised: #fbf3e9;
-  --surface-alt: #e7d9cb;
-  --line: #d9c8b9;
-  --line-dark: rgba(255, 248, 240, 0.11);
-  --accent: #c24d37;
-  --accent-on-dark: #d17767;
-  --accent-dark: #b73e2a;
-  --accent-ink: #fff8f0;
-  --accent-soft: rgba(194, 77, 55, 0.18);
-  --accent-ring: rgba(194, 77, 55, 0.38);
-  --sidebar: #2a1d17;
-  --sidebar-text: #fff8f0;
-  --sidebar-active: rgba(212, 84, 60, 0.16);
-  --button-dark: #2a1d17;
-  --button-dark-ink: #fff8f0;
-  --control: #e7d9cb;
-  --control-strong: #d9c8b9;
-  --overlay: rgba(31, 19, 14, 0.62);
-}
-
-:root[data-theme='cobalt'] {
-  color: #121a2e;
-  background: #111a32;
-  --ink: #121a2e;
-  --ink-soft: #28344e;
-  --muted: #5f687e;
-  --surface: #f0f2f7;
-  --surface-raised: #fbfcff;
-  --surface-alt: #e4e8f1;
-  --line: #d2d9e6;
-  --line-dark: rgba(246, 248, 255, 0.11);
-  --accent: #3156d9;
-  --accent-on-dark: #6c87e4;
-  --accent-dark: #2343b8;
-  --accent-ink: #ffffff;
-  --accent-soft: rgba(49, 86, 217, 0.14);
-  --accent-ring: rgba(49, 86, 217, 0.34);
-  --sidebar: #111a32;
-  --sidebar-text: #f6f8ff;
-  --sidebar-active: rgba(82, 117, 232, 0.17);
-  --button-dark: #17233f;
-  --button-dark-ink: #ffffff;
-  --control: #e4e8f1;
-  --control-strong: #d2d9e6;
-  --overlay: rgba(12, 20, 39, 0.62);
-}
-
-:root[data-theme='field'] {
-  color: #172018;
-  background: #13231b;
-  --ink: #172018;
-  --ink-soft: #2c3b30;
-  --muted: #5c665c;
-  --surface: #eceee6;
-  --surface-raised: #f7f8f2;
-  --surface-alt: #dde2d5;
-  --line: #ccd3c8;
-  --line-dark: rgba(242, 248, 239, 0.11);
-  --accent: #9ac866;
-  --accent-on-dark: #9ac866;
-  --accent-dark: #76a846;
-  --accent-ink: #142014;
-  --accent-soft: rgba(154, 200, 102, 0.2);
-  --accent-ring: rgba(154, 200, 102, 0.38);
-  --sidebar: #13231b;
-  --sidebar-text: #f2f8ef;
-  --sidebar-active: rgba(154, 200, 102, 0.15);
-  --button-dark: #183024;
-  --button-dark-ink: #f2f8ef;
-  --control: #dde2d5;
-  --control-strong: #ccd3c8;
-  --overlay: rgba(10, 22, 15, 0.62);
-}
-
-:root[data-theme='oxblood'] {
-  color: #271719;
-  background: #241416;
-  --ink: #271719;
-  --ink-soft: #432b2f;
-  --muted: #6f5d60;
-  --surface: #f2ece8;
-  --surface-raised: #fffaf7;
-  --surface-alt: #e7dbd6;
-  --line: #dbcacc;
-  --line-dark: rgba(255, 245, 243, 0.11);
-  --accent: #972d40;
-  --accent-on-dark: #bb7682;
-  --accent-dark: #771d2e;
-  --accent-ink: #fff7f5;
-  --accent-soft: rgba(151, 45, 64, 0.16);
-  --accent-ring: rgba(151, 45, 64, 0.34);
-  --sidebar: #241416;
-  --sidebar-text: #fff5f3;
-  --sidebar-active: rgba(151, 45, 64, 0.18);
-  --button-dark: #321a1f;
-  --button-dark-ink: #fff7f5;
-  --control: #e7dbd6;
-  --control-strong: #dbcacc;
-  --overlay: rgba(30, 11, 15, 0.64);
-}
-
-:root[data-theme='midnight'] {
-  color: #edf4f6;
-  background: #080f15;
+:root[data-theme='void'] {
   color-scheme: dark;
-  --ink: #edf4f6;
-  --ink-soft: #cfdae0;
-  --muted: #91a3ad;
-  --surface: #101820;
-  --surface-raised: #17232c;
-  --surface-alt: #1c2933;
-  --line: #2e3d47;
-  --line-dark: rgba(238, 248, 252, 0.11);
-  --accent: #73d8ff;
-  --accent-on-dark: #73d8ff;
-  --accent-dark: #42bce9;
-  --accent-ink: #08141a;
-  --accent-soft: rgba(115, 216, 255, 0.13);
-  --accent-ring: rgba(115, 216, 255, 0.34);
-  --sidebar: #080f15;
-  --sidebar-text: #eef8fc;
-  --sidebar-active: rgba(115, 216, 255, 0.13);
-  --button-dark: #edf4f6;
-  --button-dark-ink: #101820;
-  --control: #1c2933;
-  --control-strong: #2e3d47;
-  --overlay: rgba(2, 7, 10, 0.74);
-  --danger: #ff8176;
-  --danger-ink: #2b100c;
-  --trend-down: #a8d16a;
-  --trend-up: #e0a06a;
-  --shadow-sheet: 0 -24px 70px rgba(0, 0, 0, 0.46);
+  color: #eef2f3;
+  background: #000000;
+  --ink: #eef2f3;
+  --ink-soft: #c0c9cc;
+  --muted: #7d888c;
+  --surface: #000000;
+  --surface-raised: #0e1113;
+  --surface-alt: #171b1e;
+  --line: #222729;
+  --line-dark: rgba(255, 255, 255, 0.09);
+  --accent: #38d6ff;
+  --accent-on-dark: #5cdfff;
+  --accent-dark: #16bce8;
+  --accent-ink: #001620;
+  --accent-soft: rgba(56, 214, 255, 0.13);
+  --accent-ring: rgba(56, 214, 255, 0.36);
+  --sidebar: #000000;
+  --sidebar-text: #eef2f3;
+  --sidebar-active: rgba(56, 214, 255, 0.12);
+  --button-dark: #eef2f3;
+  --button-dark-ink: #000000;
+  --control: #171b1e;
+  --control-strong: #262c30;
+  --overlay: rgba(0, 0, 0, 0.78);
+  --danger: #ff6f68;
+  --danger-ink: #2a0a08;
+  --trend-down: #7fd48f;
+  --trend-up: #ffa06a;
+  --warm: #ffbe4f;
+  --warm-soft: rgba(255, 190, 79, 0.14);
+  --cool: #7cc0e0;
+  --cool-soft: rgba(124, 192, 224, 0.14);
+}
+
+:root[data-theme='oxide'] {
+  color-scheme: dark;
+  color: #f4efe8;
+  background: #100d0a;
+  --ink: #f4efe8;
+  --ink-soft: #cdc4b8;
+  --muted: #8d8376;
+  --surface: #100d0a;
+  --surface-raised: #1b1713;
+  --surface-alt: #25201a;
+  --line: #2e2922;
+  --line-dark: rgba(255, 248, 238, 0.09);
+  --accent: #ffa72e;
+  --accent-on-dark: #ffb857;
+  --accent-dark: #e88d10;
+  --accent-ink: #1d1200;
+  --accent-soft: rgba(255, 167, 46, 0.14);
+  --accent-ring: rgba(255, 167, 46, 0.38);
+  --sidebar: #0a0806;
+  --sidebar-text: #f4efe8;
+  --sidebar-active: rgba(255, 167, 46, 0.13);
+  --button-dark: #f4efe8;
+  --button-dark-ink: #100d0a;
+  --control: #25201a;
+  --control-strong: #342d25;
+  --overlay: rgba(8, 5, 3, 0.74);
+  --danger: #ff7a63;
+  --danger-ink: #2c0d07;
+  --trend-down: #a8cd6b;
+  --trend-up: #ff9f6a;
+  --warm: #ffc266;
+  --warm-soft: rgba(255, 194, 102, 0.15);
+  --cool: #9bb8c9;
+  --cool-soft: rgba(155, 184, 201, 0.14);
+}
+
+:root[data-theme='indigo'] {
+  color-scheme: dark;
+  color: #edf0f8;
+  background: #0a0b13;
+  --ink: #edf0f8;
+  --ink-soft: #c2c7da;
+  --muted: #80869c;
+  --surface: #0a0b13;
+  --surface-raised: #14161f;
+  --surface-alt: #1c1f2b;
+  --line: #262a38;
+  --line-dark: rgba(240, 243, 255, 0.09);
+  --accent: #8098ff;
+  --accent-on-dark: #97abff;
+  --accent-dark: #5d78f5;
+  --accent-ink: #060a24;
+  --accent-soft: rgba(128, 152, 255, 0.15);
+  --accent-ring: rgba(128, 152, 255, 0.38);
+  --sidebar: #05060d;
+  --sidebar-text: #edf0f8;
+  --sidebar-active: rgba(128, 152, 255, 0.14);
+  --button-dark: #edf0f8;
+  --button-dark-ink: #0a0b13;
+  --control: #1c1f2b;
+  --control-strong: #2a2e3e;
+  --overlay: rgba(3, 4, 10, 0.76);
+  --danger: #ff7384;
+  --danger-ink: #2a0712;
+  --trend-down: #8ad19b;
+  --trend-up: #ff9db0;
+  --warm: #ffc06b;
+  --warm-soft: rgba(255, 192, 107, 0.14);
+  --cool: #8fb0e8;
+  --cool-soft: rgba(143, 176, 232, 0.15);
+}
+
+:root[data-theme='bone'] {
+  color-scheme: light;
+  color: #16181a;
+  background: #efece6;
+  --ink: #16181a;
+  --ink-soft: #33373a;
+  --muted: #6d7174;
+  --surface: #efece6;
+  --surface-raised: #fbf9f5;
+  --surface-alt: #e4e0d8;
+  --line: #d6d1c7;
+  --line-dark: rgba(255, 255, 255, 0.14);
+  --accent: #e8491a;
+  --accent-on-dark: #ff7347;
+  --accent-dark: #c93a10;
+  --accent-ink: #fff6f2;
+  --accent-soft: rgba(232, 73, 26, 0.12);
+  --accent-ring: rgba(232, 73, 26, 0.34);
+  --sidebar: #131415;
+  --sidebar-text: #f6f4f0;
+  --sidebar-active: rgba(255, 115, 71, 0.16);
+  --button-dark: #16181a;
+  --button-dark-ink: #f8f6f2;
+  --control: #e4e0d8;
+  --control-strong: #d6d1c7;
+  --overlay: rgba(20, 18, 15, 0.56);
+  --danger: #c43d2d;
+  --danger-ink: #ffffff;
+  --trend-down: #4f7016;
+  --trend-up: #9c5428;
+  --warm: #8a6210;
+  --warm-soft: rgba(138, 98, 16, 0.12);
+  --cool: #41657a;
+  --cool-soft: rgba(65, 101, 122, 0.12);
+}
+
+:root {
+  --mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius: 16px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+  --shadow-sheet: 0 -24px 70px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 1px 0 var(--line-dark);
+  --tap: 44px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 * {
@@ -183,8 +214,10 @@
 
 html {
   min-width: 320px;
+  height: 100%;
   background: var(--sidebar);
   -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -193,9 +226,49 @@ body {
   min-height: 100vh;
   min-height: 100svh;
   background: var(--surface);
-  overscroll-behavior-y: none;
+  overscroll-behavior: none;
   transition: background-color 240ms ease, color 240ms ease;
 }
+
+/* Installed, the app has no browser chrome to absorb a stray gesture, so the
+   furniture is inert: only text and fields take a selection or a callout, and
+   taps resolve immediately rather than waiting out a double-tap zoom. */
+button,
+.set-number,
+.mobile-nav,
+.session-bar,
+.mobile-topbar,
+.sidebar {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+button,
+a,
+label,
+summary,
+[role='button'],
+[role='switch'] {
+  touch-action: manipulation;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* iOS zooms any field it considers smaller than 16px when it takes focus,
+   which throws the whole layout sideways mid-set. */
+input,
+textarea,
+select {
+  font-size: max(16px, 1em);
+}
+
 
 .app-shell,
 .sidebar,
@@ -307,8 +380,15 @@ p {
 
 .app-main {
   min-height: calc(100svh - 64px);
-  padding: 24px 17px calc(104px + env(safe-area-inset-bottom));
+  padding: 24px 17px calc(100px + var(--safe-bottom));
   overflow-x: hidden;
+}
+
+/* In a session the app's own top bar is gone, so the main pane starts under
+   the status bar and the session bar pulls itself back up into that space. */
+.app-shell.is-in-session .app-main {
+  min-height: 100svh;
+  padding-top: calc(var(--safe-top) + 18px);
 }
 
 .view-frame,
@@ -682,10 +762,13 @@ p {
   vertical-align: middle;
 }
 
+/* The hero was a dark block on a pale page. On a dark page that contrast is
+   gone, so it earns its edge from a raised surface and a hairline instead. */
 .session-hero {
   color: var(--sidebar-text);
-  background: var(--sidebar);
-  border-radius: 22px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
 }
 
 .session-hero-content {
@@ -955,155 +1038,209 @@ p {
   line-height: 1.6;
 }
 
-/* Active workout */
+/* ---------------------------------------------------------------------------
+   Active workout
+
+   The only screen that is read mid-set, one-handed, at arm's length. It gets
+   its own chrome: the app's top bar is replaced by a session bar carrying the
+   clock, the progress, and the one commitment that ends the session. Rows are
+   sized for a thumb rather than a cursor — every control clears 44px — and the
+   weight and rep fields are the largest targets on the screen because they are
+   the ones touched between every set.
+   --------------------------------------------------------------------------- */
 .content-width--narrow {
-  max-width: 930px;
+  max-width: 560px;
+  margin: 0 auto;
 }
 
 .live-workout {
-  padding-bottom: 25px;
+  display: flex;
+  flex-direction: column;
 }
 
-.live-header {
-  margin: -24px -17px 27px;
-  padding: 23px 17px 24px;
-  color: var(--sidebar-text);
-  background: var(--sidebar);
-}
-
-.live-status {
+.session-bar {
+  position: sticky;
+  z-index: 30;
+  top: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 13px;
+  gap: 10px;
+  margin: calc(var(--safe-top) * -1 - 18px) -17px 22px;
+  padding: calc(var(--safe-top) + 10px) 14px 10px;
+  background: color-mix(in srgb, var(--sidebar) 92%, transparent);
+  border-bottom: 1px solid var(--line-dark);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
-.live-status > span {
-  display: flex;
+.session-timer {
+  display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
+  height: var(--tap);
+  padding: 0 13px;
   gap: 8px;
-  font: 500 9px/1 var(--mono);
-  letter-spacing: 0.1em;
   color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  border-radius: var(--radius-pill);
 }
 
-.live-status > span i {
-  width: 6px;
-  height: 6px;
-  background: var(--accent);
-  border-radius: 50%;
-  animation: live-pulse 2s infinite;
+.session-timer.is-paused {
+  color: var(--muted);
+  background: transparent;
+  border-color: var(--line);
 }
 
-.live-status > strong {
+.session-timer strong {
+  font: 500 16px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.session-progress {
   display: flex;
-  align-items: center;
-  gap: 7px;
-  font: 500 12px/1 var(--mono);
-}
-
-.live-timer-button {
-  display: flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 9px;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
   gap: 6px;
-  color: white;
-  background: rgba(255, 255, 255, 0.075);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
 }
 
-.live-timer-button strong {
-  font: 500 11px/1 var(--mono);
+.session-progress span {
+  overflow: hidden;
+  color: color-mix(in srgb, var(--sidebar-text) 60%, transparent);
+  font: 400 10px/1 var(--mono);
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.live-timer-button span {
-  display: none;
-  color: rgba(255, 255, 255, 0.48);
-  font: 500 9px/1 var(--mono);
-  letter-spacing: 0.06em;
+.session-progress b {
+  color: var(--sidebar-text);
+  font-weight: 500;
 }
 
-.live-title-row {
+.session-progress i {
+  position: relative;
+  display: block;
+  height: 3px;
+  background: var(--line);
+  border-radius: var(--radius-pill);
+}
+
+.session-progress i::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--session-progress, 0) * 100%);
+  min-width: 3px;
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.session-bar-actions {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
 }
 
-.live-title-actions {
+.icon-button--bare {
+  width: 38px;
+  height: 38px;
+  color: color-mix(in srgb, var(--sidebar-text) 72%, transparent);
+}
+
+.session-finish {
+  height: 38px;
+  margin-left: 4px;
+  padding: 0 15px;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 0;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.session-finish:disabled {
+  color: var(--muted);
+  background: var(--control);
+}
+
+.live-body {
   display: flex;
-  flex: 0 0 auto;
-  gap: 3px;
+  flex-direction: column;
+  padding-top: 4px;
+  gap: 14px;
 }
 
 .workout-title-input {
-  min-width: 0;
   width: 100%;
   padding: 0;
-  color: white;
+  color: var(--ink);
   background: transparent;
   border: 0;
-  font-size: clamp(31px, 9vw, 46px);
-  line-height: 1.1;
-  letter-spacing: -0.055em;
-  font-weight: 750;
+  font-family: inherit;
+  font-size: 27px;
+  font-weight: 650;
+  letter-spacing: -0.035em;
 }
 
-.live-title-row .icon-button {
-  flex: 0 0 auto;
-  color: rgba(255, 255, 255, 0.68);
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.workout-title-input:focus {
+  outline: none;
+  color: var(--accent);
 }
 
 .live-summary {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 18px;
-  margin-top: 12px;
-  color: rgba(255, 255, 255, 0.53);
-  font: 400 9px/1 var(--mono);
-  text-transform: uppercase;
+  margin-top: -6px;
+  gap: 5px 14px;
+  color: var(--muted);
+  font: 400 11px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .exercise-stack {
-  display: grid;
-  gap: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .log-exercise {
   position: relative;
-  overflow: hidden;
+  padding: 13px 0 0;
   background: var(--surface-raised);
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--radius);
 }
 
 .log-exercise.is-superset {
-  border-left: 3px solid var(--accent-dark);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
 }
 
 .log-exercise-head {
-  position: relative;
   display: flex;
-  align-items: stretch;
-  padding: 12px 10px 11px 14px;
-  border-bottom: 1px solid var(--line);
+  align-items: center;
+  padding: 0 10px 0 13px;
+  gap: 4px;
 }
 
 .superset-mark {
   position: absolute;
   z-index: 1;
   top: -8px;
-  left: 42px;
+  left: 14px;
   display: flex;
   align-items: center;
-  padding: 3px 6px;
+  padding: 3px 7px;
   gap: 4px;
-  color: #4d5e0b;
+  color: var(--accent-ink);
   background: var(--accent);
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   font: 500 9px/1 var(--mono);
   letter-spacing: 0.07em;
 }
@@ -1112,10 +1249,11 @@ p {
   display: grid;
   min-width: 0;
   flex: 1;
-  grid-template-columns: 30px minmax(0, 1fr) auto;
+  grid-template-columns: 26px minmax(0, 1fr);
   align-items: center;
+  min-height: var(--tap);
   padding: 0;
-  gap: 9px;
+  gap: 8px;
   text-align: left;
   background: transparent;
   border: 0;
@@ -1130,19 +1268,19 @@ p {
 
 .exercise-title-button strong {
   overflow: hidden;
-  font-size: 13px;
-  letter-spacing: -0.015em;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .exercise-title-button small {
+  overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
-}
-
-.exercise-title-button > svg {
-  color: var(--muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .exercise-number {
@@ -1150,26 +1288,54 @@ p {
   color: var(--muted);
 }
 
+/* The base weight is declared next to the sets it changes, so the number in
+   the input is never ambiguous. */
+.base-weight-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  margin: 8px 13px 2px;
+  padding: 0 11px;
+  gap: 6px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-pill);
+  font: 400 11px/1 var(--mono);
+  letter-spacing: 0.01em;
+}
+
+.base-weight-chip.is-set {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+.base-weight-chip:active {
+  transform: scale(0.97);
+}
+
 .set-grid {
   display: grid;
-  grid-template-columns: 28px 51px minmax(42px, 1fr) minmax(42px, 1fr) minmax(38px, 0.75fr) 38px;
+  grid-template-columns: 34px 52px minmax(0, 1fr) minmax(0, 1fr) 34px 44px;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .set-grid--header {
-  min-height: 30px;
-  padding: 0 10px;
+  min-height: 28px;
+  padding: 0 11px;
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
-  letter-spacing: 0.06em;
+  font: 400 9px/1 var(--mono);
+  letter-spacing: 0.08em;
   text-align: center;
 }
 
 .set-row {
   position: relative;
-  min-height: 53px;
-  padding: 5px 10px;
+  min-height: 58px;
+  padding: 6px 11px;
   border-top: 1px solid var(--line);
   transition: background-color 170ms ease;
 }
@@ -1181,138 +1347,202 @@ p {
 .set-number {
   display: grid;
   place-items: center;
-  width: 27px;
-  height: 27px;
+  width: 34px;
+  height: 36px;
   padding: 0;
-  font: 500 9px/1 var(--mono);
+  font: 500 11px/1 var(--mono);
   color: var(--muted);
   background: var(--control);
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
 }
 
-.set-number:hover {
-  color: var(--ink);
-  background: var(--control-strong);
+.set-number:active {
+  transform: scale(0.94);
 }
 
 .set-number--warmup {
-  color: #647077;
-  background: #dfe7e9;
+  color: var(--cool);
+  background: var(--cool-soft);
 }
 
 .set-number--drop {
-  color: #8a6616;
-  background: #eee4c7;
+  color: var(--warm);
+  background: var(--warm-soft);
 }
 
 .set-number--failure {
-  color: #98453c;
-  background: #eed7d3;
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
 }
 
 .previous-value {
   overflow: hidden;
   color: var(--muted);
-  font: 400 9px/1 var(--mono);
+  font: 400 10px/1.2 var(--mono);
+  font-variant-numeric: tabular-nums;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.set-field {
+  position: relative;
+}
+
 .set-row input {
   width: 100%;
   min-width: 0;
-  height: 37px;
-  padding: 0 3px;
+  height: 46px;
+  padding: 0 4px;
   color: var(--ink);
   background: var(--surface-alt);
   border: 1px solid transparent;
-  border-radius: 9px;
-  font: 500 13px/1 var(--mono);
+  border-radius: var(--radius-sm);
+  font: 500 17px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
   text-align: center;
+  appearance: none;
   -moz-appearance: textfield;
-  transition: background-color 170ms ease, border-color 170ms ease;
 }
 
 .set-row input::-webkit-outer-spin-button,
 .set-row input::-webkit-inner-spin-button {
   margin: 0;
-  -webkit-appearance: none;
+  appearance: none;
+}
+
+.set-row input::placeholder {
+  color: color-mix(in srgb, var(--muted) 62%, transparent);
 }
 
 .set-row input:focus {
+  outline: none;
   background: var(--surface-raised);
-  border-color: var(--muted);
-  box-shadow: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+/* The running total sits inside the field rather than on a line of its own —
+   the check is worth a glance, not a row of vertical space. */
+.set-total {
+  position: absolute;
+  right: 5px;
+  bottom: 3px;
+  color: var(--muted);
+  font: 400 9px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.set-row input:focus + .set-total {
+  color: var(--accent);
 }
 
 .set-static-value {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 37px;
-  color: var(--muted);
-  background: var(--surface-alt);
-  border-radius: 9px;
-  font: 500 9px/1 var(--mono);
-  letter-spacing: 0.07em;
+  display: block;
 }
 
-.set-row.is-complete input {
-  color: var(--ink);
-  background: var(--accent-soft);
+.set-rpe {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 46px;
+  padding: 0;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font: 500 12px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.set-rpe.is-empty {
+  color: color-mix(in srgb, var(--muted) 70%, transparent);
+  border-style: dashed;
+}
+
+.set-rpe:active {
+  transform: scale(0.94);
 }
 
 .complete-set {
   display: grid;
   place-items: center;
-  width: 35px;
-  height: 35px;
+  width: 44px;
+  height: 46px;
   padding: 0;
   color: var(--muted);
   background: var(--control);
   border: 0;
-  border-radius: 10px;
-  transition: transform 170ms ease, color 170ms ease, background-color 170ms ease;
+  border-radius: var(--radius-sm);
+  transition: background-color 150ms ease, color 150ms ease, transform 120ms ease;
+}
+
+.complete-set:active {
+  transform: scale(0.92);
 }
 
 .set-row.is-complete .complete-set {
   color: var(--accent-ink);
   background: var(--accent);
-  transform: scale(1.04);
 }
 
-.add-set-button {
+.set-row.is-complete input {
+  background: transparent;
+}
+
+.log-exercise-foot {
   display: flex;
+  gap: 1px;
+  border-top: 1px solid var(--line);
+}
+
+.add-set-button,
+.note-toggle {
+  display: flex;
+  flex: 1;
   align-items: center;
   justify-content: center;
-  width: calc(100% - 20px);
-  min-height: 38px;
-  margin: 9px 10px 7px;
-  gap: 6px;
-  color: var(--ink-soft);
-  background: var(--control);
+  min-height: 46px;
+  gap: 7px;
+  color: var(--muted);
+  background: transparent;
   border: 0;
-  border-radius: 10px;
-  font-size: 10px;
-  font-weight: 700;
+  border-radius: 0 0 var(--radius) var(--radius);
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.note-toggle {
+  flex: 0 0 38%;
+  border-left: 1px solid var(--line);
+}
+
+.add-set-button:active,
+.note-toggle:active {
+  color: var(--ink);
+  background: var(--surface-alt);
 }
 
 .exercise-notes {
-  display: block;
-  width: calc(100% - 20px);
-  min-height: 39px;
-  margin: 0 10px 10px;
-  padding: 10px 11px;
-  resize: vertical;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 13px;
   color: var(--ink);
-  background: transparent;
+  background: var(--surface-alt);
   border: 0;
-  border-top: 1px dashed var(--line);
-  border-radius: 0;
-  font-size: 10px;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--radius) var(--radius);
+  font-family: inherit;
+  font-size: 13px;
   line-height: 1.5;
+  resize: vertical;
+}
+
+.exercise-notes:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .exercise-notes::placeholder {
@@ -1320,21 +1550,22 @@ p {
 }
 
 .live-actions {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 9px;
-  margin-top: 20px;
 }
 
 .empty-workout,
 .empty-state {
   display: flex;
-  min-height: 320px;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 42px 24px;
+  padding: 40px 22px;
+  gap: 11px;
   text-align: center;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
 }
 
 .empty-icon,
@@ -3079,25 +3310,27 @@ p {
   font-weight: 700;
 }
 
+/* Sits above the nav rather than over the content, so a confirmation never
+   covers the row that produced it. */
 .toast {
   position: fixed;
   z-index: 140;
-  top: calc(75px + env(safe-area-inset-top));
   right: 14px;
+  bottom: calc(84px + var(--safe-bottom));
   left: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 45px;
-  padding: 9px 15px;
+  min-height: 46px;
+  padding: 10px 16px;
   gap: 8px;
-  color: var(--ink);
+  color: var(--accent-ink);
   background: var(--accent);
-  border: 1px solid rgba(23, 25, 20, 0.2);
-  border-radius: 13px;
-  box-shadow: 0 12px 30px rgba(12, 13, 10, 0.18);
-  font-size: 10px;
-  font-weight: 700;
+  border: 0;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 @media (min-width: 430px) {
@@ -3357,6 +3590,12 @@ p {
     margin-left: auto;
   }
 
+  /* A set row stretched across a desktop pane puts the weight field and its
+     tick half a screen apart; the session stays column-width everywhere. */
+  .content-width--narrow {
+    max-width: 620px;
+  }
+
   .desktop-action {
     display: inline-flex;
   }
@@ -3468,18 +3707,18 @@ p {
   }
 
   .difficulty--beginner {
-    color: #466615;
-    background: #e0eacc;
+    color: var(--trend-down);
+    background: color-mix(in srgb, var(--trend-down) 15%, transparent);
   }
 
   .difficulty--intermediate {
-    color: #786316;
-    background: #eee6c7;
+    color: var(--warm);
+    background: var(--warm-soft);
   }
 
   .difficulty--advanced {
-    color: #84453d;
-    background: #eed7d3;
+    color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 15%, transparent);
   }
 
   .metric-band {
@@ -3588,4 +3827,156 @@ p {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Base weight
+
+   Picked once per exercise, from a sheet that leads with the bars people
+   actually own and keeps an exact field underneath for everything else. The
+   preview line does the arithmetic out loud, because the whole point of the
+   control is that the user stops doing it.
+   --------------------------------------------------------------------------- */
+.base-weight-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.base-weight-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.base-weight-presets button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 62px;
+  padding: 11px 12px;
+  gap: 5px;
+  text-align: left;
+  color: var(--ink);
+  background: var(--surface-alt);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+}
+
+.base-weight-presets button strong {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  font: 500 19px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.base-weight-presets button strong small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.base-weight-presets button span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.base-weight-presets button.is-active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+.base-weight-presets button.is-active span {
+  color: color-mix(in srgb, var(--accent) 76%, var(--ink));
+}
+
+.base-weight-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.base-weight-custom > span {
+  color: var(--muted);
+  font: 400 9px/1 var(--mono);
+  letter-spacing: 0.1em;
+}
+
+.base-weight-custom > div {
+  display: flex;
+  align-items: center;
+  padding: 0 14px 0 0;
+  gap: 8px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.base-weight-custom:focus-within > div {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.base-weight-custom input {
+  width: 100%;
+  min-width: 0;
+  height: 54px;
+  padding: 0 0 0 14px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  font: 500 22px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  appearance: none;
+  -moz-appearance: textfield;
+}
+
+.base-weight-custom input:focus,
+.base-weight-custom input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.base-weight-custom input::-webkit-outer-spin-button,
+.base-weight-custom input::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+.base-weight-custom b {
+  flex-shrink: 0;
+  color: var(--muted);
+  font: 400 12px/1 var(--mono);
+  text-transform: uppercase;
+}
+
+.base-weight-preview {
+  margin: 0;
+  padding: 13px 15px;
+  color: var(--ink-soft);
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.base-weight-preview b {
+  color: var(--accent);
+  font: 500 14px/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.base-weight-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.base-weight-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+  text-align: center;
 }

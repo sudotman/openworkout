@@ -10,6 +10,8 @@ import {
 
 const CARD_WIDTH = 1080
 const CARD_HEIGHT = 1920
+const SANS = "'Geist Variable', sans-serif"
+const MONO = "'Geist Mono Variable', monospace"
 const PAPER = '#f3efe5'
 const INK = '#171713'
 const MUTED = '#766f62'
@@ -23,7 +25,7 @@ const KM_PER_MILE = 1.609344
 function fitFontSize(context, text, maxWidth, startSize, minimumSize = 32, weight = 760) {
   let size = startSize
   while (size > minimumSize) {
-    context.font = `${weight} ${size}px Manrope, sans-serif`
+    context.font = `${weight} ${size}px ${SANS}`
     if (context.measureText(String(text)).width <= maxWidth) break
     size -= 2
   }
@@ -165,11 +167,11 @@ function buildCardData(workout, unit, distanceUnit, exerciseMap) {
 
 function drawHeader(context, data) {
   context.fillStyle = INK
-  context.font = '760 30px Manrope, sans-serif'
+  context.font = `760 30px ${SANS}`
   context.fillText('OPENWORKOUT', 80, 112)
 
   context.fillStyle = MUTED
-  context.font = '500 20px "DM Mono", monospace'
+  context.font = `500 20px ${MONO}`
   context.textAlign = 'right'
   context.fillText(data.date, 1000, 104)
   context.fillText(data.mode.toUpperCase(), 1000, 132)
@@ -179,7 +181,7 @@ function drawHeader(context, data) {
 
 function drawTitle(context, title) {
   context.fillStyle = INK
-  context.font = '760 100px Manrope, sans-serif'
+  context.font = `760 100px ${SANS}`
   const lines = wrapText(context, title, 920, 2)
   lines.forEach((line, index) => context.fillText(line, 78, 285 + index * 92))
   return Math.max(390, 302 + lines.length * 92)
@@ -187,16 +189,16 @@ function drawTitle(context, title) {
 
 function drawMetric(context, { label, value, unit }, x, y, width, size = 150) {
   context.fillStyle = MUTED
-  context.font = '500 20px "DM Mono", monospace'
+  context.font = `500 20px ${MONO}`
   context.fillText(label, x, y)
 
   const valueSize = fitFontSize(context, value, width - 88, size, 70, 760)
   context.fillStyle = INK
-  context.font = `760 ${valueSize}px Manrope, sans-serif`
+  context.font = `760 ${valueSize}px ${SANS}`
   context.fillText(value, x - 5, y + 145)
   const valueWidth = context.measureText(value).width
   context.fillStyle = ACCENT
-  context.font = '500 29px "DM Mono", monospace'
+  context.font = `500 29px ${MONO}`
   context.fillText(unit, Math.min(x + width - 62, x + valueWidth + 10), y + 136)
 }
 
@@ -251,7 +253,7 @@ function strengthPlotValues(data) {
 function drawBarChart(context, entries, x, y, width, height, usesVolume) {
   if (!entries.length) {
     context.fillStyle = MUTED
-    context.font = '500 20px "DM Mono", monospace'
+    context.font = `500 20px ${MONO}`
     context.fillText('NO LIFTING DATA LOGGED', x, y + height / 2)
     return
   }
@@ -271,12 +273,12 @@ function drawBarChart(context, entries, x, y, width, height, usesVolume) {
     context.fillRect(barX, barY, barWidth, barHeight)
 
     context.fillStyle = INK
-    context.font = '500 18px "DM Mono", monospace'
+    context.font = `500 18px ${MONO}`
     context.textAlign = 'center'
     context.fillText(usesVolume ? formatVolume(entry.value) : String(entry.value), barX + barWidth / 2, barY - 12)
 
     context.fillStyle = MUTED
-    context.font = '500 17px "DM Mono", monospace'
+    context.font = `500 17px ${MONO}`
     const shortLabel = truncateText(context, entry.label.toUpperCase(), slot - 16)
     context.fillText(shortLabel, x + index * slot + slot / 2, baseline + 30)
   })
@@ -293,7 +295,7 @@ function cardioPaces(data) {
 function drawPaceChart(context, paces, x, y, width, height) {
   if (!paces.length) {
     context.fillStyle = MUTED
-    context.font = '500 20px "DM Mono", monospace'
+    context.font = `500 20px ${MONO}`
     context.fillText('PACE DATA NOT LOGGED', x, y + height / 2)
     return
   }
@@ -313,7 +315,7 @@ function drawPaceChart(context, paces, x, y, width, height) {
     const lineY = top + ((value - low) / range) * (bottom - top)
     drawRule(context, left, lineY, right, RULE, 1.2)
     context.fillStyle = MUTED
-    context.font = '500 17px "DM Mono", monospace'
+    context.font = `500 17px ${MONO}`
     context.fillText(formatPaceTick(value), x, lineY + 6)
   })
 
@@ -343,7 +345,7 @@ function drawPaceChart(context, paces, x, y, width, height) {
 
     if (index % labelEvery === 0 || index === points.length - 1) {
       context.fillStyle = MUTED
-      context.font = '500 16px "DM Mono", monospace'
+      context.font = `500 16px ${MONO}`
       context.textAlign = 'center'
       context.fillText(`S${index + 1}`, point.x, bottom + 32)
     }
@@ -353,7 +355,7 @@ function drawPaceChart(context, paces, x, y, width, height) {
 
 function drawChartHeader(context, label, value, y) {
   context.fillStyle = MUTED
-  context.font = '500 18px "DM Mono", monospace'
+  context.font = `500 18px ${MONO}`
   context.fillText(label, 80, y)
   context.fillStyle = ACCENT
   context.textAlign = 'right'
@@ -417,10 +419,10 @@ function drawFacts(context, data, top) {
       context.stroke()
     }
     context.fillStyle = MUTED
-    context.font = '500 17px "DM Mono", monospace'
+    context.font = `500 17px ${MONO}`
     context.fillText(label, x + (index ? 22 : 0), top + 27)
     context.fillStyle = INK
-    context.font = '700 35px Manrope, sans-serif'
+    context.font = `700 35px ${SANS}`
     context.fillText(value, x + (index ? 22 : 0), top + 78)
   })
   drawRule(context, 80, top + 112, 1000)
@@ -447,7 +449,7 @@ function drawWorkRegister(context, data, top) {
   const hiddenCount = Math.max(0, rows.length - visibleRows.length)
 
   context.fillStyle = MUTED
-  context.font = '500 18px "DM Mono", monospace'
+  context.font = `500 18px ${MONO}`
   context.fillText('WORK PERFORMED', 80, top + 24)
   context.textAlign = 'right'
   context.fillStyle = hiddenCount > 0 ? ACCENT : MUTED
@@ -457,15 +459,15 @@ function drawWorkRegister(context, data, top) {
   visibleRows.forEach((row, index) => {
     const y = top + 72 + index * REGISTER_ROW_HEIGHT
     context.fillStyle = ACCENT
-    context.font = '500 18px "DM Mono", monospace'
+    context.font = `500 18px ${MONO}`
     context.fillText(String(index + 1).padStart(2, '0'), 80, y)
 
     context.fillStyle = INK
-    context.font = '650 27px Manrope, sans-serif'
+    context.font = `650 27px ${SANS}`
     context.fillText(truncateText(context, row.name.toUpperCase(), 660), 145, y + 2)
 
     context.fillStyle = MUTED
-    context.font = '500 18px "DM Mono", monospace'
+    context.font = `500 18px ${MONO}`
     context.textAlign = 'right'
     context.fillText(row.value, 1000, y)
     context.textAlign = 'left'
@@ -480,7 +482,7 @@ function drawFooter(context, data) {
   context.fill()
 
   context.fillStyle = MUTED
-  context.font = '500 17px "DM Mono", monospace'
+  context.font = `500 17px ${MONO}`
   context.fillText(`SESSION ${data.date} · LOCAL RECORD`, 115, 1848)
   context.textAlign = 'right'
   context.fillText('OPENWORKOUT', 1000, 1848)
@@ -490,8 +492,8 @@ function drawFooter(context, data) {
 export async function createWorkoutShareImage(workout, unit, distanceUnit, exerciseMap) {
   if (typeof document === 'undefined') throw new Error('Share images require a browser')
   await Promise.allSettled([
-    document.fonts?.load?.('760 100px Manrope'),
-    document.fonts?.load?.('500 20px "DM Mono"'),
+    document.fonts?.load?.("760 100px 'Geist Variable'"),
+    document.fonts?.load?.("500 20px 'Geist Mono Variable'"),
   ].filter(Boolean))
 
   const canvas = document.createElement('canvas')

@@ -6,11 +6,19 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
-  "orientation": "any",
-  "background_color": "#11130f",
-  "theme_color": "#11130f",
-  "categories": ["fitness", "health", "lifestyle", "utilities"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait",
+  "background_color": "#090a0a",
+  "theme_color": "#090a0a",
+  "categories": [
+    "fitness",
+    "health",
+    "lifestyle",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "./icon.svg",

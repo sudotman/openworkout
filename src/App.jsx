@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
   Activity,
+  Anchor,
   ArrowDown,
   ArrowLeft,
   ArrowUp,
@@ -23,6 +24,7 @@ import {
   ListPlus,
   Link2,
   Minus,
+  NotebookPen,
   Palette,
   Pause,
   Play,
@@ -41,7 +43,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { exercises, equipmentOptions, muscleGroups } from './data/exercises.js'
-import { getTheme, normalizeTheme, THEMES } from './data/themes.js'
+import { DEFAULT_THEME_ID, getTheme, isDarkTheme, normalizeTheme, THEMES } from './data/themes.js'
 import {
   clearAppState,
   exportAppState,
@@ -62,6 +64,16 @@ import {
   workoutIsCardioOnly,
 } from './lib/cardio.js'
 import { createInitialNutritionState, normalizeNutritionState } from './lib/nutrition.js'
+import {
+  addedWeight,
+  barPresets,
+  convertBaseWeight,
+  convertExerciseSettings,
+  formatLoad,
+  normalizeBaseWeight,
+  suggestedBaseWeight,
+  totalWeight,
+} from './lib/base-weight.js'
 
 const RoutinesView = lazy(() =>
   import('./components/RoutinesView.jsx').then((module) => ({ default: module.RoutinesView })),
@@ -201,7 +213,7 @@ function createInitialState() {
   return {
     version: 1,
     settings: {
-      theme: 'graphite',
+      theme: DEFAULT_THEME_ID,
       unit: 'kg',
       distanceUnit: 'km',
       restSeconds: 90,
@@ -221,6 +233,7 @@ function createInitialState() {
     progressPhotos: [],
     nutrition: createInitialNutritionState(),
     customExercises: [],
+    exerciseSettings: {},
     hasStarterData: true,
     activeWorkout: null,
     workouts: [
@@ -282,6 +295,16 @@ function createInitialState() {
   }
 }
 
+function normalizeExerciseSettings(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  return Object.fromEntries(
+    Object.entries(value).flatMap(([exerciseId, entry]) => {
+      const baseWeight = normalizeBaseWeight(entry?.baseWeight)
+      return baseWeight ? [[exerciseId, { baseWeight }]] : []
+    }),
+  )
+}
+
 function normalizeState(state) {
   const fallback = createInitialState()
   if (!state || typeof state !== 'object') return fallback
@@ -316,6 +339,7 @@ function normalizeState(state) {
     progressPhotos: Array.isArray(state.progressPhotos) ? state.progressPhotos : [],
     nutrition,
     customExercises: Array.isArray(state.customExercises) ? state.customExercises : [],
+    exerciseSettings: normalizeExerciseSettings(state.exerciseSettings),
     hasStarterData: Boolean(state.hasStarterData),
     activeWorkout: state.activeWorkout || null,
     settings: {
@@ -450,14 +474,22 @@ function getTrackingType(exercise) {
   return 'weight-reps'
 }
 
-function previousSetLabel(set, trackingType) {
+/**
+ * Last time's set, written in the same terms as the input beside it. When an
+ * exercise has a base weight, the row is about what you add, so the reference
+ * has to be too — otherwise the column reintroduces exactly the arithmetic the
+ * base weight removed. Older logs carry no base weight of their own, so the
+ * one in use now is the best available reading of what was on the bar.
+ */
+function previousSetLabel(set, trackingType, baseWeight = 0, previousBaseWeight = null) {
   if (!set) return '—'
   if (trackingType === 'duration') return set.duration ? set.duration + ' sec' : '—'
+  const base = previousBaseWeight == null ? baseWeight : previousBaseWeight
+  const load = addedWeight(set.weight, base)
   if (trackingType === 'distance') {
-    const load = set.weight === '' || set.weight == null ? '—' : set.weight
-    return load + ' · ' + (set.distance || '—') + 'm'
+    return (load === '' ? '—' : formatLoad(load)) + ' · ' + (set.distance || '—') + 'm'
   }
-  return String(set.weight ?? '—') + ' × ' + String(set.reps ?? '—')
+  return (load === '' ? '—' : formatLoad(load)) + '×' + String(set.reps ?? '—')
 }
 
 function completedSetLabel(set, trackingType, unit, distanceUnit = 'km') {
@@ -531,7 +563,7 @@ function App() {
   useEffect(() => {
     const theme = getTheme(appState.settings.theme)
     document.documentElement.dataset.theme = theme.id
-    document.documentElement.style.colorScheme = theme.id === 'midnight' ? 'dark' : 'light'
+    document.documentElement.style.colorScheme = isDarkTheme(theme.id) ? 'dark' : 'light'
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.browserColor)
   }, [appState.settings.theme])
 
@@ -649,6 +681,7 @@ function App() {
           restSeconds: prescription?.restSeconds,
           targetMinReps: prescription?.minReps,
           targetMaxReps: prescription?.maxReps,
+          baseWeight: appState.exerciseSettings?.[exerciseId]?.baseWeight || 0,
           sets: Array.from({ length: prescription?.sets || (cardio ? 1 : 3) }, () => createWorkoutSet(previous)),
         }
       }),
@@ -699,6 +732,7 @@ function App() {
             id: uid('we'),
             exerciseId,
             notes: '',
+            baseWeight: appState.exerciseSettings?.[exerciseId]?.baseWeight || 0,
             sets: [createWorkoutSet(previous)],
           },
         ],
@@ -717,6 +751,27 @@ function App() {
           ? {
               ...item,
               sets: item.sets.map((set) => (set.id === setId ? { ...set, [field]: normalized } : set)),
+            }
+          : item,
+      ),
+    }))
+  }
+
+  // The input holds what goes on the bar; the set stores the total, so volume,
+  // records, and exports stay comparable across exercises with and without a
+  // base weight.
+  const updateWeight = (workoutExerciseId, setId, value) => {
+    updateActiveWorkout((workout) => ({
+      ...workout,
+      exercises: workout.exercises.map((item) =>
+        item.id === workoutExerciseId
+          ? {
+              ...item,
+              sets: item.sets.map((set) =>
+                set.id === setId
+                  ? { ...set, weight: totalWeight(value === '' ? '' : Number(value), normalizeBaseWeight(item.baseWeight)) }
+                  : set,
+              ),
             }
           : item,
       ),
@@ -879,6 +934,40 @@ function App() {
       ),
     }))
     notify('Exercise rest set to ' + seconds + ' seconds')
+  }
+
+  // Remembered per exercise, so a bar only has to be declared once. Weights
+  // already logged keep their total — only the number in the input changes.
+  const setExerciseBaseWeight = (workoutExerciseId, value) => {
+    const baseWeight = normalizeBaseWeight(value)
+    setAppState((state) => {
+      const item = state.activeWorkout?.exercises.find((exercise) => exercise.id === workoutExerciseId)
+      if (!item) return state
+      const exerciseSettings = { ...state.exerciseSettings }
+      if (baseWeight) {
+        exerciseSettings[item.exerciseId] = { ...exerciseSettings[item.exerciseId], baseWeight }
+      } else {
+        delete exerciseSettings[item.exerciseId]
+      }
+      return {
+        ...state,
+        exerciseSettings,
+        activeWorkout: {
+          ...state.activeWorkout,
+          exercises: state.activeWorkout.exercises.map((exercise) =>
+            exercise.id === workoutExerciseId ? { ...exercise, baseWeight } : exercise,
+          ),
+        },
+      }
+    })
+    setSheet(null)
+    const exerciseId = activeWorkout?.exercises.find((item) => item.id === workoutExerciseId)?.exerciseId
+    const name = exerciseMap.get(exerciseId)?.name || 'this exercise'
+    notify(
+      baseWeight
+        ? name + ' starts at ' + formatLoad(baseWeight) + ' ' + appState.settings.unit
+        : 'Base weight cleared for ' + name,
+    )
   }
 
   const finishWorkout = (routineAction = 'none') => {
@@ -1125,6 +1214,7 @@ function App() {
             ...workout,
             exercises: workout.exercises.map((exercise) => ({
               ...exercise,
+              baseWeight: convertBaseWeight(exercise.baseWeight, factor),
               sets: exercise.sets.map((set) => ({
                 ...set,
                 weight: set.weight === '' ? '' : Math.round(Number(set.weight) * factor * 2) / 2,
@@ -1136,6 +1226,7 @@ function App() {
     setAppState((state) => ({
       ...state,
       settings: { ...state.settings, unit: nextUnit },
+      exerciseSettings: convertExerciseSettings(state.exerciseSettings, factor),
       workouts: state.workouts.map(convertWorkout),
       activeWorkout: convertWorkout(state.activeWorkout),
       measurements: state.measurements.map((measurement) => ({
@@ -1222,8 +1313,10 @@ function App() {
     notify('Starter data cleared')
   }
 
+  const inSession = view === 'train' && Boolean(activeWorkout)
+
   return (
-    <div className="app-shell">
+    <div className={'app-shell ' + (inSession ? 'is-in-session' : '')}>
       <Sidebar
         view={view}
         navigate={navigate}
@@ -1232,7 +1325,9 @@ function App() {
       />
 
       <div className="app-pane">
-        <MobileTopBar openSettings={() => setSheet({ type: 'settings' })} activeWorkout={activeWorkout} />
+        {!inSession && (
+          <MobileTopBar openSettings={() => setSheet({ type: 'settings' })} activeWorkout={activeWorkout} />
+        )}
         <main className="app-main">
           <Suspense fallback={<FeatureLoader />}>
             <AnimatePresence mode="wait">
@@ -1248,6 +1343,7 @@ function App() {
                     previousWorkouts={appState.workouts}
                     updateActiveWorkout={updateActiveWorkout}
                     updateSet={updateSet}
+                    updateWeight={updateWeight}
                     toggleSet={toggleSet}
                     addSet={addSet}
                     removeSet={removeSet}
@@ -1255,6 +1351,7 @@ function App() {
                     openExercise={(exerciseId) => setSheet({ type: 'exercise', exerciseId })}
                     openExerciseMenu={(workoutExerciseId) => setSheet({ type: 'exercise-menu', workoutExerciseId })}
                     openSetOptions={(workoutExerciseId, setId) => setSheet({ type: 'set-options', workoutExerciseId, setId })}
+                    openBaseWeight={(workoutExerciseId) => setSheet({ type: 'base-weight', workoutExerciseId })}
                     openTools={() => setSheet({ type: 'tools' })}
                     openFinish={() => setSheet({ type: 'finish' })}
                     openDiscard={() => setSheet({ type: 'discard' })}
@@ -1451,6 +1548,7 @@ function App() {
                   .find((exercise) => exercise.id === sheet.workoutExerciseId)?.sets
                   .find((set) => set.id === sheet.setId)}
                 onChangeType={(type) => changeSetType(sheet.workoutExerciseId, sheet.setId, type)}
+                onChangeRpe={(value) => updateSet(sheet.workoutExerciseId, sheet.setId, 'rpe', value)}
                 onDelete={() => {
                   removeSet(sheet.workoutExerciseId, sheet.setId)
                   setSheet(null)
@@ -1458,6 +1556,18 @@ function App() {
                 onClose={() => setSheet(null)}
               />
             )}
+            {sheet.type === 'base-weight' && (() => {
+              const item = activeWorkout?.exercises.find((exercise) => exercise.id === sheet.workoutExerciseId)
+              return (
+                <BaseWeightSheet
+                  exercise={exerciseMap.get(item?.exerciseId)}
+                  item={item}
+                  unit={appState.settings.unit}
+                  onSave={(value) => setExerciseBaseWeight(sheet.workoutExerciseId, value)}
+                  onClose={() => setSheet(null)}
+                />
+              )
+            })()}
             {sheet.type === 'custom-exercise' && (
               <CustomExerciseSheet
                 initial={sheet.initial}
@@ -1501,9 +1611,11 @@ function App() {
               <ExerciseActionsSheet
                 workout={activeWorkout}
                 workoutExerciseId={sheet.workoutExerciseId}
+                unit={appState.settings.unit}
                 moveExercise={moveExercise}
                 toggleSuperset={toggleSuperset}
                 setExerciseRest={setExerciseRest}
+                openBaseWeight={(workoutExerciseId) => setSheet({ type: 'base-weight', workoutExerciseId })}
                 removeExercise={removeExercise}
                 close={() => setSheet(null)}
               />
@@ -1801,6 +1913,170 @@ function TrainView({ workouts, routines, unit, distanceUnit, exerciseMap, hasSta
   )
 }
 
+function SessionBar({
+  workout,
+  elapsedSeconds,
+  completed,
+  planned,
+  openTools,
+  openDiscard,
+  openFinish,
+  toggleWorkoutTimer,
+}) {
+  const progress = planned > 0 ? Math.min(1, completed / planned) : 0
+  return (
+    <header className="session-bar">
+      <button
+        className={'session-timer ' + (workout.pausedAt ? 'is-paused' : '')}
+        onClick={toggleWorkoutTimer}
+        aria-label={workout.pausedAt ? 'Resume workout timer' : 'Pause workout timer'}
+      >
+        {workout.pausedAt ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
+        <strong>{formatDuration(elapsedSeconds)}</strong>
+      </button>
+
+      <div className="session-progress">
+        <span>
+          <b>{completed}</b> of {planned} {planned === 1 ? 'set' : 'sets'}
+        </span>
+        <i style={{ '--session-progress': progress }} aria-hidden="true" />
+      </div>
+
+      <div className="session-bar-actions">
+        <button className="icon-button icon-button--bare" onClick={openTools} aria-label="Open workout tools">
+          <Wrench size={19} />
+        </button>
+        <button className="icon-button icon-button--bare" onClick={openDiscard} aria-label="Workout options">
+          <Ellipsis size={21} />
+        </button>
+        <button
+          className="session-finish"
+          onClick={openFinish}
+          disabled={completed === 0}
+        >
+          Finish
+        </button>
+      </div>
+    </header>
+  )
+}
+
+function SetRow({
+  item,
+  set,
+  setIndex,
+  previousSet,
+  previousBaseWeight,
+  trackingType,
+  baseWeight,
+  unit,
+  updateSet,
+  updateWeight,
+  toggleSet,
+  openSetOptions,
+}) {
+  const added = addedWeight(set.weight, baseWeight)
+  const showTotal = baseWeight > 0 && set.weight !== '' && set.weight != null
+  const selectOnFocus = (event) => event.target.select()
+
+  return (
+    <div
+      className={'set-grid set-row ' + (set.completed ? 'is-complete' : '')}
+      data-set-id={set.id}
+    >
+      <button
+        className={'set-number set-number--' + (set.type || 'normal')}
+        onClick={() => openSetOptions(item.id, set.id)}
+        aria-label={'Options for set ' + (setIndex + 1) + ', ' + (set.type || 'normal')}
+      >
+        {set.type === 'warmup' ? 'W' : set.type === 'drop' ? 'D' : set.type === 'failure' ? 'F' : setIndex + 1}
+      </button>
+
+      <span className="previous-value">
+        {previousSetLabel(previousSet, trackingType, baseWeight, previousBaseWeight)}
+      </span>
+
+      {trackingType === 'duration' ? (
+        <div className="set-field">
+          <input
+            inputMode="numeric"
+            type="number"
+            min="0"
+            enterKeyHint="next"
+            value={set.duration ?? ''}
+            placeholder="—"
+            aria-label={'Set ' + (setIndex + 1) + ' duration in seconds'}
+            onFocus={selectOnFocus}
+            onChange={(event) => updateSet(item.id, set.id, 'duration', event.target.value)}
+          />
+        </div>
+      ) : (
+        <div className="set-field">
+          <input
+            inputMode="decimal"
+            type="number"
+            min="0"
+            step="0.5"
+            enterKeyHint="next"
+            value={added}
+            placeholder="—"
+            aria-label={
+              baseWeight > 0
+                ? 'Set ' + (setIndex + 1) + ' weight added to a ' + formatLoad(baseWeight) + ' ' + unit + ' base'
+                : 'Set ' + (setIndex + 1) + ' weight in ' + unit
+            }
+            onFocus={selectOnFocus}
+            onChange={(event) => updateWeight(item.id, set.id, event.target.value)}
+          />
+          {showTotal && (
+            <span className="set-total" aria-hidden="true">{formatLoad(set.weight)}</span>
+          )}
+        </div>
+      )}
+
+      {trackingType === 'duration' ? (
+        <span className="set-static-value" />
+      ) : (
+        <div className="set-field">
+          <input
+            inputMode={trackingType === 'distance' ? 'decimal' : 'numeric'}
+            type="number"
+            min="0"
+            step={trackingType === 'distance' ? '1' : undefined}
+            enterKeyHint="next"
+            value={trackingType === 'distance' ? set.distance ?? '' : set.reps}
+            placeholder="—"
+            aria-label={
+              'Set ' + (setIndex + 1) + (trackingType === 'distance' ? ' distance in meters' : ' repetitions')
+            }
+            onFocus={selectOnFocus}
+            onChange={(event) =>
+              updateSet(item.id, set.id, trackingType === 'distance' ? 'distance' : 'reps', event.target.value)
+            }
+          />
+        </div>
+      )}
+
+      <button
+        className={'set-rpe ' + (set.rpe === '' || set.rpe == null ? 'is-empty' : '')}
+        onClick={() => openSetOptions(item.id, set.id)}
+        aria-label={'Set ' + (setIndex + 1) + ' RPE' + (set.rpe ? ', currently ' + set.rpe : ', not set')}
+      >
+        {set.rpe === '' || set.rpe == null ? '–' : set.rpe}
+      </button>
+
+      <button
+        className="complete-set"
+        onClick={() => toggleSet(item.id, set.id)}
+        aria-label={set.completed ? 'Mark set incomplete' : 'Complete set'}
+        aria-pressed={Boolean(set.completed)}
+      >
+        <Check size={19} strokeWidth={3} />
+      </button>
+    </div>
+  )
+}
+
 function LiveWorkout({
   workout,
   elapsedSeconds,
@@ -1810,6 +2086,7 @@ function LiveWorkout({
   previousWorkouts,
   updateActiveWorkout,
   updateSet,
+  updateWeight,
   toggleSet,
   addSet,
   removeSet,
@@ -1817,47 +2094,48 @@ function LiveWorkout({
   openExercise,
   openExerciseMenu,
   openSetOptions,
+  openBaseWeight,
   openTools,
   openFinish,
   openDiscard,
   toggleWorkoutTimer,
 }) {
+  const [openNotes, setOpenNotes] = useState(() => new Set())
   const cardioSummary = getCardioSummary(workout, exerciseMap, { completedOnly: false })
   const completedCardio = getCardioSummary(workout, exerciseMap)
   const cardioOnly = workoutIsCardioOnly(workout, exerciseMap)
   const completedWork = completedSetCount(workout)
-  const completedStrengthWork = Math.max(0, completedWork - completedCardio.segmentCount)
-  const hybrid = completedCardio.segmentCount > 0 && completedStrengthWork > 0
-  const completedWorkLabel = cardioOnly
-    ? completedWork === 1 ? 'split' : 'splits'
-    : completedWork === 1 ? 'set' : 'sets'
+  const plannedWork = workout.exercises.reduce((total, item) => total + (item.sets?.length || 0), 0)
+
+  const toggleNote = (id) =>
+    setOpenNotes((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
   return (
-    <div className="live-workout content-width content-width--narrow">
-      <div className="live-header">
-        <div className="live-status">
-          <span><i /> Workout in progress</span>
-          <button className="live-timer-button" onClick={toggleWorkoutTimer}>
-            {workout.pausedAt ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
-            <strong>{formatDuration(elapsedSeconds)}</strong>
-            <span>{workout.pausedAt ? 'RESUME' : 'PAUSE'}</span>
-          </button>
-        </div>
-        <div className="live-title-row">
-          <input
-            className="workout-title-input"
-            value={workout.name}
-            onChange={(event) => updateActiveWorkout({ ...workout, name: event.target.value })}
-            aria-label="Workout name"
-          />
-          <div className="live-title-actions">
-            <button className="icon-button icon-button--light" onClick={openTools} aria-label="Open workout tools">
-              <Wrench size={19} />
-            </button>
-            <button className="icon-button icon-button--light" onClick={openDiscard} aria-label="Workout options">
-              <Ellipsis size={21} />
-            </button>
-          </div>
-        </div>
+    <div className="live-workout">
+      <SessionBar
+        workout={workout}
+        elapsedSeconds={elapsedSeconds}
+        completed={completedWork}
+        planned={plannedWork}
+        openTools={openTools}
+        openDiscard={openDiscard}
+        openFinish={openFinish}
+        toggleWorkoutTimer={toggleWorkoutTimer}
+      />
+
+      <div className="live-body content-width content-width--narrow">
+        <input
+          className="workout-title-input"
+          value={workout.name}
+          onChange={(event) => updateActiveWorkout({ ...workout, name: event.target.value })}
+          aria-label="Workout name"
+        />
+
         <div className="live-summary">
           {cardioSummary.distanceKm > 0 && (
             <span>{formatCardioDistance(cardioSummary.distanceKm, distanceUnit)} {distanceUnit}</span>
@@ -1866,221 +2144,168 @@ function LiveWorkout({
             <span>{formatCardioPace(cardioSummary.paceSecondsPerKm, distanceUnit)} pace</span>
           )}
           {!cardioOnly && <span>{workout.exercises.length} exercises</span>}
-          {hybrid ? (
-            <>
-              <span>{completedCardio.segmentCount} {completedCardio.segmentCount === 1 ? 'split' : 'splits'} logged</span>
-              <span>{completedStrengthWork} {completedStrengthWork === 1 ? 'set' : 'sets'} complete</span>
-            </>
-          ) : (
-            <span>{completedWork} {completedWorkLabel} complete</span>
+          {completedCardio.segmentCount > 0 && (
+            <span>{completedCardio.segmentCount} {completedCardio.segmentCount === 1 ? 'split' : 'splits'}</span>
           )}
-          {!cardioOnly && <span>{compactNumber(workoutVolume(workout))} {unit}</span>}
+          {!cardioOnly && <span>{compactNumber(workoutVolume(workout))} {unit} volume</span>}
         </div>
-      </div>
 
-      <div className="exercise-stack">
-        {workout.exercises.map((item, itemIndex) => {
-          const exercise = exerciseMap.get(item.exerciseId)
-          const trackingType = getTrackingType(exercise)
-          const previous = previousWorkouts
-            .map((past) => past.exercises?.find((entry) => entry.exerciseId === item.exerciseId))
-            .find(Boolean)
-          return (
-            <motion.section
-              layout
-              className={'log-exercise ' + (item.supersetId ? 'is-superset' : '')}
-              key={item.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="log-exercise-head">
-                {item.supersetId && <span className="superset-mark"><Link2 size={12} /> SUPERSET</span>}
-                <button className="exercise-title-button" onClick={() => openExercise(item.exerciseId)}>
-                  <span className="exercise-number">{String(itemIndex + 1).padStart(2, '0')}</span>
-                  <span>
-                    <strong>{exercise?.name || 'Exercise'}</strong>
-                    <small>
-                      {exercise?.primaryMuscle} · {exercise?.equipment}
-                      {item.targetMinReps ? ' · target ' + item.targetMinReps + (item.targetMaxReps && item.targetMaxReps !== item.targetMinReps ? '–' + item.targetMaxReps : '') + ' reps' : ''}
-                    </small>
-                  </span>
-                  <CircleHelp size={17} />
-                </button>
-                <button
-                  className="icon-button icon-button--quiet"
-                  aria-label={'Options for ' + (exercise?.name || 'exercise')}
-                  onClick={() => openExerciseMenu(item.id)}
-                >
-                  <Ellipsis size={21} />
-                </button>
-              </div>
+        <div className="exercise-stack">
+          {workout.exercises.map((item, itemIndex) => {
+            const exercise = exerciseMap.get(item.exerciseId)
+            const trackingType = getTrackingType(exercise)
+            const previous = previousWorkouts
+              .map((past) => past.exercises?.find((entry) => entry.exerciseId === item.exerciseId))
+              .find(Boolean)
+            const baseWeight = normalizeBaseWeight(item.baseWeight)
+            const noteOpen = openNotes.has(item.id) || Boolean(item.notes)
+            return (
+              <motion.section
+                layout
+                className={'log-exercise ' + (item.supersetId ? 'is-superset' : '')}
+                key={item.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="log-exercise-head">
+                  {item.supersetId && <span className="superset-mark"><Link2 size={12} /> SUPERSET</span>}
+                  <button className="exercise-title-button" onClick={() => openExercise(item.exerciseId)}>
+                    <span className="exercise-number">{String(itemIndex + 1).padStart(2, '0')}</span>
+                    <span>
+                      <strong>{exercise?.name || 'Exercise'}</strong>
+                      <small>
+                        {exercise?.primaryMuscle} · {exercise?.equipment}
+                        {item.targetMinReps ? ' · target ' + item.targetMinReps + (item.targetMaxReps && item.targetMaxReps !== item.targetMinReps ? '–' + item.targetMaxReps : '') + ' reps' : ''}
+                      </small>
+                    </span>
+                  </button>
+                  <button
+                    className="icon-button icon-button--quiet"
+                    aria-label={'Options for ' + (exercise?.name || 'exercise')}
+                    onClick={() => openExerciseMenu(item.id)}
+                  >
+                    <Ellipsis size={21} />
+                  </button>
+                </div>
 
-              {trackingType === 'cardio' ? (
-                <CardioTracker
-                  item={item}
-                  exercise={exercise}
-                  previous={previous}
-                  distanceUnit={distanceUnit}
-                  updateSet={updateSet}
-                  toggleSet={toggleSet}
-                  addSet={addSet}
-                  removeSet={removeSet}
-                />
-              ) : (
-                <>
-              <div className="set-grid set-grid--header" aria-hidden="true">
-                <span>SET</span>
-                <span>PREVIOUS</span>
-                <span>{trackingType === 'duration' ? 'SECONDS' : unit.toUpperCase()}</span>
-                <span>{trackingType === 'distance' ? 'METERS' : trackingType === 'duration' ? '' : 'REPS'}</span>
-                <span>RPE</span>
-                <span />
-              </div>
-
-              <div className="set-list">
-                {item.sets.map((set, setIndex) => {
-                  const previousSet = previous?.sets?.[setIndex]
-                  return (
-                    <div
-                      className={'set-grid set-row ' + (set.completed ? 'is-complete' : '')}
-                      key={set.id}
-                      data-set-id={set.id}
-                    >
+                {trackingType === 'cardio' ? (
+                  <CardioTracker
+                    item={item}
+                    exercise={exercise}
+                    previous={previous}
+                    distanceUnit={distanceUnit}
+                    updateSet={updateSet}
+                    toggleSet={toggleSet}
+                    addSet={addSet}
+                    removeSet={removeSet}
+                  />
+                ) : (
+                  <>
+                    {trackingType !== 'duration' && (
                       <button
-                        className={'set-number set-number--' + (set.type || 'normal')}
-                        onClick={() => openSetOptions(item.id, set.id)}
-                        title="Set type and options"
-                        aria-label={'Options for set ' + (setIndex + 1) + ', ' + (set.type || 'normal')}
+                        className={'base-weight-chip ' + (baseWeight ? 'is-set' : '')}
+                        onClick={() => openBaseWeight(item.id)}
                       >
-                        {set.type === 'warmup' ? 'W' : set.type === 'drop' ? 'D' : set.type === 'failure' ? 'F' : setIndex + 1}
+                        <Anchor size={13} />
+                        {baseWeight
+                          ? 'Starts at ' + formatLoad(baseWeight) + ' ' + unit
+                          : 'Set base weight'}
                       </button>
-                      <span className="previous-value">
-                        {previousSetLabel(previousSet, trackingType)}
+                    )}
+
+                    <div className="set-grid set-grid--header" aria-hidden="true">
+                      <span>SET</span>
+                      <span>PREV</span>
+                      <span>
+                        {trackingType === 'duration'
+                          ? 'SECS'
+                          : baseWeight
+                            ? '+' + unit.toUpperCase()
+                            : unit.toUpperCase()}
                       </span>
-                      {trackingType === 'duration' ? (
-                        <input
-                          inputMode="numeric"
-                          type="number"
-                          min="0"
-                          value={set.duration ?? ''}
-                          placeholder="—"
-                          aria-label={'Set ' + (setIndex + 1) + ' duration in seconds'}
-                          onChange={(event) => updateSet(item.id, set.id, 'duration', event.target.value)}
-                        />
-                      ) : (
-                        <input
-                          inputMode="decimal"
-                          type="number"
-                          min="0"
-                          step="0.5"
-                          value={set.weight}
-                          placeholder="—"
-                          aria-label={'Set ' + (setIndex + 1) + ' weight in ' + unit}
-                          onChange={(event) => updateSet(item.id, set.id, 'weight', event.target.value)}
-                        />
-                      )}
-                      {trackingType === 'duration' ? (
-                        <span className="set-static-value" />
-                      ) : trackingType === 'distance' ? (
-                        <input
-                          inputMode="decimal"
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={set.distance ?? ''}
-                          placeholder="—"
-                          aria-label={'Set ' + (setIndex + 1) + ' distance in meters'}
-                          onChange={(event) => updateSet(item.id, set.id, 'distance', event.target.value)}
-                        />
-                      ) : (
-                        <input
-                          inputMode="numeric"
-                          type="number"
-                          min="0"
-                          value={set.reps}
-                          placeholder="—"
-                          aria-label={'Set ' + (setIndex + 1) + ' repetitions'}
-                          onChange={(event) => updateSet(item.id, set.id, 'reps', event.target.value)}
-                        />
-                      )}
-                      <input
-                        inputMode="decimal"
-                        type="number"
-                        min="1"
-                        max="10"
-                        step="0.5"
-                        value={set.rpe}
-                        placeholder="—"
-                        aria-label={'Set ' + (setIndex + 1) + ' RPE'}
-                        onChange={(event) => updateSet(item.id, set.id, 'rpe', event.target.value)}
-                      />
-                      <button
-                        className="complete-set"
-                        onClick={() => toggleSet(item.id, set.id)}
-                        aria-label={set.completed ? 'Mark set incomplete' : 'Complete set'}
-                      >
-                        <Check size={18} strokeWidth={3} />
-                      </button>
+                      <span>{trackingType === 'distance' ? 'METRES' : trackingType === 'duration' ? '' : 'REPS'}</span>
+                      <span>RPE</span>
+                      <span />
                     </div>
-                  )
-                })}
-              </div>
 
-              <button className="add-set-button" onClick={() => addSet(item.id)}>
-                <Plus size={15} /> Add set
-              </button>
-                </>
-              )}
+                    <div className="set-list">
+                      {item.sets.map((set, setIndex) => (
+                        <SetRow
+                          key={set.id}
+                          item={item}
+                          set={set}
+                          setIndex={setIndex}
+                          previousSet={previous?.sets?.[setIndex]}
+                          previousBaseWeight={
+                            previous?.baseWeight == null ? null : normalizeBaseWeight(previous.baseWeight)
+                          }
+                          trackingType={trackingType}
+                          baseWeight={baseWeight}
+                          unit={unit}
+                          updateSet={updateSet}
+                          updateWeight={updateWeight}
+                          toggleSet={toggleSet}
+                          openSetOptions={openSetOptions}
+                        />
+                      ))}
+                    </div>
 
-              <textarea
-                className="exercise-notes"
-                placeholder="Add a note for this exercise…"
-                value={item.notes}
-                rows={1}
-                onChange={(event) =>
-                  updateActiveWorkout({
-                    ...workout,
-                    exercises: workout.exercises.map((exercise) =>
-                      exercise.id === item.id ? { ...exercise, notes: event.target.value } : exercise,
-                    ),
-                  })
-                }
-                aria-label={'Notes for ' + (exercise?.name || 'exercise')}
-              />
-            </motion.section>
-          )
-        })}
-      </div>
+                    <div className="log-exercise-foot">
+                      <button className="add-set-button" onClick={() => addSet(item.id)}>
+                        <Plus size={15} /> Add set
+                      </button>
+                      {!noteOpen && (
+                        <button className="note-toggle" onClick={() => toggleNote(item.id)}>
+                          <NotebookPen size={15} /> Note
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
 
-      {workout.exercises.length === 0 && (
-        <div className="empty-workout">
-          <span className="empty-icon"><Dumbbell size={28} /></span>
-          <h2>Add your first exercise</h2>
-          <p>Pick from {exerciseMap.size} exercises, or create your own.</p>
+                {noteOpen && (
+                  <textarea
+                    className="exercise-notes"
+                    placeholder="Add a note for this exercise…"
+                    value={item.notes}
+                    rows={1}
+                    onChange={(event) =>
+                      updateActiveWorkout({
+                        ...workout,
+                        exercises: workout.exercises.map((exercise) =>
+                          exercise.id === item.id ? { ...exercise, notes: event.target.value } : exercise,
+                        ),
+                      })
+                    }
+                    aria-label={'Notes for ' + (exercise?.name || 'exercise')}
+                  />
+                )}
+              </motion.section>
+            )
+          })}
         </div>
-      )}
 
-      <label className="session-notes">
-        <span>SESSION NOTES</span>
-        <textarea
-          rows={2}
-          value={workout.notes || ''}
-          onChange={(event) => updateActiveWorkout({ ...workout, notes: event.target.value })}
-          placeholder="How did it go?"
-        />
-      </label>
+        {workout.exercises.length === 0 && (
+          <div className="empty-workout">
+            <span className="empty-icon"><Dumbbell size={28} /></span>
+            <h2>Add your first exercise</h2>
+            <p>Pick from {exerciseMap.size} exercises, or create your own.</p>
+          </div>
+        )}
 
-      <div className="live-actions">
         <button className="button button--outline button--wide" onClick={openExercisePicker}>
           <ListPlus size={18} /> Add exercise
         </button>
-        <button
-          className="button button--accent button--wide"
-          onClick={openFinish}
-          disabled={completedSetCount(workout) === 0}
-        >
-          <Check size={18} /> Finish workout
-        </button>
+
+        <label className="session-notes">
+          <span>SESSION NOTES</span>
+          <textarea
+            rows={2}
+            value={workout.notes || ''}
+            onChange={(event) => updateActiveWorkout({ ...workout, notes: event.target.value })}
+            placeholder="How did it go?"
+          />
+        </label>
       </div>
     </div>
   )
@@ -2846,7 +3071,12 @@ function WorkoutDetail({
                 <span>{String(index + 1).padStart(2, '0')}</span>
                 <div>
                   <strong>{exercise?.name || 'Exercise'}</strong>
-                  <small>{exercise?.primaryMuscle} · {completedCount} {workLabel}</small>
+                  <small>
+                    {exercise?.primaryMuscle} · {completedCount} {workLabel}
+                    {normalizeBaseWeight(item.baseWeight)
+                      ? ' · from ' + formatLoad(item.baseWeight) + ' ' + unit
+                      : ''}
+                  </small>
                 </div>
               </div>
               <div className="readonly-sets">
@@ -2979,9 +3209,11 @@ function ConfirmSheet({ icon: Icon, title, body, confirmLabel, onConfirm, onCanc
 function ExerciseActionsSheet({
   workout,
   workoutExerciseId,
+  unit,
   moveExercise,
   toggleSuperset,
   setExerciseRest,
+  openBaseWeight,
   removeExercise,
   close,
 }) {
@@ -3008,6 +3240,18 @@ function ExerciseActionsSheet({
           </div>
           <ChevronRight size={18} />
         </button>
+        <button onClick={() => openBaseWeight(workoutExerciseId)}>
+          <span><Anchor size={17} /></span>
+          <div>
+            <strong>Base weight</strong>
+            <small>
+              {normalizeBaseWeight(item?.baseWeight)
+                ? 'Starts at ' + formatLoad(item.baseWeight) + ' ' + unit + ' — you log what you add'
+                : 'Log only what you add to the bar'}
+            </small>
+          </div>
+          <ChevronRight size={18} />
+        </button>
         <div className="exercise-rest-option">
           <div>
             <span><TimerReset size={17} /></span>
@@ -3030,6 +3274,86 @@ function ExerciseActionsSheet({
         </button>
       </div>
       <button className="button button--ghost button--wide" onClick={close}>Cancel</button>
+    </div>
+  )
+}
+
+function BaseWeightSheet({ exercise, item, unit, onSave, onClose }) {
+  const current = normalizeBaseWeight(item?.baseWeight)
+  const suggestion = suggestedBaseWeight(exercise, unit)
+  const [value, setValue] = useState(() => (current ? String(current) : suggestion ? String(suggestion) : ''))
+  const presets = barPresets(unit)
+  const parsed = normalizeBaseWeight(value)
+
+  return (
+    <div className="sheet-content base-weight-sheet">
+      <SheetHeading
+        title="Base weight"
+        body={
+          'What ' + (exercise?.name || 'this exercise') + ' weighs before you add anything — the bar, or a loaded carriage. ' +
+          'You then log only what you put on, and the total is kept for you.'
+        }
+      />
+
+      <div className="base-weight-presets" role="group" aria-label="Common base weights">
+        {presets.map((preset) => (
+          <button
+            key={preset.id}
+            type="button"
+            className={parsed === preset.weight ? 'is-active' : ''}
+            onClick={() => setValue(String(preset.weight))}
+          >
+            <strong>{formatLoad(preset.weight)}<small>{unit}</small></strong>
+            <span>{preset.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <label className="base-weight-custom">
+        <span>OR ENTER IT EXACTLY</span>
+        <div>
+          <input
+            inputMode="decimal"
+            type="number"
+            min="0"
+            step="0.5"
+            value={value}
+            placeholder="0"
+            autoFocus
+            onFocus={(event) => event.target.select()}
+            onChange={(event) => setValue(event.target.value)}
+            aria-label={'Base weight in ' + unit}
+          />
+          <b>{unit}</b>
+        </div>
+      </label>
+
+      <p className="base-weight-preview">
+        {parsed > 0 ? (
+          <>
+            Type <b>60</b>, log <b>{formatLoad(60 + parsed)} {unit}</b>.
+          </>
+        ) : (
+          <>No base weight — you log the total yourself.</>
+        )}
+      </p>
+
+      <div className="base-weight-actions">
+        <button className="button button--accent button--wide" onClick={() => onSave(parsed)}>
+          <Check size={18} /> {parsed > 0 ? 'Use ' + formatLoad(parsed) + ' ' + unit : 'Save'}
+        </button>
+        {current > 0 && (
+          <button className="button button--ghost button--wide" onClick={() => onSave(0)}>
+            Remove base weight
+          </button>
+        )}
+        <button className="button button--ghost button--wide" onClick={onClose}>Cancel</button>
+      </div>
+
+      <p className="base-weight-note">
+        Remembered for {exercise?.name || 'this exercise'} in future workouts. Weights you have
+        already logged keep their total.
+      </p>
     </div>
   )
 }

@@ -54,6 +54,8 @@ const WARMUP_SCHEME = [
   { percent: 90, reps: 1, label: 'Ready' },
 ]
 
+const RPE_VALUES = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
+
 const SET_TYPES = [
   {
     id: 'normal',
@@ -540,7 +542,7 @@ function normalizeSetType(type) {
   return 'normal'
 }
 
-export function SetOptions({ set, onChangeType, onDelete, onClose }) {
+export function SetOptions({ set, onChangeType, onChangeRpe, onDelete, onClose }) {
   const activeType = normalizeSetType(set?.type)
   const setNumber = set?.number ?? (Number.isFinite(set?.index) ? set.index + 1 : null)
 
@@ -592,6 +594,29 @@ export function SetOptions({ set, onChangeType, onDelete, onClose }) {
             </button>
           )
         })}
+      </div>
+
+      <div className="wt-rpe">
+        <div className="wt-rpe-head">
+          <h3>Effort</h3>
+          <p>How hard the set felt, 6 (easy) to 10 (nothing left).</p>
+        </div>
+        <div className="wt-rpe-scale" role="group" aria-label="Rate of perceived exertion">
+          {RPE_VALUES.map((value) => {
+            const selected = Number(set?.rpe) === value
+            return (
+              <button
+                className={'wt-rpe-step ' + (selected ? 'is-active' : '')}
+                type="button"
+                key={value}
+                aria-pressed={selected}
+                onClick={() => onChangeRpe?.(selected ? '' : value)}
+              >
+                {value % 1 === 0 ? value : value.toFixed(1)}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       <button className="wt-delete-set" type="button" onClick={deleteSet}>

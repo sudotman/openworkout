@@ -8,6 +8,12 @@ Every exercise detail includes a responsive front/back muscle map. Primary and a
 
 ![OpenWorkout training dashboard with routines and recent workout stats](docs/images/openworkout-overview.jpg)
 
+## Base weight
+
+Barbell and machine exercises can carry a base weight — what the movement weighs before you add anything, such as the bar or a loaded carriage. Set it once from the exercise's **Set base weight** control and you log only what you put on: type `60` on a 20 kg bar and the set records 80 kg.
+
+The base weight is remembered per exercise for future workouts, suggested from the equipment the first time you open the control, and converted along with everything else when you switch between kg and lb. Sets always store the total, so volume, personal records, history, and both exports stay comparable across exercises with and without one. Changing a base weight never rewrites a weight you have already logged.
+
 ## Run locally
 
     npm install
@@ -52,5 +58,6 @@ The Vite build uses relative asset paths, so it works on both a custom subdomain
 - JSON backup/restore, including routines and private progress data
 - Flat CSV workout export for Excel, Numbers, or Google Sheets
 - Installable PWA shell with offline asset caching
+- Dark-first themes, safe-area layout, and a session screen built for one-handed phone use
 
 Browser storage belongs to the current browser profile and domain. Export a backup before clearing site data, changing domains, or moving to a new phone.

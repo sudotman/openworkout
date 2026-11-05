@@ -1,49 +1,42 @@
 export const THEMES = Object.freeze([
   {
-    id: 'graphite',
-    name: 'Graphite Acid',
-    description: 'Sharp, neutral, high-energy.',
-    swatches: ['#11130f', '#f3f2eb', '#d9ff4f'],
-    browserColor: '#11130f',
+    id: 'carbon',
+    name: 'Carbon',
+    description: 'Graphite and signal orange.',
+    swatches: ['#090a0a', '#1d2020', '#ff5a1f'],
+    browserColor: '#090a0a',
   },
   {
-    id: 'terracotta',
-    name: 'Terracotta Paper',
-    description: 'Warm, tactile, editorial.',
-    swatches: ['#2a1d17', '#f1e8dc', '#d4543c'],
-    browserColor: '#2a1d17',
+    id: 'void',
+    name: 'Void',
+    description: 'True black, built for OLED.',
+    swatches: ['#000000', '#171b1e', '#38d6ff'],
+    browserColor: '#000000',
   },
   {
-    id: 'cobalt',
-    name: 'International Blue',
-    description: 'Crisp, technical, composed.',
-    swatches: ['#111a32', '#f0f2f7', '#3156d9'],
-    browserColor: '#111a32',
+    id: 'oxide',
+    name: 'Oxide',
+    description: 'Warm iron and amber.',
+    swatches: ['#100d0a', '#25201a', '#ffa72e'],
+    browserColor: '#100d0a',
   },
   {
-    id: 'field',
-    name: 'Field Notes',
-    description: 'Quiet, grounded, restorative.',
-    swatches: ['#13231b', '#eceee6', '#9ac866'],
-    browserColor: '#13231b',
+    id: 'indigo',
+    name: 'Indigo',
+    description: 'Cool, quiet, late sessions.',
+    swatches: ['#0a0b13', '#1c1f2b', '#8098ff'],
+    browserColor: '#0a0b13',
   },
   {
-    id: 'oxblood',
-    name: 'Oxblood Studio',
-    description: 'Rich, focused, confident.',
-    swatches: ['#241416', '#f2ece8', '#972d40'],
-    browserColor: '#241416',
-  },
-  {
-    id: 'midnight',
-    name: 'Midnight Ice',
-    description: 'Deep contrast for late sessions.',
-    swatches: ['#080f15', '#17232c', '#73d8ff'],
-    browserColor: '#080f15',
+    id: 'bone',
+    name: 'Bone',
+    description: 'Daylight, paper and ink.',
+    swatches: ['#efece6', '#e4e0d8', '#e8491a'],
+    browserColor: '#efece6',
   },
 ])
 
-export const DEFAULT_THEME_ID = 'graphite'
+export const DEFAULT_THEME_ID = 'carbon'
 
 export function normalizeTheme(themeId) {
   return THEMES.some((theme) => theme.id === themeId) ? themeId : DEFAULT_THEME_ID
@@ -51,4 +44,9 @@ export function normalizeTheme(themeId) {
 
 export function getTheme(themeId) {
   return THEMES.find((theme) => theme.id === normalizeTheme(themeId)) || THEMES[0]
+}
+
+/** Themes that paint light-on-dark, which the browser chrome needs to know. */
+export function isDarkTheme(themeId) {
+  return normalizeTheme(themeId) !== 'bone'
 }
