@@ -118,11 +118,15 @@ export function exportAppState(state) {
     return false
   } finally {
     if (objectUrl) {
-      try {
-        URL.revokeObjectURL(objectUrl)
-      } catch {
-        // Revocation is best-effort in restricted browser contexts.
-      }
+      const url = objectUrl
+      // Safari can cancel a download whose URL is revoked in the same task.
+      setTimeout(() => {
+        try {
+          URL.revokeObjectURL(url)
+        } catch {
+          // Revocation is best-effort in restricted browser contexts.
+        }
+      }, 1000)
     }
   }
 }

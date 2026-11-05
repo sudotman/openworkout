@@ -204,6 +204,11 @@
   --shadow-sheet: 0 -24px 70px rgba(0, 0, 0, 0.5);
   --shadow-card: 0 1px 0 var(--line-dark);
   --tap: 44px;
+  /* Type floor for a phone held at arm's length mid-set: nothing smaller than
+     11px, and small text drawn from these steps rather than one-off sizes. */
+  --text-label: 11px; /* mono caps: kickers, column heads, metadata */
+  --text-xs: 12px;
+  --text-sm: 13px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
@@ -379,9 +384,14 @@ p {
 }
 
 .app-main {
+  /* Shared with the session bar, which bleeds back out to the pane's edges. */
+  --main-pad-x: 17px;
   min-height: calc(100svh - 64px);
-  padding: 24px 17px calc(100px + var(--safe-bottom));
+  padding: 24px var(--main-pad-x) calc(100px + var(--safe-bottom));
+  /* clip, not hidden: hidden would make this a scroll container, and the
+     sticky session bar would then stick to a box that never scrolls. */
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* In a session the app's own top bar is gone, so the main pane starts under
@@ -487,7 +497,7 @@ p {
   align-items: center;
   gap: 6px;
   padding: 5px 8px;
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.1em;
   color: var(--accent);
   border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
@@ -570,9 +580,10 @@ p {
   background: transparent;
   border: 0;
   border-radius: 10px;
-  font-size: 9px;
+  /* Six tabs share 320–375px, so the label sits at the floor of the scale. */
+  font-size: var(--text-label);
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
 }
 
 .mobile-nav button.is-active {
@@ -633,7 +644,7 @@ p {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font: 500 10px/1.2 var(--mono);
+  font: 500 var(--text-label)/1.2 var(--mono);
   letter-spacing: 0.12em;
   color: var(--muted);
 }
@@ -712,7 +723,7 @@ p {
   flex: 0 0 auto;
   min-height: 42px;
   padding-inline: 14px;
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .train-layout {
@@ -728,13 +739,13 @@ p {
   padding: 10px 11px;
   gap: 9px;
   color: var(--ink);
-  background: var(--accent-soft);
-  border: 1px solid var(--accent-ring);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
   border-radius: 11px;
 }
 
 .starter-banner p {
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.4;
 }
 
@@ -742,10 +753,10 @@ p {
   min-height: 32px;
   padding: 0 9px;
   color: var(--ink);
-  background: color-mix(in srgb, var(--surface-raised) 75%, transparent);
+  background: var(--control);
   border: 0;
   border-radius: 999px;
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -756,7 +767,7 @@ p {
   color: var(--ink);
   background: var(--accent-soft);
   border-radius: 4px;
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   font-style: normal;
   letter-spacing: 0.05em;
   vertical-align: middle;
@@ -765,7 +776,7 @@ p {
 /* The hero was a dark block on a pale page. On a dark page that contrast is
    gone, so it earns its edge from a raised surface and a hairline instead. */
 .session-hero {
-  color: var(--sidebar-text);
+  color: var(--ink);
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -792,8 +803,8 @@ p {
   flex-wrap: wrap;
   gap: 6px 15px;
   margin: 16px 0 22px;
-  color: color-mix(in srgb, var(--sidebar-text) 62%, transparent);
-  font: 400 10px/1 var(--mono);
+  color: var(--muted);
+  font: 400 var(--text-label)/1 var(--mono);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -827,7 +838,7 @@ p {
   gap: 4px;
   min-height: 40px;
   padding: 0;
-  font-size: 11px;
+  font-size: var(--text-sm);
   font-weight: 700;
   background: transparent;
   border: 0;
@@ -864,7 +875,7 @@ p {
 }
 
 .template-index {
-  font: 500 10px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   color: var(--muted);
 }
 
@@ -883,14 +894,14 @@ p {
 .template-main small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .template-type {
   display: none;
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.08em;
   color: var(--muted);
   text-transform: uppercase;
@@ -933,7 +944,7 @@ p {
 
 .week-metrics span {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .week-bars {
@@ -965,7 +976,7 @@ p {
 
 .week-bars span {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .recent-panel {
@@ -1000,7 +1011,7 @@ p {
 .recent-workout > div:nth-child(2) span {
   overflow: hidden;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1022,7 +1033,7 @@ p {
 }
 
 .date-tile span {
-  font: 500 9px/1 var(--mono) !important;
+  font: 500 var(--text-label)/1 var(--mono) !important;
   color: var(--accent-on-dark) !important;
   text-transform: uppercase;
 }
@@ -1065,7 +1076,7 @@ p {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: calc(var(--safe-top) * -1 - 18px) -17px 22px;
+  margin: calc(var(--safe-top) * -1 - 18px) calc(var(--main-pad-x) * -1) 22px;
   padding: calc(var(--safe-top) + 10px) 14px 10px;
   background: color-mix(in srgb, var(--sidebar) 92%, transparent);
   border-bottom: 1px solid var(--line-dark);
@@ -1109,7 +1120,7 @@ p {
 .session-progress span {
   overflow: hidden;
   color: color-mix(in srgb, var(--sidebar-text) 60%, transparent);
-  font: 400 10px/1 var(--mono);
+  font: 400 var(--text-label)/1 var(--mono);
   letter-spacing: 0.04em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1200,7 +1211,7 @@ p {
   margin-top: -6px;
   gap: 5px 14px;
   color: var(--muted);
-  font: 400 11px/1 var(--mono);
+  font: 400 var(--text-xs)/1 var(--mono);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1241,7 +1252,7 @@ p {
   color: var(--accent-ink);
   background: var(--accent);
   border-radius: var(--radius-xs);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.07em;
 }
 
@@ -1278,13 +1289,13 @@ p {
 .exercise-title-button small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .exercise-number {
-  font: 500 10px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   color: var(--muted);
 }
 
@@ -1301,7 +1312,7 @@ p {
   background: transparent;
   border: 1px dashed var(--line);
   border-radius: var(--radius-pill);
-  font: 400 11px/1 var(--mono);
+  font: 400 var(--text-xs)/1 var(--mono);
   letter-spacing: 0.01em;
 }
 
@@ -1327,7 +1338,7 @@ p {
   min-height: 28px;
   padding: 0 11px;
   color: var(--muted);
-  font: 400 9px/1 var(--mono);
+  font: 400 var(--text-label)/1 var(--mono);
   letter-spacing: 0.08em;
   text-align: center;
 }
@@ -1350,7 +1361,7 @@ p {
   width: 34px;
   height: 36px;
   padding: 0;
-  font: 500 11px/1 var(--mono);
+  font: 500 var(--text-xs)/1 var(--mono);
   color: var(--muted);
   background: var(--control);
   border: 0;
@@ -1379,7 +1390,7 @@ p {
 .previous-value {
   overflow: hidden;
   color: var(--muted);
-  font: 400 10px/1.2 var(--mono);
+  font: 400 var(--text-label)/1.2 var(--mono);
   font-variant-numeric: tabular-nums;
   text-align: center;
   text-overflow: ellipsis;
@@ -1430,7 +1441,7 @@ p {
   right: 5px;
   bottom: 3px;
   color: var(--muted);
-  font: 400 9px/1 var(--mono);
+  font: 400 var(--text-label)/1 var(--mono);
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
@@ -1453,7 +1464,7 @@ p {
   background: transparent;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  font: 500 12px/1 var(--mono);
+  font: 500 var(--text-xs)/1 var(--mono);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1510,7 +1521,7 @@ p {
   background: transparent;
   border: 0;
   border-radius: 0 0 var(--radius) var(--radius);
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 550;
 }
 
@@ -1604,7 +1615,7 @@ p {
 }
 
 .feature-loader p {
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -1624,7 +1635,7 @@ p {
   max-width: 340px;
   margin: 8px 0 18px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-sm);
   line-height: 1.55;
 }
 
@@ -1638,7 +1649,7 @@ p {
 .session-notes > span,
 .session-note-detail > span {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.08em;
 }
 
@@ -1651,7 +1662,7 @@ p {
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 12px;
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.5;
 }
 
@@ -1665,7 +1676,7 @@ p {
 .session-note-detail p {
   margin-top: 7px;
   color: var(--ink-soft);
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.55;
 }
 
@@ -1690,7 +1701,7 @@ p {
 
 .history-month span {
   color: var(--muted);
-  font: 400 9px/1 var(--mono);
+  font: 400 var(--text-label)/1 var(--mono);
   text-transform: uppercase;
 }
 
@@ -1729,7 +1740,7 @@ p {
 .history-date span {
   margin-top: 4px;
   color: var(--muted);
-  font: 400 9px/1 var(--mono);
+  font: 400 var(--text-label)/1 var(--mono);
   text-transform: uppercase;
 }
 
@@ -1747,7 +1758,7 @@ p {
 .history-main span {
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1793,7 +1804,7 @@ p {
   padding: 0;
   background: transparent;
   border: 0;
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
 .search-box input::placeholder {
@@ -1833,7 +1844,7 @@ p {
   background: transparent;
   border: 1px solid var(--control-strong);
   border-radius: 999px;
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 600;
 }
 
@@ -1851,7 +1862,7 @@ p {
 }
 
 .equipment-filter label {
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   color: var(--muted);
   text-transform: uppercase;
 }
@@ -1863,14 +1874,14 @@ p {
   background: var(--control);
   border: 0;
   border-radius: 9px;
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 600;
 }
 
 .equipment-filter > span {
   margin-left: auto;
   color: var(--muted);
-  font: 400 9px/1 var(--mono);
+  font: 400 var(--text-label)/1 var(--mono);
 }
 
 .exercise-directory {
@@ -1900,7 +1911,7 @@ p {
   color: var(--ink);
   background: var(--control);
   border-radius: 10px;
-  font: 500 10px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .directory-main {
@@ -1912,7 +1923,7 @@ p {
 
 .directory-main strong {
   overflow: hidden;
-  font-size: 12px;
+  font-size: var(--text-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1920,7 +1931,7 @@ p {
 .directory-main small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1939,24 +1950,26 @@ p {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   margin-bottom: 25px;
-  padding: 3px;
+  padding: 4px;
   background: var(--control);
-  border-radius: 13px;
+  border-radius: 999px;
 }
 
 .progress-tabs button {
-  min-height: 39px;
+  min-height: 38px;
   color: var(--muted);
   background: transparent;
   border: 0;
-  border-radius: 10px;
-  font-size: 10px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
-.progress-tabs button.is-active {
-  color: var(--button-dark-ink);
-  background: var(--button-dark);
+.progress-tabs button.is-active,
+.segmented-control button.is-active {
+  color: var(--ink);
+  background: var(--surface-raised);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
 .metric-band {
@@ -1985,7 +1998,7 @@ p {
 
 .metric-band span {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.08em;
 }
 
@@ -1998,7 +2011,7 @@ p {
 
 .metric-band small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .progress-layout {
@@ -2008,7 +2021,7 @@ p {
 }
 
 .chart-unit {
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   color: var(--muted);
   text-transform: uppercase;
 }
@@ -2068,7 +2081,7 @@ p {
 
 .record-rank {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .record-main {
@@ -2080,7 +2093,7 @@ p {
 
 .record-main strong {
   overflow: hidden;
-  font-size: 12px;
+  font-size: var(--text-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2088,7 +2101,7 @@ p {
 .record-main small,
 .record-value small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .record-value {
@@ -2186,7 +2199,7 @@ p {
   max-width: 600px;
   margin-top: 10px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-sm);
   line-height: 1.55;
 }
 
@@ -2200,7 +2213,7 @@ p {
   color: var(--muted);
   background: transparent;
   border: 0;
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -2252,14 +2265,14 @@ p {
 
 .picker-details strong {
   overflow: hidden;
-  font-size: 12px;
+  font-size: var(--text-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .picker-details small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .picker-add {
@@ -2296,7 +2309,7 @@ p {
 
 .instruction-title span,
 .instruction-title small {
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.1em;
 }
 
@@ -2322,11 +2335,11 @@ p {
 .instruction-steps li > span {
   padding-top: 2px;
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .instruction-steps p {
-  font-size: 12px;
+  font-size: var(--text-sm);
   line-height: 1.55;
 }
 
@@ -2345,7 +2358,7 @@ p {
   padding: 10px 11px;
   background: var(--accent-soft);
   border-radius: 10px;
-  font-size: 11px;
+  font-size: var(--text-sm);
   line-height: 1.4;
 }
 
@@ -2369,7 +2382,7 @@ p {
 }
 
 .safety-note p {
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.5;
 }
 
@@ -2406,7 +2419,7 @@ p {
   background: var(--control);
   border: 0;
   border-radius: 999px;
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -2446,13 +2459,13 @@ p {
 }
 
 .workout-day-list strong {
-  font-size: 11px;
+  font-size: var(--text-sm);
 }
 
 .workout-day-list small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2490,18 +2503,18 @@ p {
 
 .workout-cardio-summary span {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .workout-cardio-summary strong {
   overflow: hidden;
-  font: 600 12px/1.15 var(--mono);
+  font: 600 var(--text-xs)/1.15 var(--mono);
   text-overflow: ellipsis;
 }
 
 .workout-cardio-summary small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .workout-edit-form label,
@@ -2514,7 +2527,7 @@ p {
 .workout-edit-form label span,
 .custom-form-grid label > span {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.07em;
 }
 
@@ -2529,7 +2542,7 @@ p {
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 9px;
-  font-size: 11px;
+  font-size: var(--text-sm);
 }
 
 .custom-form-grid textarea {
@@ -2552,7 +2565,7 @@ p {
 
 .workout-detail-exercise > span {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .workout-detail-exercise > div {
@@ -2567,7 +2580,7 @@ p {
 
 .workout-detail-exercise small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .readonly-sets {
@@ -2585,11 +2598,11 @@ p {
 .readonly-sets span,
 .readonly-sets small {
   color: var(--muted);
-  font: 400 9px/1 var(--mono);
+  font: 400 var(--text-label)/1 var(--mono);
 }
 
 .readonly-sets strong {
-  font: 500 11px/1 var(--mono);
+  font: 500 var(--text-xs)/1 var(--mono);
 }
 
 .detail-note {
@@ -2598,7 +2611,7 @@ p {
   color: var(--muted);
   background: var(--surface-alt);
   border-radius: 9px;
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.5;
 }
 
@@ -2612,7 +2625,7 @@ p {
   color: var(--danger);
   background: transparent;
   border: 0;
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .delete-history-confirm {
@@ -2622,7 +2635,7 @@ p {
   margin-top: 15px;
   gap: 7px;
   color: var(--danger);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .delete-history-confirm button {
@@ -2631,7 +2644,7 @@ p {
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 999px;
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -2699,7 +2712,7 @@ p {
 
 .finish-summary span {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .finish-summary strong {
@@ -2708,7 +2721,7 @@ p {
 
 .finish-summary strong small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .compact-sheet > .button + .button {
@@ -2723,7 +2736,7 @@ p {
 .finish-routine-actions > span {
   margin-bottom: 2px;
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.08em;
 }
 
@@ -2775,12 +2788,12 @@ p {
 }
 
 .exercise-action-list strong {
-  font-size: 11px;
+  font-size: var(--text-sm);
 }
 
 .exercise-action-list small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .exercise-action-list > button > svg {
@@ -2820,12 +2833,12 @@ p {
 }
 
 .exercise-rest-option strong {
-  font-size: 11px;
+  font-size: var(--text-sm);
 }
 
 .exercise-rest-option small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .exercise-rest-option > div:last-child {
@@ -2841,7 +2854,7 @@ p {
   background: var(--control);
   border: 1px solid transparent;
   border-radius: 8px;
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .exercise-rest-option > div:last-child button.is-active {
@@ -2877,7 +2890,7 @@ p {
   background: var(--control);
   border: 0;
   border-radius: 999px;
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -2907,14 +2920,14 @@ p {
 }
 
 .setting-label span {
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 700;
 }
 
 .setting-label small {
   max-width: 170px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.45;
   text-align: right;
 }
@@ -2995,7 +3008,7 @@ p {
 
 .theme-option-copy strong {
   overflow: hidden;
-  font-size: 10px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -3003,7 +3016,7 @@ p {
 .theme-option-copy small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -3028,24 +3041,20 @@ p {
   display: grid;
   grid-template-columns: 1fr 1fr;
   margin-top: 13px;
-  padding: 3px;
+  padding: 4px;
   background: var(--control);
-  border-radius: 12px;
+  border-radius: 999px;
 }
 
 .segmented-control button {
-  min-height: 39px;
+  min-height: 38px;
   color: var(--muted);
   background: transparent;
   border: 0;
-  border-radius: 9px;
-  font: 500 10px/1 var(--mono);
+  border-radius: 999px;
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
-.segmented-control button.is-active {
-  color: var(--button-dark-ink);
-  background: var(--button-dark);
-}
 
 .rest-options {
   display: grid;
@@ -3108,7 +3117,7 @@ p {
   background: var(--control);
   border: 1px solid transparent;
   border-radius: 10px;
-  font: 500 10px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .rest-options button.is-active {
@@ -3156,12 +3165,12 @@ p {
 }
 
 .data-actions strong {
-  font-size: 11px;
+  font-size: var(--text-sm);
 }
 
 .data-actions small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .data-actions > button > svg {
@@ -3183,12 +3192,12 @@ p {
 }
 
 .privacy-callout strong {
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .privacy-callout p {
   margin-top: 3px;
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.45;
 }
 
@@ -3201,7 +3210,7 @@ p {
   color: var(--danger);
   background: transparent;
   border: 0;
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .reset-confirm {
@@ -3214,7 +3223,7 @@ p {
 
 .reset-confirm p {
   color: var(--danger);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .reset-confirm > div {
@@ -3230,7 +3239,7 @@ p {
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 999px;
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -3281,7 +3290,7 @@ p {
 
 .rest-copy span {
   color: rgba(255, 255, 255, 0.5);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.09em;
 }
 
@@ -3306,7 +3315,7 @@ p {
   padding: 0 9px;
   color: var(--accent);
   background: transparent;
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -3329,8 +3338,16 @@ p {
   border: 0;
   border-radius: var(--radius-sm);
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 600;
+}
+
+/* While a rest is running on a phone, the toast lifts clear of the timer
+   instead of covering it. */
+@media (max-width: 759px) {
+  .app-shell.is-resting .toast {
+    bottom: calc(84px + 70px + var(--safe-bottom));
+  }
 }
 
 @media (min-width: 430px) {
@@ -3339,8 +3356,7 @@ p {
   }
 
   .app-main {
-    padding-right: 22px;
-    padding-left: 22px;
+    --main-pad-x: 22px;
   }
 
   .mobile-topbar {
@@ -3386,7 +3402,7 @@ p {
   .muscle-label {
     display: inline;
     color: var(--muted);
-    font: 500 9px/1 var(--mono);
+    font: 500 var(--text-label)/1 var(--mono);
     text-transform: uppercase;
   }
 }
@@ -3440,6 +3456,7 @@ p {
   .toast {
     top: 22px;
     right: 22px;
+    bottom: auto;
     left: auto;
     width: max-content;
     max-width: 390px;
@@ -3491,7 +3508,7 @@ p {
     background: transparent;
     border: 0;
     border-radius: 11px;
-    font-size: 11px;
+    font-size: var(--text-sm);
     font-weight: 600;
     text-align: left;
     transition: color 170ms ease, background-color 170ms ease;
@@ -3551,18 +3568,18 @@ p {
 
   .privacy-note strong {
     color: color-mix(in srgb, var(--sidebar-text) 80%, transparent);
-    font-size: 9px;
+    font-size: var(--text-xs);
   }
 
   .privacy-note span {
-    font-size: 9px;
+    font-size: var(--text-xs);
   }
 
   .sidebar-signature {
     margin-top: 9px;
     padding: 0 12px;
     color: color-mix(in srgb, var(--sidebar-text) 23%, transparent);
-    font: 500 9px/1 var(--mono);
+    font: 500 var(--text-label)/1 var(--mono);
     letter-spacing: 0.09em;
   }
 
@@ -3577,9 +3594,10 @@ p {
   }
 
   .app-main {
+    --main-pad-x: 45px;
     height: 100svh;
     min-height: 0;
-    padding: 44px 45px 60px;
+    padding: 44px var(--main-pad-x) 60px;
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -3613,7 +3631,7 @@ p {
   }
 
   .view-header p {
-    font-size: 12px;
+    font-size: var(--text-sm);
   }
 
   .train-layout {
@@ -3666,7 +3684,7 @@ p {
     align-items: center;
     gap: 6px;
     color: var(--muted);
-    font: 400 9px/1 var(--mono);
+    font: 400 var(--text-label)/1 var(--mono);
   }
 
   .library-tools {
@@ -3701,7 +3719,7 @@ p {
   .difficulty {
     width: max-content;
     padding: 5px 8px;
-    font: 500 9px/1 var(--mono);
+    font: 500 var(--text-label)/1 var(--mono);
     border-radius: 20px;
     text-transform: uppercase;
   }
@@ -3778,7 +3796,7 @@ p {
 
   .set-grid--header {
     min-height: 35px;
-    font-size: 9px;
+    font-size: var(--text-xs);
   }
 
   .set-row {
@@ -3801,7 +3819,8 @@ p {
   }
 
   .app-main {
-    padding: 50px 58px 70px;
+    --main-pad-x: 58px;
+    padding: 50px var(--main-pad-x) 70px;
   }
 
   .train-layout {
@@ -3873,13 +3892,13 @@ p {
 
 .base-weight-presets button strong small {
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 400;
 }
 
 .base-weight-presets button span {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-sm);
 }
 
 .base-weight-presets button.is-active {
@@ -3900,7 +3919,7 @@ p {
 
 .base-weight-custom > span {
   color: var(--muted);
-  font: 400 9px/1 var(--mono);
+  font: 400 var(--text-label)/1 var(--mono);
   letter-spacing: 0.1em;
 }
 
@@ -3948,7 +3967,7 @@ p {
 .base-weight-custom b {
   flex-shrink: 0;
   color: var(--muted);
-  font: 400 12px/1 var(--mono);
+  font: 400 var(--text-xs)/1 var(--mono);
   text-transform: uppercase;
 }
 
@@ -3976,7 +3995,7 @@ p {
 .base-weight-note {
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-sm);
   line-height: 1.55;
   text-align: center;
 }

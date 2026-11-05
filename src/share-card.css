@@ -32,7 +32,7 @@
   max-width: 420px;
   margin: 12px auto 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-sm);
   line-height: 1.55;
 }
 
@@ -62,7 +62,7 @@
 .share-session-facts span {
   overflow: hidden;
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.05em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -71,7 +71,7 @@
 .share-session-facts strong {
   overflow: hidden;
   color: var(--ink);
-  font: 650 10px/1.2 var(--mono);
+  font: 650 var(--text-label)/1.2 var(--mono);
   text-overflow: ellipsis;
 }
 
@@ -84,7 +84,7 @@
   padding-top: 0;
   color: var(--muted);
   border-top: 0;
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .share-workout-meta strong {
@@ -108,7 +108,7 @@
   max-width: 420px;
   margin: 9px auto 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.45;
 }
 
@@ -157,7 +157,7 @@
   gap: 13px;
   color: rgba(23, 23, 19, 0.68);
   text-align: center;
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .share-card-loading span {
@@ -171,7 +171,7 @@
 
 .share-card-error strong {
   color: #171713;
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
 .share-card-error span {

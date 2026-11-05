@@ -6,11 +6,6 @@
   overflow: hidden;
 }
 
-.photo-module button,
-.photo-module input {
-  font: inherit;
-}
-
 .photo-module button:focus-visible,
 .photo-module input:focus-visible {
   outline: none;
@@ -42,7 +37,7 @@
   max-width: 280px;
   margin: 7px 0 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.4;
 }
 
@@ -59,7 +54,7 @@
   background: transparent;
   border: 0;
   border-radius: 11px;
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 750;
   white-space: nowrap;
   cursor: pointer;
@@ -122,14 +117,14 @@
 }
 
 .photo-privacy-note span {
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.45;
 }
 
 .photo-privacy-note strong {
   display: block;
   color: var(--ink);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .photo-add-form {
@@ -202,7 +197,7 @@
 .photo-picker-empty small {
   margin-top: 5px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .photo-picker-hitbox {
@@ -275,7 +270,7 @@
   align-items: center;
   gap: 6px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -288,7 +283,7 @@
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 10px;
-  font: 500 11px/1 var(--mono);
+  font: 500 var(--text-xs)/1 var(--mono);
 }
 
 .photo-field input:focus {
@@ -317,7 +312,7 @@
   color: var(--muted);
   background: rgba(233, 232, 223, 0.65);
   border-radius: 9px;
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.4;
 }
 
@@ -332,7 +327,7 @@
   background: color-mix(in srgb, var(--danger) 9%, transparent);
   border: 1px solid color-mix(in srgb, var(--danger) 16%, transparent);
   border-radius: 9px;
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.4;
 }
 
@@ -361,12 +356,12 @@
 }
 
 .photo-gallery-toolbar strong {
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
 .photo-gallery-toolbar span {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   text-transform: uppercase;
 }
 
@@ -409,12 +404,12 @@
 }
 
 .photo-compare-head strong {
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
 .photo-compare-head > span {
   color: var(--accent);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   white-space: nowrap;
 }
 
@@ -449,7 +444,7 @@
   background: rgba(17, 19, 15, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 7px;
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   text-align: center;
   backdrop-filter: blur(8px);
 }
@@ -475,11 +470,11 @@
   place-items: center;
   border: 1px dashed rgba(255, 255, 255, 0.25);
   border-radius: 50%;
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .photo-compare-placeholder small {
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .photo-gallery {
@@ -546,7 +541,7 @@
   background: rgba(17, 19, 15, 0.54);
   border: 1px solid rgba(255, 255, 255, 0.64);
   border-radius: 50%;
-  font: 700 9px/1 var(--mono);
+  font: 700 var(--text-label)/1 var(--mono);
   backdrop-filter: blur(8px);
 }
 
@@ -573,12 +568,12 @@
 }
 
 .photo-tile figcaption strong {
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .photo-tile figcaption small {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .photo-tile figcaption > button {
@@ -615,13 +610,13 @@
 }
 
 .photo-delete-confirm > strong {
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
 .photo-delete-confirm > span {
   margin-top: 5px;
   color: rgba(255, 255, 255, 0.55);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .photo-delete-confirm > div {
@@ -637,7 +632,7 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 8px;
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 700;
   cursor: pointer;
 }
@@ -678,7 +673,7 @@
   max-width: 310px;
   margin: 7px 0 17px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.5;
 }
 
@@ -700,7 +695,7 @@
 
 .photo-storage-note p {
   margin: 0;
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.55;
 }
 
@@ -708,7 +703,7 @@
   display: block;
   margin-bottom: 2px;
   color: var(--ink);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 @media (min-width: 560px) {

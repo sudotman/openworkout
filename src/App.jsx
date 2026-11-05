@@ -227,8 +227,8 @@ function createInitialState() {
       folder: template.id === 'full-body' ? 'Essentials' : 'My training',
     })),
     measurements: [
-      { id: uid('measure'), date: daysAgoIso(14, 8, 0).slice(0, 10), weight: 76.4, bodyFat: 16.2, waist: 82, chest: 101, arm: 35, thigh: 57 },
-      { id: uid('measure'), date: daysAgoIso(0, 8, 0).slice(0, 10), weight: 75.8, bodyFat: 15.8, waist: 81.5, chest: 101.5, arm: 35.3, thigh: 57.2 },
+      { id: uid('measure'), isSample: true, date: daysAgoIso(14, 8, 0).slice(0, 10), weight: 76.4, bodyFat: 16.2, waist: 82, chest: 101, arm: 35, thigh: 57 },
+      { id: uid('measure'), isSample: true, date: daysAgoIso(0, 8, 0).slice(0, 10), weight: 75.8, bodyFat: 15.8, waist: 81.5, chest: 101.5, arm: 35.3, thigh: 57.2 },
     ],
     progressPhotos: [],
     nutrition: createInitialNutritionState(),
@@ -236,6 +236,7 @@ function createInitialState() {
     exerciseSettings: {},
     hasStarterData: true,
     activeWorkout: null,
+    restTimer: null,
     workouts: [
       {
         id: uid('workout'),
@@ -305,10 +306,25 @@ function normalizeExerciseSettings(value) {
   )
 }
 
+// Saves from before sample measurements were flagged: recognise the two seeded
+// entries by their values so clearing samples leaves the user's own alone.
+function isLegacySampleMeasurement(entry) {
+  return (
+    (Number(entry?.weight) === 76.4 && Number(entry?.bodyFat) === 16.2 && Number(entry?.waist) === 82) ||
+    (Number(entry?.weight) === 75.8 && Number(entry?.bodyFat) === 15.8 && Number(entry?.waist) === 81.5)
+  )
+}
+
 function normalizeState(state) {
   const fallback = createInitialState()
   if (!state || typeof state !== 'object') return fallback
-  const measurements = Array.isArray(state.measurements) ? state.measurements : fallback.measurements
+  const measurements = Array.isArray(state.measurements)
+    ? state.measurements.map((entry) =>
+        state.hasStarterData && !entry?.isSample && isLegacySampleMeasurement(entry)
+          ? { ...entry, isSample: true }
+          : entry,
+      )
+    : fallback.measurements
   let nutrition = state.nutrition
     ? normalizeNutritionState(state.nutrition)
     : state.hasStarterData === false
@@ -342,6 +358,10 @@ function normalizeState(state) {
     exerciseSettings: normalizeExerciseSettings(state.exerciseSettings),
     hasStarterData: Boolean(state.hasStarterData),
     activeWorkout: state.activeWorkout || null,
+    restTimer:
+      state.activeWorkout && Number.isFinite(state.restTimer?.endsAt) && Number(state.restTimer?.total) > 0
+        ? { endsAt: state.restTimer.endsAt, total: Number(state.restTimer.total) }
+        : null,
     settings: {
       ...fallback.settings,
       ...(state.settings || {}),
@@ -478,14 +498,14 @@ function getTrackingType(exercise) {
  * Last time's set, written in the same terms as the input beside it. When an
  * exercise has a base weight, the row is about what you add, so the reference
  * has to be too — otherwise the column reintroduces exactly the arithmetic the
- * base weight removed. Older logs carry no base weight of their own, so the
- * one in use now is the best available reading of what was on the bar.
+ * base weight removed. Sets store the total, so subtracting today's base is
+ * what makes typing the number shown here repeat last time's load, whatever
+ * base (if any) was in use back then.
  */
-function previousSetLabel(set, trackingType, baseWeight = 0, previousBaseWeight = null) {
+function previousSetLabel(set, trackingType, baseWeight = 0) {
   if (!set) return '—'
   if (trackingType === 'duration') return set.duration ? set.duration + ' sec' : '—'
-  const base = previousBaseWeight == null ? baseWeight : previousBaseWeight
-  const load = addedWeight(set.weight, base)
+  const load = addedWeight(set.weight, baseWeight)
   if (trackingType === 'distance') {
     return (load === '' ? '—' : formatLoad(load)) + ' · ' + (set.distance || '—') + 'm'
   }
@@ -531,8 +551,6 @@ function App() {
   const [sheet, setSheet] = useState(null)
   const [toast, setToast] = useState('')
   const [now, setNow] = useState(Date.now())
-  const [restRemaining, setRestRemaining] = useState(null)
-  const [restTotal, setRestTotal] = useState(90)
   const [installPrompt, setInstallPrompt] = useState(null)
   const importInputRef = useRef(null)
   const wakeLockRef = useRef(null)
@@ -547,6 +565,8 @@ function App() {
     [allExercises],
   )
   const elapsedSeconds = calculateElapsed(activeWorkout, now)
+  const restTimer = appState.restTimer
+  const restRemaining = restTimer ? Math.max(0, Math.ceil((restTimer.endsAt - now) / 1000)) : null
   const latestWeightKg = useMemo(() => {
     const measurement = appState.measurements
       .filter((entry) => Number(entry.weight) > 0)
@@ -556,8 +576,15 @@ function App() {
     return Math.round((appState.settings.unit === 'lb' ? value / 2.2046226218 : value) * 10) / 10
   }, [appState.measurements, appState.settings.unit])
 
+  // localStorage is the only copy of everything, so a failed write (usually a
+  // full quota) has to be said out loud — once per failure streak, not per keystroke.
+  const saveFailedRef = useRef(false)
   useEffect(() => {
-    saveAppState(appState)
+    const saved = saveAppState(appState)
+    if (!saved && !saveFailedRef.current) {
+      notify('Could not save on this device — storage may be full. Export a backup.')
+    }
+    saveFailedRef.current = !saved
   }, [appState])
 
   useEffect(() => {
@@ -612,20 +639,26 @@ function App() {
     }
   }, [Boolean(activeWorkout), appState.settings.keepAwake])
 
+  // The rest timer is a deadline rather than a countdown, so it keeps true time
+  // while the phone is locked or the tab is throttled, and survives a reload.
+  const restEndsAt = restTimer?.endsAt
   useEffect(() => {
-    if (restRemaining === null || restRemaining <= 0) return undefined
-    const timer = window.setInterval(() => {
-      setRestRemaining((value) => {
-        if (value === null || value <= 1) {
-          window.navigator?.vibrate?.([80, 50, 80])
-          if (appState.settings.timerSound) playTimerSound()
-          return null
-        }
-        return value - 1
-      })
-    }, 1000)
-    return () => window.clearInterval(timer)
-  }, [restRemaining, appState.settings.timerSound])
+    if (!restEndsAt) return undefined
+    const clear = () =>
+      setAppState((state) => (state.restTimer?.endsAt === restEndsAt ? { ...state, restTimer: null } : state))
+    const overdue = Date.now() - restEndsAt
+    // Long past (the app was closed through it): end quietly rather than beep on open.
+    if (overdue > 5000) {
+      clear()
+      return undefined
+    }
+    const timer = window.setTimeout(() => {
+      window.navigator?.vibrate?.([80, 50, 80])
+      if (appState.settings.timerSound) playTimerSound()
+      clear()
+    }, Math.max(0, -overdue))
+    return () => window.clearTimeout(timer)
+  }, [restEndsAt, appState.settings.timerSound])
 
   useEffect(() => {
     if (!toast) return undefined
@@ -799,19 +832,26 @@ function App() {
 
     if (willComplete) {
       if (!isCardioExercise(exerciseMap.get(item?.exerciseId))) {
-        const restLength = item?.restSeconds || appState.settings.restSeconds
-        setRestTotal(restLength)
-        setRestRemaining(restLength)
+        startRest(item?.restSeconds || appState.settings.restSeconds)
       }
       window.navigator?.vibrate?.(35)
       const weight = Number(targetSet?.weight) || 0
       const reps = Number(targetSet?.reps) || 0
       if (weight > 0 && reps > 0) {
-        const estimate = weight * (1 + reps / 30)
-        const previousBest = getPersonalRecords(appState.workouts)
+        const estimate = Math.round(weight * (1 + reps / 30) * 10) / 10
+        // Earlier sets from this session count too, so a record is announced
+        // once rather than on every set that beats last week.
+        const sessionSoFar = {
+          exercises: activeWorkout.exercises.map((exercise) => ({
+            ...exercise,
+            sets: exercise.sets.filter((set) => set.id !== setId),
+          })),
+        }
+        const previousBest = getPersonalRecords([sessionSoFar, ...appState.workouts])
           .find((record) => record.exerciseId === item?.exerciseId)?.estimate || 0
-        if (estimate > previousBest) {
-          notify('New personal record · ' + Math.round(estimate * 10) / 10 + ' ' + appState.settings.unit + ' e1RM')
+        // A first log is a baseline, not a record worth interrupting a set for.
+        if (previousBest && estimate > previousBest) {
+          notify('New personal record · ' + estimate + ' ' + appState.settings.unit + ' e1RM')
         }
       }
       if (item?.supersetId) {
@@ -831,6 +871,33 @@ function App() {
       }
     }
   }
+
+  const startRest = (seconds) => {
+    const total = Math.max(1, Number(seconds) || 90)
+    const startedAt = Date.now()
+    setNow(startedAt)
+    setAppState((state) => ({ ...state, restTimer: { endsAt: startedAt + total * 1000, total } }))
+  }
+
+  const adjustRest = (deltaSeconds) => {
+    const at = Date.now()
+    setNow(at)
+    setAppState((state) => {
+      if (!state.restTimer) return state
+      const remaining = Math.max(0, Math.ceil((state.restTimer.endsAt - at) / 1000)) + deltaSeconds
+      // Taking it down to nothing means the rest is over: no alarm for that.
+      if (remaining <= 0) return { ...state, restTimer: null }
+      return {
+        ...state,
+        restTimer: {
+          endsAt: at + remaining * 1000,
+          total: Math.max(state.restTimer.total, remaining),
+        },
+      }
+    })
+  }
+
+  const skipRest = () => setAppState((state) => ({ ...state, restTimer: null }))
 
   const changeSetType = (workoutExerciseId, setId, type) => {
     updateActiveWorkout((workout) => ({
@@ -1001,15 +1068,15 @@ function App() {
         ...state,
         routines,
         activeWorkout: null,
+        restTimer: null,
         hasStarterData: false,
         workouts: [finished, ...state.workouts.filter((workout) => !workout.isSample)],
-        measurements: state.hasStarterData ? [] : state.measurements,
+        measurements: state.measurements.filter((entry) => !entry.isSample),
         nutrition: state.hasStarterData
           ? { ...state.nutrition, entries: state.nutrition.entries.filter((entry) => !entry.isSample) }
           : state.nutrition,
       }
     })
-    setRestRemaining(null)
     setSheet({ type: 'share', workout: finished })
     setView('history')
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }))
@@ -1023,8 +1090,7 @@ function App() {
   }
 
   const discardWorkout = () => {
-    setAppState((state) => ({ ...state, activeWorkout: null }))
-    setRestRemaining(null)
+    setAppState((state) => ({ ...state, activeWorkout: null, restTimer: null }))
     setSheet(null)
     notify('Workout discarded')
   }
@@ -1217,7 +1283,9 @@ function App() {
               baseWeight: convertBaseWeight(exercise.baseWeight, factor),
               sets: exercise.sets.map((set) => ({
                 ...set,
-                weight: set.weight === '' ? '' : Math.round(Number(set.weight) * factor * 2) / 2,
+                weight: set.weight === '' || set.weight == null || !Number.isFinite(Number(set.weight))
+                  ? set.weight
+                  : Math.round(Number(set.weight) * factor * 2) / 2,
               })),
             })),
           }
@@ -1304,7 +1372,7 @@ function App() {
       ...state,
       hasStarterData: false,
       workouts: state.workouts.filter((workout) => !workout.isSample),
-      measurements: [],
+      measurements: state.measurements.filter((entry) => !entry.isSample),
       nutrition: {
         ...state.nutrition,
         entries: state.nutrition.entries.filter((entry) => !entry.isSample),
@@ -1316,7 +1384,7 @@ function App() {
   const inSession = view === 'train' && Boolean(activeWorkout)
 
   return (
-    <div className={'app-shell ' + (inSession ? 'is-in-session' : '')}>
+    <div className={'app-shell' + (inSession ? ' is-in-session' : '') + (restTimer ? ' is-resting' : '')}>
       <Sidebar
         view={view}
         navigate={navigate}
@@ -1354,7 +1422,7 @@ function App() {
                     openBaseWeight={(workoutExerciseId) => setSheet({ type: 'base-weight', workoutExerciseId })}
                     openTools={() => setSheet({ type: 'tools' })}
                     openFinish={() => setSheet({ type: 'finish' })}
-                    openDiscard={() => setSheet({ type: 'discard' })}
+                    openDiscard={() => setSheet({ type: 'session-menu' })}
                     toggleWorkoutTimer={toggleWorkoutTimer}
                   />
                 ) : (
@@ -1436,9 +1504,9 @@ function App() {
         {restRemaining !== null && (
           <RestTimer
             remaining={restRemaining}
-            total={restTotal}
-            setRemaining={setRestRemaining}
-            setTotal={setRestTotal}
+            total={restTimer.total}
+            adjust={adjustRest}
+            skip={skipRest}
           />
         )}
       </AnimatePresence>
@@ -1594,6 +1662,14 @@ function App() {
                 exerciseMap={exerciseMap}
                 onDone={() => setSheet(null)}
                 notify={notify}
+              />
+            )}
+            {sheet.type === 'session-menu' && (
+              <SessionMenuSheet
+                openPicker={() => setSheet({ type: 'picker' })}
+                openSettings={() => setSheet({ type: 'settings' })}
+                openDiscard={() => setSheet({ type: 'discard' })}
+                close={() => setSheet(null)}
               />
             )}
             {sheet.type === 'discard' && (
@@ -1937,7 +2013,7 @@ function SessionBar({
 
       <div className="session-progress">
         <span>
-          <b>{completed}</b> of {planned} {planned === 1 ? 'set' : 'sets'}
+          <b>{completed}</b>/{planned} {planned === 1 ? 'set' : 'sets'}
         </span>
         <i style={{ '--session-progress': progress }} aria-hidden="true" />
       </div>
@@ -1966,7 +2042,6 @@ function SetRow({
   set,
   setIndex,
   previousSet,
-  previousBaseWeight,
   trackingType,
   baseWeight,
   unit,
@@ -1993,7 +2068,7 @@ function SetRow({
       </button>
 
       <span className="previous-value">
-        {previousSetLabel(previousSet, trackingType, baseWeight, previousBaseWeight)}
+        {previousSetLabel(previousSet, trackingType, baseWeight)}
       </span>
 
       {trackingType === 'duration' ? (
@@ -2068,7 +2143,7 @@ function SetRow({
       <button
         className="complete-set"
         onClick={() => toggleSet(item.id, set.id)}
-        aria-label={set.completed ? 'Mark set incomplete' : 'Complete set'}
+        aria-label={(set.completed ? 'Mark set ' + (setIndex + 1) + ' incomplete' : 'Complete set ' + (setIndex + 1))}
         aria-pressed={Boolean(set.completed)}
       >
         <Check size={19} strokeWidth={3} />
@@ -2107,6 +2182,9 @@ function LiveWorkout({
   const completedWork = completedSetCount(workout)
   const plannedWork = workout.exercises.reduce((total, item) => total + (item.sets?.length || 0), 0)
 
+  const keepNoteOpen = (id) =>
+    setOpenNotes((current) => (current.has(id) ? current : new Set(current).add(id)))
+
   const toggleNote = (id) =>
     setOpenNotes((current) => {
       const next = new Set(current)
@@ -2132,7 +2210,10 @@ function LiveWorkout({
         <input
           className="workout-title-input"
           value={workout.name}
-          onChange={(event) => updateActiveWorkout({ ...workout, name: event.target.value })}
+          onChange={(event) => {
+            const name = event.target.value
+            updateActiveWorkout((current) => ({ ...current, name }))
+          }}
           aria-label="Workout name"
         />
 
@@ -2236,9 +2317,6 @@ function LiveWorkout({
                           set={set}
                           setIndex={setIndex}
                           previousSet={previous?.sets?.[setIndex]}
-                          previousBaseWeight={
-                            previous?.baseWeight == null ? null : normalizeBaseWeight(previous.baseWeight)
-                          }
                           trackingType={trackingType}
                           baseWeight={baseWeight}
                           unit={unit}
@@ -2269,14 +2347,18 @@ function LiveWorkout({
                     placeholder="Add a note for this exercise…"
                     value={item.notes}
                     rows={1}
-                    onChange={(event) =>
-                      updateActiveWorkout({
-                        ...workout,
-                        exercises: workout.exercises.map((exercise) =>
-                          exercise.id === item.id ? { ...exercise, notes: event.target.value } : exercise,
+                    // Pinned open once touched, so clearing the last character
+                    // doesn't pull the field (and the keyboard) out from under you.
+                    onFocus={() => keepNoteOpen(item.id)}
+                    onChange={(event) => {
+                      const notes = event.target.value
+                      updateActiveWorkout((current) => ({
+                        ...current,
+                        exercises: current.exercises.map((exercise) =>
+                          exercise.id === item.id ? { ...exercise, notes } : exercise,
                         ),
-                      })
-                    }
+                      }))
+                    }}
                     aria-label={'Notes for ' + (exercise?.name || 'exercise')}
                   />
                 )}
@@ -2302,7 +2384,10 @@ function LiveWorkout({
           <textarea
             rows={2}
             value={workout.notes || ''}
-            onChange={(event) => updateActiveWorkout({ ...workout, notes: event.target.value })}
+            onChange={(event) => {
+              const notes = event.target.value
+              updateActiveWorkout((current) => ({ ...current, notes }))
+            }}
             placeholder="How did it go?"
           />
         </label>
@@ -3278,6 +3363,28 @@ function ExerciseActionsSheet({
   )
 }
 
+// The session bar replaces the app bar on phones, so anything the app bar
+// offered has to be reachable from here too.
+function SessionMenuSheet({ openPicker, openSettings, openDiscard, close }) {
+  return (
+    <div className="sheet-content compact-menu-sheet">
+      <SheetHeading title="Workout options" />
+      <div className="exercise-action-list">
+        <button onClick={openPicker}>
+          <span><Plus size={17} /></span><div><strong>Add exercise</strong><small>From the library or your own</small></div><ChevronRight size={18} />
+        </button>
+        <button onClick={openSettings}>
+          <span><Settings size={17} /></span><div><strong>Settings</strong><small>Units, rest timer, theme, backups</small></div><ChevronRight size={18} />
+        </button>
+        <button className="is-danger" onClick={openDiscard}>
+          <span><Trash2 size={17} /></span><div><strong>Discard workout</strong><small>Remove this session and its sets</small></div><ChevronRight size={18} />
+        </button>
+      </div>
+      <button className="button button--ghost button--wide" onClick={close}>Cancel</button>
+    </div>
+  )
+}
+
 function BaseWeightSheet({ exercise, item, unit, onSave, onClose }) {
   const current = normalizeBaseWeight(item?.baseWeight)
   const suggestion = suggestedBaseWeight(exercise, unit)
@@ -3639,13 +3746,8 @@ function SettingsSheet({
   )
 }
 
-function RestTimer({ remaining, total, setRemaining, setTotal }) {
+function RestTimer({ remaining, total, adjust, skip }) {
   const progress = Math.max(0, Math.min(1, remaining / Math.max(total, 1)))
-  const adjust = (delta) => {
-    const next = Math.max(0, remaining + delta)
-    setRemaining(next)
-    setTotal((current) => Math.max(current, next))
-  }
   return (
     <motion.div
       className="rest-timer"
@@ -3669,7 +3771,7 @@ function RestTimer({ remaining, total, setRemaining, setTotal }) {
       <button onClick={() => adjust(15)} aria-label="Add 15 seconds">
         <Plus size={17} />
       </button>
-      <button className="skip-rest" onClick={() => setRemaining(null)}>Skip</button>
+      <button className="skip-rest" onClick={skip}>Skip</button>
     </motion.div>
   )
 }

@@ -38,8 +38,20 @@ export const THEMES = Object.freeze([
 
 export const DEFAULT_THEME_ID = 'carbon'
 
+// Themes retired in the November 2026 redesign, mapped to their closest
+// successor so a saved choice carries its character over instead of resetting.
+const LEGACY_THEMES = Object.freeze({
+  graphite: 'carbon',
+  terracotta: 'oxide',
+  cobalt: 'indigo',
+  field: 'carbon',
+  oxblood: 'oxide',
+  midnight: 'void',
+})
+
 export function normalizeTheme(themeId) {
-  return THEMES.some((theme) => theme.id === themeId) ? themeId : DEFAULT_THEME_ID
+  if (THEMES.some((theme) => theme.id === themeId)) return themeId
+  return LEGACY_THEMES[themeId] || DEFAULT_THEME_ID
 }
 
 export function getTheme(themeId) {

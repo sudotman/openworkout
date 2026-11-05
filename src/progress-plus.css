@@ -6,11 +6,6 @@
   overflow: hidden;
 }
 
-.pp-module button,
-.pp-module input {
-  font: inherit;
-}
-
 .pp-module button:focus-visible,
 .pp-module input:focus-visible {
   outline: none;
@@ -41,7 +36,7 @@
 .pp-module-head p {
   margin: 6px 0 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .pp-button,
@@ -57,7 +52,7 @@
   background: transparent;
   border: 0;
   border-radius: 11px;
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 750;
   white-space: nowrap;
   cursor: pointer;
@@ -138,7 +133,7 @@
 .pp-calendar-summary small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.25;
   text-overflow: ellipsis;
 }
@@ -167,7 +162,7 @@
 }
 
 .pp-month-controls strong {
-  font-size: 12px;
+  font-size: var(--text-sm);
   text-align: center;
   letter-spacing: -0.02em;
 }
@@ -197,7 +192,7 @@
 
 .pp-weekdays span {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   text-align: center;
 }
 
@@ -225,7 +220,7 @@
   background: transparent;
   border: 0;
   border-radius: 11px;
-  font: 500 10px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .pp-calendar-day:not(:disabled) {
@@ -287,7 +282,7 @@
   color: var(--muted);
   background: color-mix(in srgb, var(--surface-alt) 62%, transparent);
   border-top: 1px solid var(--line);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .pp-measurement-form {
@@ -316,7 +311,7 @@
 
 .pp-field > span {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 650;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -336,7 +331,7 @@
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 10px;
-  font: 500 12px/1 var(--mono);
+  font: 500 var(--text-xs)/1 var(--mono);
 }
 
 .pp-field input:focus {
@@ -369,7 +364,7 @@
 .pp-featured-value small,
 .pp-muscle-lead small {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.08em;
 }
 
@@ -381,14 +376,14 @@
 
 .pp-featured-value strong i {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-sm);
   font-style: normal;
   font-weight: 500;
 }
 
 .pp-change {
   color: var(--trend-down);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .pp-change--up {
@@ -419,7 +414,7 @@
   display: block;
   margin-bottom: 7px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   text-transform: uppercase;
 }
 
@@ -430,7 +425,7 @@
 .pp-latest-grid small {
   margin-left: 3px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .pp-trend-chart,
@@ -450,14 +445,14 @@
 .pp-trend-title span,
 .pp-subhead span {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
 .pp-trend-title strong,
 .pp-subhead strong {
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .pp-trend-chart svg,
@@ -499,7 +494,7 @@
   justify-content: space-between;
   margin-top: -2px;
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .pp-trend-empty {
@@ -510,7 +505,7 @@
   gap: 8px;
   color: var(--muted);
   border-bottom: 1px solid var(--line);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .pp-measurement-history,
@@ -547,13 +542,13 @@
 .pp-measurement-detail small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .pp-measurement-detail strong {
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .pp-measurement-row button {
@@ -604,7 +599,7 @@
   max-width: 310px;
   margin: 7px 0 16px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.5;
 }
 
@@ -616,7 +611,7 @@
   color: var(--muted);
   background: var(--surface-alt);
   border-radius: 999px;
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   white-space: nowrap;
 }
 
@@ -657,7 +652,7 @@
 
 .pp-muscle-lead span:not(.pp-summary-icon) {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .pp-muscle-list {
@@ -679,7 +674,7 @@
 
 .pp-muscle-label-row > span {
   overflow: hidden;
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -689,17 +684,17 @@
   display: inline-block;
   width: 27px;
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   font-style: normal;
 }
 
 .pp-muscle-label-row strong {
-  font: 550 10px/1 var(--mono);
+  font: 550 var(--text-label)/1 var(--mono);
 }
 
 .pp-muscle-label-row small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .pp-muscle-track {
@@ -721,7 +716,7 @@
   margin: 0;
   padding: 0 18px 16px;
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .pp-performance-metrics {
@@ -751,7 +746,7 @@
   align-items: center;
   gap: 6px;
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.05em;
 }
 
@@ -763,7 +758,7 @@
 
 .pp-performance-metrics small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 500;
   letter-spacing: 0;
 }
@@ -781,7 +776,7 @@
   margin-top: 8px;
   color: var(--muted);
   border-bottom: 1px solid var(--line);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   text-transform: uppercase;
 }
 
@@ -812,7 +807,7 @@
 
 .pp-set-history-row strong {
   overflow: hidden;
-  font: 550 9px/1 var(--mono);
+  font: 550 var(--text-label)/1 var(--mono);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -820,7 +815,7 @@
 .pp-set-history-row small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -837,7 +832,7 @@
   }
 
   .pp-calendar-summary small {
-    font-size: 9px;
+    font-size: var(--text-xs);
   }
 
   .pp-calendar-day {
@@ -890,7 +885,7 @@
 
   .pp-calendar-day {
     min-height: 56px;
-    font-size: 11px;
+    font-size: var(--text-sm);
   }
 
   .pp-form-inner {
@@ -971,7 +966,7 @@
   }
 
   .pp-set-history-row strong {
-    font-size: 10px;
+    font-size: var(--text-xs);
   }
 }
 

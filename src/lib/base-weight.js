@@ -112,7 +112,8 @@ export function totalWeight(added, baseWeight) {
   if (added === '' || added == null) return ''
   const value = Number(added)
   if (!Number.isFinite(value)) return ''
-  return round(value + (baseWeight || 0))
+  // Nothing can be taken off a bar, so a negative entry means an empty one.
+  return round(Math.max(0, value) + (baseWeight || 0))
 }
 
 /**

@@ -740,7 +740,7 @@ function RoutinesView({
       <div className="routine-summary" aria-label="Routine overview">
         <span><strong>{routines.length}</strong> {routines.length === 1 ? 'routine' : 'routines'}</span>
         <span><strong>{groups.length}</strong> {groups.length === 1 ? 'folder' : 'folders'}</span>
-        <span><strong>{programmedExerciseCount}</strong> programmed exercises</span>
+        <span><strong>{programmedExerciseCount}</strong> {programmedExerciseCount === 1 ? 'exercise' : 'exercises'}</span>
       </div>
 
       <button type="button" className="routine-button routine-button-dark routine-mobile-create" onClick={openCreate}>
@@ -779,11 +779,14 @@ function RoutinesView({
                           <div className="routine-row-main">
                             <h3>{routine.name}</h3>
                             <p>{summary || 'No exercises yet'}</p>
-                            <span>
-                              {plural(exerciseIds.length, 'exercise')}
-                              {prescribedCount ? ' · ' + prescribedCount + ' prescribed' : ''}
-                              {truncated ? ' · +' + (exerciseNames.length - 3) + ' more' : ''}
-                            </span>
+                            {/* The starter routines' descriptions already give the count. */}
+                            {!/\bexercises?\b/i.test(routine.description || '') && (
+                              <span>
+                                {plural(exerciseIds.length, 'exercise')}
+                                {prescribedCount ? ' · ' + prescribedCount + ' prescribed' : ''}
+                                {truncated ? ' · +' + (exerciseNames.length - 3) + ' more' : ''}
+                              </span>
+                            )}
                           </div>
                           <div className="routine-row-actions">
                             <button

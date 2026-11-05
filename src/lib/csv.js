@@ -1,5 +1,9 @@
+// Spreadsheet apps evaluate a cell that starts with = + - @ as a formula, even
+// inside quotes, so free text such as a workout name or note is defused with a
+// leading apostrophe. Numbers are left alone so negative values stay numeric.
 function escapeCell(value) {
-  const stringValue = value === null || value === undefined ? '' : String(value)
+  let stringValue = value === null || value === undefined ? '' : String(value)
+  if (typeof value === 'string' && /^[=+\-@\t\r]/.test(stringValue)) stringValue = "'" + stringValue
   return '"' + stringValue.replaceAll('"', '""') + '"'
 }
 
@@ -51,7 +55,8 @@ export function exportWorkoutsCsv(state, exerciseMap) {
     document.body.appendChild(link)
     link.click()
     link.remove()
-    URL.revokeObjectURL(url)
+    // Safari can cancel a download whose URL is revoked in the same task.
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
     return true
   } catch {
     return false

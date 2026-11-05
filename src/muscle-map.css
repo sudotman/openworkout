@@ -28,7 +28,7 @@
 .muscle-map-key span,
 .muscle-map-figure figcaption,
 .muscle-map-note {
-  font: 500 9px/1.2 var(--mono);
+  font: 500 var(--text-label)/1.2 var(--mono);
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
@@ -117,7 +117,7 @@
 
 .muscle-map-key strong {
   overflow: hidden;
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 650;
   line-height: 1.35;
   text-overflow: ellipsis;

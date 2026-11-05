@@ -45,7 +45,7 @@ body.routine-modal-open {
   background: transparent;
   border: 1px solid transparent;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 750;
   transition: color 170ms ease, background-color 170ms ease, border-color 170ms ease, transform 170ms ease, opacity 170ms ease;
 }
@@ -121,7 +121,7 @@ body.routine-modal-open {
 .routine-summary span {
   flex: 0 0 auto;
   padding-right: 14px;
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.015em;
 }
 
@@ -143,7 +143,7 @@ body.routine-modal-open {
 
 .routine-summary strong {
   color: var(--ink);
-  font-size: 11px;
+  font-size: var(--text-sm);
 }
 
 .routine-workspace {
@@ -177,7 +177,7 @@ body.routine-modal-open {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-weight: 750;
 }
 
@@ -187,7 +187,7 @@ body.routine-modal-open {
 
 .routine-folder-heading small {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
@@ -209,7 +209,7 @@ body.routine-modal-open {
 .routine-row-index {
   padding-top: 4px;
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .routine-row-main {
@@ -231,7 +231,7 @@ body.routine-modal-open {
   margin-top: 5px;
   overflow: hidden;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.45;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
@@ -241,7 +241,7 @@ body.routine-modal-open {
   display: block;
   margin-top: 7px;
   color: var(--muted);
-  font: 500 9px/1.2 var(--mono);
+  font: 500 var(--text-label)/1.2 var(--mono);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -292,17 +292,19 @@ body.routine-modal-open {
   margin-left: auto;
   padding: 0 16px;
   gap: 7px;
-  color: var(--accent-ink);
-  background: var(--accent);
-  border: 0;
+  /* One of many in a list, so it stays neutral: orange is kept for state
+     and for the single primary action on a screen. */
+  color: var(--ink);
+  background: var(--control);
+  border: 1px solid var(--control-strong);
   border-radius: 999px;
-  font-size: 11px;
+  font-size: var(--text-sm);
   font-weight: 800;
   transition: background-color 170ms ease, transform 170ms ease, opacity 170ms ease;
 }
 
 .routine-start-button:hover {
-  background: color-mix(in srgb, var(--accent) 86%, white);
+  background: var(--control-strong);
   transform: translateY(-1px);
 }
 
@@ -348,7 +350,7 @@ body.routine-modal-open {
   max-width: 440px;
   margin: 12px auto 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-sm);
   line-height: 1.55;
 }
 
@@ -389,7 +391,7 @@ body.routine-modal-open {
 .routine-program-header p {
   margin-top: 11px;
   color: rgba(255, 255, 255, 0.55);
-  font-size: 11px;
+  font-size: var(--text-sm);
   line-height: 1.55;
 }
 
@@ -412,7 +414,7 @@ body.routine-modal-open {
   top: 25px;
   right: 22px;
   color: color-mix(in srgb, var(--sidebar-text) 58%, transparent);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .routine-program h3 {
@@ -424,7 +426,7 @@ body.routine-modal-open {
 .routine-program p {
   margin-top: 7px;
   color: rgba(255, 255, 255, 0.48);
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.5;
 }
 
@@ -434,7 +436,7 @@ body.routine-modal-open {
   margin-top: 13px;
   gap: 6px 12px;
   color: rgba(255, 255, 255, 0.62);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
   letter-spacing: 0.045em;
   text-transform: uppercase;
 }
@@ -449,7 +451,7 @@ body.routine-modal-open {
   color: var(--accent);
   background: transparent;
   border: 0;
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 750;
 }
 
@@ -542,7 +544,7 @@ body.routine-modal-open {
 
 .routine-field > span {
   color: var(--ink-soft);
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 750;
 }
 
@@ -590,7 +592,7 @@ body.routine-modal-open {
 
 .routine-field > small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.4;
 }
 
@@ -614,7 +616,7 @@ body.routine-modal-open {
   position: absolute;
   right: 0;
   bottom: 4px;
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .routine-builder-heading {
@@ -635,7 +637,7 @@ body.routine-modal-open {
 .routine-builder-heading > small {
   max-width: 150px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   line-height: 1.4;
   text-align: right;
 }
@@ -664,7 +666,7 @@ body.routine-modal-open {
 
 .routine-order-number {
   color: var(--muted);
-  font: 500 9px/1 var(--mono);
+  font: 500 var(--text-label)/1 var(--mono);
 }
 
 .routine-selected-copy {
@@ -676,7 +678,7 @@ body.routine-modal-open {
 
 .routine-selected-copy strong {
   overflow: hidden;
-  font-size: 11px;
+  font-size: var(--text-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -684,7 +686,7 @@ body.routine-modal-open {
 .routine-selected-copy small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -736,7 +738,7 @@ body.routine-modal-open {
   background: transparent;
   border: 0;
   border-radius: 8px;
-  font: 500 9px/1.2 var(--mono);
+  font: 500 var(--text-label)/1.2 var(--mono);
   text-align: left;
   transition: color 170ms ease, background-color 170ms ease;
 }
@@ -780,7 +782,7 @@ body.routine-modal-open {
 
 .routine-prescription-grid label > span {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -797,7 +799,7 @@ body.routine-modal-open {
   background: var(--surface-raised);
   border: 1px solid var(--line);
   border-radius: 9px;
-  font: 500 12px/1 var(--mono);
+  font: 500 var(--text-xs)/1 var(--mono);
   transition: border-color 170ms ease, box-shadow 170ms ease;
 }
 
@@ -813,7 +815,7 @@ body.routine-modal-open {
   color: var(--muted);
   background: transparent;
   border: 0;
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -842,11 +844,11 @@ body.routine-modal-open {
 
 .routine-selection-empty strong {
   color: var(--ink-soft);
-  font-size: 11px;
+  font-size: var(--text-sm);
 }
 
 .routine-selection-empty small {
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .routine-exercise-search {
@@ -879,7 +881,7 @@ body.routine-modal-open {
   color: var(--ink);
   background: transparent;
   border: 0;
-  font-size: 11px;
+  font-size: var(--text-sm);
 }
 
 .routine-exercise-search input:focus {
@@ -923,14 +925,14 @@ body.routine-modal-open {
 
 .routine-search-result strong {
   overflow: hidden;
-  font-size: 11px;
+  font-size: var(--text-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .routine-search-result small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
 }
 
 .routine-search-result > svg {
@@ -941,7 +943,7 @@ body.routine-modal-open {
 .routine-no-results {
   padding: 25px 8px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.5;
   text-align: center;
   border-bottom: 1px solid var(--line);
@@ -962,7 +964,7 @@ body.routine-modal-open {
 
 .routine-editor-footer p {
   color: var(--muted);
-  font-size: 9px;
+  font-size: var(--text-xs);
   text-align: center;
 }
 
@@ -975,7 +977,7 @@ body.routine-modal-open {
 .routine-editor-footer .routine-button {
   min-width: 0;
   padding-inline: 12px;
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .routine-modal-backdrop-confirm {
@@ -1014,7 +1016,7 @@ body.routine-modal-open {
 .routine-confirm-dialog p {
   margin-top: 11px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-sm);
   line-height: 1.55;
 }
 
@@ -1028,7 +1030,7 @@ body.routine-modal-open {
 .routine-confirm-actions .routine-button {
   min-width: 0;
   padding-inline: 12px;
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 @media (min-width: 430px) {
@@ -1167,7 +1169,7 @@ body.routine-modal-open {
   }
 
   .routine-view-header p {
-    font-size: 12px;
+    font-size: var(--text-sm);
   }
 
   .routine-summary {
