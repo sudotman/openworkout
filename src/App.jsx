@@ -1,49 +1,51 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Check, Trash2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import {
-  Activity,
-  Anchor,
-  ArrowDown,
-  ArrowLeft,
-  ArrowUp,
-  BarChart3,
-  BookOpen,
-  Check,
-  ChevronRight,
-  CircleHelp,
-  ClipboardList,
-  Clock3,
-  Copy,
-  Database,
-  Download,
-  Dumbbell,
-  Ellipsis,
-  FileJson,
-  History,
-  Info,
-  ListPlus,
-  Link2,
-  Minus,
-  NotebookPen,
-  Palette,
-  Pause,
-  Play,
-  Plus,
-  Search,
-  Settings,
-  Share2,
-  ShieldCheck,
-  TimerReset,
-  Trash2,
-  Upload,
-  Utensils,
-  Volume2,
-  Wrench,
-  X,
-  Zap,
-} from 'lucide-react'
-import { exercises, equipmentOptions, muscleGroups } from './data/exercises.js'
-import { DEFAULT_THEME_ID, getTheme, isDarkTheme, normalizeTheme, THEMES } from './data/themes.js'
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { FeatureLoader, MobileNav, MobileTopBar, Sidebar } from './components/AppChrome.jsx'
+import {
+  BaseWeightSheet,
+  CustomExerciseSheet,
+  ExerciseActionsSheet,
+  ExerciseDetail,
+  ExercisePicker,
+  SessionMenuSheet,
+} from './components/sheets/ExerciseSheets.jsx'
+import { SettingsSheet } from './components/sheets/SettingsSheet.jsx'
+import { ConfirmSheet, Sheet } from './components/sheets/Sheet.jsx'
+import { FinishWorkoutSheet, WorkoutDaySheet, WorkoutDetail } from './components/sheets/WorkoutSheets.jsx'
+import { exercises } from './data/exercises.js'
+import { getTheme, isDarkTheme } from './data/themes.js'
+import {
+  loadProgressPhotos,
+  loadProgressPlus,
+  NutritionView,
+  RoutinesView,
+  SetOptions,
+  WorkoutShareCard,
+  WorkoutTools,
+} from './features.js'
+import {
+  formatLoad,
+  normalizeBaseWeight,
+  totalWeight,
+} from './lib/base-weight.js'
+import { getCardioSummary, isCardioExercise } from './lib/cardio.js'
+import { exportWorkoutsCsv } from './lib/csv.js'
+import { MOTION } from './lib/motion.js'
+import {
+  clearPhotos,
+  deletePhoto,
+  loadAllPhotos,
+  putPhoto,
+  requestPersistentStorage,
+} from './lib/photo-store.js'
+import { suggestNextLoad } from './lib/progression.js'
 import {
   clearAppState,
   exportAppState,
@@ -51,507 +53,40 @@ import {
   loadAppState,
   saveAppState,
 } from './lib/storage.js'
-import { exportWorkoutsCsv } from './lib/csv.js'
+import { playTimerSound } from './lib/timer-sound.js'
 import {
-  cardioSetDistanceKm,
-  cardioSetPaceSecondsPerKm,
-  formatCardioDistance,
-  formatCardioPace,
-  formatCardioSpeed,
-  formatCardioTime,
-  getCardioSummary,
-  isCardioExercise,
-  workoutIsCardioOnly,
-} from './lib/cardio.js'
-import { createInitialNutritionState, normalizeNutritionState } from './lib/nutrition.js'
-import {
-  addedWeight,
-  barPresets,
-  convertBaseWeight,
-  convertExerciseSettings,
-  formatLoad,
-  normalizeBaseWeight,
-  suggestedBaseWeight,
-  totalWeight,
-} from './lib/base-weight.js'
-
-const RoutinesView = lazy(() =>
-  import('./components/RoutinesView.jsx').then((module) => ({ default: module.RoutinesView })),
-)
-const loadProgressPlus = () => import('./components/ProgressPlus.jsx')
-const loadProgressPhotos = () => import('./components/ProgressPhotos.jsx')
-
-const TrainingCalendar = lazy(() =>
-  loadProgressPlus().then((module) => ({ default: module.TrainingCalendar })),
-)
-const MeasurementsPanel = lazy(() =>
-  loadProgressPlus().then((module) => ({ default: module.MeasurementsPanel })),
-)
-const MuscleBreakdown = lazy(() =>
-  loadProgressPlus().then((module) => ({ default: module.MuscleBreakdown })),
-)
-const ExercisePerformance = lazy(() =>
-  loadProgressPlus().then((module) => ({ default: module.ExercisePerformance })),
-)
-const ExerciseMuscleMap = lazy(() => import('./components/ExerciseMuscleMap.jsx'))
-const ProgressPhotos = lazy(() =>
-  loadProgressPhotos().then((module) => ({ default: module.ProgressPhotos })),
-)
-const WorkoutTools = lazy(() =>
-  import('./components/WorkoutTools.jsx').then((module) => ({ default: module.WorkoutTools })),
-)
-const SetOptions = lazy(() =>
-  import('./components/WorkoutTools.jsx').then((module) => ({ default: module.SetOptions })),
-)
-const WorkoutShareCard = lazy(() =>
-  import('./components/WorkoutShareCard.jsx').then((module) => ({ default: module.WorkoutShareCard })),
-)
-const CardioTracker = lazy(() =>
-  import('./components/CardioTracker.jsx').then((module) => ({ default: module.CardioTracker })),
-)
-const NutritionView = lazy(() =>
-  import('./components/NutritionView.jsx').then((module) => ({ default: module.NutritionView })),
-)
-
-const NAV_ITEMS = [
-  { id: 'train', label: 'Train', icon: Dumbbell },
-  { id: 'routines', label: 'Routines', icon: ClipboardList },
-  { id: 'history', label: 'History', icon: History },
-  { id: 'library', label: 'Exercises', icon: BookOpen },
-  { id: 'nutrition', label: 'Protein', icon: Utensils },
-  { id: 'progress', label: 'Progress', icon: BarChart3 },
-]
-
-const TEMPLATES = [
-  {
-    id: 'upper-strength',
-    name: 'Upper strength',
-    eyebrow: 'Recommended',
-    description: '4 exercises · about 55 min',
-    exerciseIds: ['barbell-bench-press', 'barbell-bent-over-row', 'barbell-overhead-press', 'pull-up'],
-  },
-  {
-    id: 'lower-strength',
-    name: 'Lower strength',
-    eyebrow: 'Strength',
-    description: '4 exercises · about 60 min',
-    exerciseIds: ['barbell-back-squat', 'barbell-romanian-deadlift', 'leg-press', 'standing-calf-raise'],
-  },
-  {
-    id: 'push-express',
-    name: 'Push express',
-    eyebrow: 'Quick',
-    description: '4 exercises · about 35 min',
-    exerciseIds: ['incline-dumbbell-press', 'seated-dumbbell-shoulder-press', 'dumbbell-lateral-raise', 'rope-triceps-pushdown'],
-  },
-  {
-    id: 'full-body',
-    name: 'Full body',
-    eyebrow: 'Balanced',
-    description: '4 exercises · about 45 min',
-    exerciseIds: ['goblet-squat', 'push-up', 'one-arm-dumbbell-row', 'kettlebell-swing'],
-  },
-  {
-    id: 'treadmill-run-session',
-    name: 'Treadmill run',
-    eyebrow: 'Cardio',
-    description: 'Distance, pace, incline & heart rate',
-    exerciseIds: ['treadmill-run'],
-    prescriptions: { 'treadmill-run': { sets: 1 } },
-  },
-]
-
-const EXERCISE_MAP = new Map(exercises.map((exercise) => [exercise.id, exercise]))
-const DURATION_EXERCISES = new Set(['forearm-plank', 'side-plank'])
-const DISTANCE_EXERCISES = new Set([
-  'farmers-carry',
-  'suitcase-carry',
-  'kettlebell-front-rack-carry',
-  'sled-push',
-])
-const MOTION = {
-  initial: { opacity: 0, y: 10 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
-  transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
-}
-
-function uid(prefix = 'id') {
-  const value = globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)
-  return prefix + '-' + value
-}
-
-function daysAgoIso(days, hour = 18, minute = 0) {
-  const date = new Date()
-  date.setHours(hour, minute, 0, 0)
-  date.setDate(date.getDate() - days)
-  return date.toISOString()
-}
-
-function seedExercise(exerciseId, values, notes = '') {
-  return {
-    id: uid('we'),
-    exerciseId,
-    notes,
-    sets: values.map(([weight, reps, rpe]) => ({
-      id: uid('set'),
-      weight,
-      reps,
-      rpe,
-      type: 'normal',
-      completed: true,
-    })),
-  }
-}
-
-function createInitialState() {
-  const upperStart = daysAgoIso(2, 18, 12)
-  const lowerStart = daysAgoIso(5, 7, 8)
-  const pullStart = daysAgoIso(9, 18, 32)
-  const fullStart = daysAgoIso(13, 9, 15)
-
-  return {
-    version: 1,
-    settings: {
-      theme: DEFAULT_THEME_ID,
-      unit: 'kg',
-      distanceUnit: 'km',
-      restSeconds: 90,
-      keepAwake: true,
-      countWarmups: false,
-      timerSound: true,
-    },
-    routines: TEMPLATES.map((template) => ({
-      ...template,
-      id: 'routine-' + template.id,
-      folder: template.id === 'full-body' ? 'Essentials' : 'My training',
-    })),
-    measurements: [
-      { id: uid('measure'), isSample: true, date: daysAgoIso(14, 8, 0).slice(0, 10), weight: 76.4, bodyFat: 16.2, waist: 82, chest: 101, arm: 35, thigh: 57 },
-      { id: uid('measure'), isSample: true, date: daysAgoIso(0, 8, 0).slice(0, 10), weight: 75.8, bodyFat: 15.8, waist: 81.5, chest: 101.5, arm: 35.3, thigh: 57.2 },
-    ],
-    progressPhotos: [],
-    nutrition: createInitialNutritionState(),
-    customExercises: [],
-    exerciseSettings: {},
-    hasStarterData: true,
-    activeWorkout: null,
-    restTimer: null,
-    workouts: [
-      {
-        id: uid('workout'),
-        isSample: true,
-        name: 'Upper strength',
-        startedAt: upperStart,
-        completedAt: new Date(new Date(upperStart).getTime() + 56 * 60000).toISOString(),
-        durationSeconds: 56 * 60,
-        exercises: [
-          seedExercise('barbell-bench-press', [[70, 8, 8], [70, 8, 8], [70, 7, 9]]),
-          seedExercise('barbell-bent-over-row', [[62.5, 10, 8], [62.5, 10, 8], [62.5, 9, 9]]),
-          seedExercise('barbell-overhead-press', [[40, 8, 8], [40, 8, 9], [37.5, 9, 9]]),
-          seedExercise('pull-up', [[0, 8, 8], [0, 7, 9], [0, 6, 9]]),
-        ],
-      },
-      {
-        id: uid('workout'),
-        isSample: true,
-        name: 'Lower strength',
-        startedAt: lowerStart,
-        completedAt: new Date(new Date(lowerStart).getTime() + 64 * 60000).toISOString(),
-        durationSeconds: 64 * 60,
-        exercises: [
-          seedExercise('barbell-back-squat', [[90, 6, 8], [90, 6, 8], [90, 5, 9]]),
-          seedExercise('barbell-romanian-deadlift', [[80, 8, 8], [80, 8, 8], [80, 8, 9]]),
-          seedExercise('leg-press', [[150, 10, 8], [150, 10, 8], [150, 9, 9]]),
-          seedExercise('standing-calf-raise', [[60, 12, 8], [60, 12, 8], [60, 11, 9]]),
-        ],
-      },
-      {
-        id: uid('workout'),
-        isSample: true,
-        name: 'Pull volume',
-        startedAt: pullStart,
-        completedAt: new Date(new Date(pullStart).getTime() + 48 * 60000).toISOString(),
-        durationSeconds: 48 * 60,
-        exercises: [
-          seedExercise('lat-pulldown', [[55, 10, 8], [55, 10, 8], [55, 9, 9]]),
-          seedExercise('seated-cable-row', [[52.5, 12, 8], [52.5, 11, 8], [52.5, 10, 9]]),
-          seedExercise('hammer-curl', [[14, 10, 8], [14, 9, 9], [12, 11, 9]]),
-        ],
-      },
-      {
-        id: uid('workout'),
-        isSample: true,
-        name: 'Full body',
-        startedAt: fullStart,
-        completedAt: new Date(new Date(fullStart).getTime() + 43 * 60000).toISOString(),
-        durationSeconds: 43 * 60,
-        exercises: [
-          seedExercise('goblet-squat', [[26, 12, 8], [26, 12, 8], [26, 10, 9]]),
-          seedExercise('dumbbell-bench-press', [[24, 10, 8], [24, 9, 9], [22, 10, 9]]),
-          seedExercise('one-arm-dumbbell-row', [[26, 10, 8], [26, 10, 8], [26, 10, 9]]),
-        ],
-      },
-    ],
-  }
-}
-
-function normalizeExerciseSettings(value) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-  return Object.fromEntries(
-    Object.entries(value).flatMap(([exerciseId, entry]) => {
-      const baseWeight = normalizeBaseWeight(entry?.baseWeight)
-      return baseWeight ? [[exerciseId, { baseWeight }]] : []
-    }),
-  )
-}
-
-// Saves from before sample measurements were flagged: recognise the two seeded
-// entries by their values so clearing samples leaves the user's own alone.
-function isLegacySampleMeasurement(entry) {
-  return (
-    (Number(entry?.weight) === 76.4 && Number(entry?.bodyFat) === 16.2 && Number(entry?.waist) === 82) ||
-    (Number(entry?.weight) === 75.8 && Number(entry?.bodyFat) === 15.8 && Number(entry?.waist) === 81.5)
-  )
-}
-
-function normalizeState(state) {
-  const fallback = createInitialState()
-  if (!state || typeof state !== 'object') return fallback
-  const measurements = Array.isArray(state.measurements)
-    ? state.measurements.map((entry) =>
-        state.hasStarterData && !entry?.isSample && isLegacySampleMeasurement(entry)
-          ? { ...entry, isSample: true }
-          : entry,
-      )
-    : fallback.measurements
-  let nutrition = state.nutrition
-    ? normalizeNutritionState(state.nutrition)
-    : state.hasStarterData === false
-      ? { ...fallback.nutrition, entries: [], recentFoodIds: [] }
-      : fallback.nutrition
-
-  if (!state.nutrition) {
-    const latestMeasurement = measurements
-      .filter((entry) => Number(entry.weight) > 0)
-      .sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())[0]
-    if (latestMeasurement) {
-      const storedWeight = Number(latestMeasurement.weight)
-      const weightKg = state.settings?.unit === 'lb' ? storedWeight / 2.2046226218 : storedWeight
-      nutrition = {
-        ...nutrition,
-        profile: { ...nutrition.profile, weightKg: Math.round(weightKg * 10) / 10 },
-      }
-    }
-  }
-
-  return {
-    ...fallback,
-    ...state,
-    version: 1,
-    workouts: Array.isArray(state.workouts) ? state.workouts : fallback.workouts,
-    routines: Array.isArray(state.routines) ? state.routines : fallback.routines,
-    measurements,
-    progressPhotos: Array.isArray(state.progressPhotos) ? state.progressPhotos : [],
-    nutrition,
-    customExercises: Array.isArray(state.customExercises) ? state.customExercises : [],
-    exerciseSettings: normalizeExerciseSettings(state.exerciseSettings),
-    hasStarterData: Boolean(state.hasStarterData),
-    activeWorkout: state.activeWorkout || null,
-    restTimer:
-      state.activeWorkout && Number.isFinite(state.restTimer?.endsAt) && Number(state.restTimer?.total) > 0
-        ? { endsAt: state.restTimer.endsAt, total: Number(state.restTimer.total) }
-        : null,
-    settings: {
-      ...fallback.settings,
-      ...(state.settings || {}),
-      theme: normalizeTheme(state.settings?.theme),
-    },
-  }
-}
-
-function formatDate(dateValue, options) {
-  const date = new Date(dateValue)
-  return new Intl.DateTimeFormat('en', options).format(date)
-}
-
-function formatDuration(seconds) {
-  const safeSeconds = Math.max(0, Math.floor(seconds || 0))
-  const hours = Math.floor(safeSeconds / 3600)
-  const minutes = Math.floor((safeSeconds % 3600) / 60)
-  const remainingSeconds = safeSeconds % 60
-  if (hours > 0) return String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(remainingSeconds).padStart(2, '0')
-  return String(minutes).padStart(2, '0') + ':' + String(remainingSeconds).padStart(2, '0')
-}
-
-function calculateElapsed(workout, nowValue = Date.now()) {
-  if (!workout?.startedAt) return 0
-  const endTime = workout.pausedAt ? new Date(workout.pausedAt).getTime() : nowValue
-  const pausedMilliseconds = Number(workout.pausedDurationSeconds || 0) * 1000
-  return Math.max(0, Math.floor((endTime - new Date(workout.startedAt).getTime() - pausedMilliseconds) / 1000))
-}
-
-function workoutVolume(workout) {
-  return (workout?.exercises || []).reduce(
-    (total, item) =>
-      total +
-      (item.sets || []).reduce((setTotal, set) => {
-        if (!set.completed || set.type === 'warmup') return setTotal
-        return setTotal + (Number(set.weight) || 0) * (Number(set.reps) || 0)
-      }, 0),
-    0,
-  )
-}
-
-function completedSetCount(workout) {
-  return (workout?.exercises || []).reduce(
-    (total, item) => total + (item.sets || []).filter((set) => set.completed).length,
-    0,
-  )
-}
-
-function createWorkoutSet(previous = null) {
-  return {
-    id: uid('set'),
-    weight: previous?.weight ?? '',
-    reps: previous?.reps ?? '',
-    duration: previous?.duration ?? '',
-    distance: previous?.distance ?? '',
-    distanceKm: previous?.distanceKm ?? '',
-    speed: previous?.speed ?? '',
-    incline: previous?.incline ?? '',
-    heartRate: previous?.heartRate ?? '',
-    calories: previous?.calories ?? '',
-    rpe: '',
-    type: 'normal',
-    completed: false,
-  }
-}
-
-function compactNumber(value) {
-  return new Intl.NumberFormat('en', {
-    notation: value >= 10000 ? 'compact' : 'standard',
-    maximumFractionDigits: value >= 10000 ? 1 : 0,
-  }).format(value || 0)
-}
-
-function getGreeting() {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'Good morning'
-  if (hour < 18) return 'Good afternoon'
-  return 'Good evening'
-}
-
-function getPreviousSet(workouts, exerciseId) {
-  for (const workout of workouts) {
-    const match = workout.exercises?.find((item) => item.exerciseId === exerciseId)
-    const previous = match?.sets?.filter((set) => set.completed).at(-1)
-    if (previous) return previous
-  }
-  return null
-}
-
-function sameExerciseOrder(left = [], right = []) {
-  return left.length === right.length && left.every((id, index) => id === right[index])
-}
-
-function workoutExerciseIds(workout) {
-  return Array.from(new Set((workout?.exercises || []).map((item) => item.exerciseId).filter(Boolean)))
-}
-
-function routineDataFromWorkout(workout, sourceRoutine = null) {
-  const exerciseIds = workoutExerciseIds(workout)
-  const prescriptions = Object.fromEntries(
-    exerciseIds.flatMap((exerciseId) => {
-      const item = workout.exercises.find((exercise) => exercise.exerciseId === exerciseId)
-      const sourcePrescription = sourceRoutine?.prescriptions?.[exerciseId]
-      const completedSets = (item?.sets || []).filter((set) => set.completed)
-      const setCount = completedSets.length || item?.sets?.length || 0
-      const prescription = sourcePrescription ? { ...sourcePrescription } : {}
-
-      if (!sourcePrescription && setCount) prescription.sets = setCount
-      if (item?.targetMinReps) prescription.minReps = item.targetMinReps
-      if (item?.targetMaxReps) prescription.maxReps = item.targetMaxReps
-      if (item?.restSeconds !== undefined) prescription.restSeconds = item.restSeconds
-
-      return Object.keys(prescription).length ? [[exerciseId, prescription]] : []
-    }),
-  )
-
-  return {
-    name: workout?.name?.trim() || 'Workout routine',
-    folder: sourceRoutine?.folder || 'Unfiled',
-    description: sourceRoutine?.description || 'Saved from a completed workout.',
-    exerciseIds,
-    prescriptions,
-  }
-}
-
-function getTrackingType(exercise) {
-  if (exercise?.trackingType) return exercise.trackingType
-  if (DURATION_EXERCISES.has(exercise?.id)) return 'duration'
-  if (DISTANCE_EXERCISES.has(exercise?.id)) return 'distance'
-  return 'weight-reps'
-}
-
-/**
- * Last time's set, written in the same terms as the input beside it. When an
- * exercise has a base weight, the row is about what you add, so the reference
- * has to be too — otherwise the column reintroduces exactly the arithmetic the
- * base weight removed. Sets store the total, so subtracting today's base is
- * what makes typing the number shown here repeat last time's load, whatever
- * base (if any) was in use back then.
- */
-function previousSetLabel(set, trackingType, baseWeight = 0) {
-  if (!set) return '—'
-  if (trackingType === 'duration') return set.duration ? set.duration + ' sec' : '—'
-  const load = addedWeight(set.weight, baseWeight)
-  if (trackingType === 'distance') {
-    return (load === '' ? '—' : formatLoad(load)) + ' · ' + (set.distance || '—') + 'm'
-  }
-  return (load === '' ? '—' : formatLoad(load)) + '×' + String(set.reps ?? '—')
-}
-
-function completedSetLabel(set, trackingType, unit, distanceUnit = 'km') {
-  if (trackingType === 'duration') return (set.duration || 0) + ' seconds'
-  if (trackingType === 'distance') {
-    return (set.weight || 0) + ' ' + unit + ' · ' + (set.distance || 0) + ' m'
-  }
-  if (trackingType === 'cardio') {
-    return `${formatCardioDistance(cardioSetDistanceKm(set), distanceUnit)} ${distanceUnit} · ${formatCardioTime(set.duration)} · ${formatCardioPace(cardioSetPaceSecondsPerKm(set), distanceUnit)}`
-  }
-  return (set.weight || 'BW') + (set.weight ? ' ' + unit : '') + ' × ' + (set.reps || 0)
-}
-
-function playTimerSound() {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext
-    if (!AudioContext) return
-    const context = new AudioContext()
-    const oscillator = context.createOscillator()
-    const gain = context.createGain()
-    oscillator.frequency.setValueAtTime(660, context.currentTime)
-    oscillator.frequency.exponentialRampToValueAtTime(880, context.currentTime + 0.16)
-    gain.gain.setValueAtTime(0.0001, context.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.02)
-    gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.22)
-    oscillator.connect(gain)
-    gain.connect(context.destination)
-    oscillator.start()
-    oscillator.stop(context.currentTime + 0.24)
-    oscillator.addEventListener('ended', () => context.close(), { once: true })
-  } catch {
-    // Audio feedback is optional and may be blocked by the browser.
-  }
-}
+  calculateElapsed,
+  convertStateUnits,
+  createInitialState,
+  createWorkoutSet,
+  getPersonalRecords,
+  getPreviousExercise,
+  getTrackingType,
+  insertAt,
+  normalizeState,
+  routineDataFromWorkout,
+  sortWorkouts,
+  uid,
+  workoutExerciseIds,
+} from './lib/workout.js'
+import { HistoryView } from './views/HistoryView.jsx'
+import { LibraryView } from './views/LibraryView.jsx'
+import { LiveWorkout, RestTimer } from './views/LiveWorkout.jsx'
+import { ProgressView } from './views/ProgressView.jsx'
+import { TrainView } from './views/TrainView.jsx'
 
 function App() {
   const [appState, setAppState] = useState(() => normalizeState(loadAppState(createInitialState())))
   const [view, setView] = useState('train')
   const [sheet, setSheet] = useState(null)
-  const [toast, setToast] = useState('')
+  // { id, message, undo? } — a toast with undo stays up long enough to reach it.
+  const [toast, setToast] = useState(null)
   const [now, setNow] = useState(Date.now())
   const [installPrompt, setInstallPrompt] = useState(null)
+  // Photo images by id, mirrored from IndexedDB. 'unavailable' falls back to
+  // keeping images inline in the app state, as before.
+  const [photoData, setPhotoData] = useState(() => new Map())
+  const [photoStore, setPhotoStore] = useState('loading')
   const importInputRef = useRef(null)
   const wakeLockRef = useRef(null)
 
@@ -593,6 +128,59 @@ function App() {
     document.documentElement.style.colorScheme = isDarkTheme(theme.id) ? 'dark' : 'light'
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.browserColor)
   }, [appState.settings.theme])
+
+  useEffect(() => {
+    let cancelled = false
+    loadAllPhotos()
+      .then((stored) => {
+        if (cancelled) return
+        setPhotoData((current) => new Map([...stored, ...current]))
+        setPhotoStore('ready')
+      })
+      .catch(() => {
+        if (!cancelled) setPhotoStore('unavailable')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Images still inline in the state — saves from before IndexedDB, or an
+  // imported backup — move into the photo store, and only leave the state
+  // once they're safely written there.
+  useEffect(() => {
+    if (photoStore !== 'ready') return
+    const inline = appState.progressPhotos.filter((photo) => photo?.id && photo.dataUrl)
+    if (!inline.length) return
+    Promise.all(inline.map((photo) => putPhoto(photo.id, photo.dataUrl)))
+      .then(() => {
+        setPhotoData((current) => {
+          const next = new Map(current)
+          inline.forEach((photo) => next.set(photo.id, photo.dataUrl))
+          return next
+        })
+        const moved = new Set(inline.map((photo) => photo.id))
+        setAppState((state) => ({
+          ...state,
+          progressPhotos: state.progressPhotos.map((photo) => {
+            if (!moved.has(photo?.id)) return photo
+            const { dataUrl: _moved, ...meta } = photo
+            return meta
+          }),
+        }))
+      })
+      .catch(() => {
+        // Left inline; the next change to the photo list tries again.
+      })
+  }, [photoStore, appState.progressPhotos])
+
+  const progressPhotos = useMemo(
+    () =>
+      appState.progressPhotos.map((photo) =>
+        photo?.dataUrl || !photoData.has(photo?.id) ? photo : { ...photo, dataUrl: photoData.get(photo.id) },
+      ),
+    [appState.progressPhotos, photoData],
+  )
 
   useEffect(() => {
     const captureInstallPrompt = (event) => {
@@ -662,7 +250,7 @@ function App() {
 
   useEffect(() => {
     if (!toast) return undefined
-    const timer = window.setTimeout(() => setToast(''), 2600)
+    const timer = window.setTimeout(() => setToast(null), toast.undo ? 5000 : 2600)
     return () => window.clearTimeout(timer)
   }, [toast])
 
@@ -671,9 +259,11 @@ function App() {
     return () => document.body.classList.remove('sheet-open')
   }, [sheet])
 
-  const notify = (message) => {
-    setToast('')
-    window.setTimeout(() => setToast(message), 10)
+  // Destructive actions act at once and offer an undo, rather than asking
+  // first: a mis-tap costs one tap to reverse instead of a dialog every time.
+  const notify = (message, undo) => {
+    setToast(null)
+    window.setTimeout(() => setToast({ id: Date.now(), message, undo }), 10)
   }
 
   const navigate = (nextView) => {
@@ -685,6 +275,39 @@ function App() {
     setSheet(null)
     window.scrollTo({ top: 0, behavior: 'auto' })
     document.querySelector('.app-main')?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  // Sets start from last session's numbers, or from a suggested step up when
+  // every set last time reached the top of the rep range.
+  const createWorkoutExercise = (exerciseId, prescription, setCount) => {
+    const exercise = exerciseMap.get(exerciseId)
+    const cardio = isCardioExercise(exercise)
+    const lastEntry = getPreviousExercise(appState.workouts, exerciseId)
+    const previous = lastEntry?.sets?.filter((set) => set.completed).at(-1) || null
+    const suggestion = !cardio && getTrackingType(exercise) === 'weight-reps'
+      ? suggestNextLoad({
+          previousSets: lastEntry?.sets,
+          minReps: prescription?.minReps,
+          maxReps: prescription?.maxReps,
+          equipment: exercise?.equipment,
+          unit: appState.settings.unit,
+        })
+      : null
+    const progression = suggestion && { ...suggestion, fromReps: Number(previous?.reps) || suggestion.topReps }
+    return {
+      id: uid('we'),
+      exerciseId,
+      notes: '',
+      restSeconds: prescription?.restSeconds,
+      targetMinReps: prescription?.minReps,
+      targetMaxReps: prescription?.maxReps,
+      baseWeight: appState.exerciseSettings?.[exerciseId]?.baseWeight || 0,
+      progression: progression || undefined,
+      sets: Array.from({ length: setCount || prescription?.sets || (cardio ? 1 : 3) }, () => {
+        const set = createWorkoutSet(previous)
+        return progression ? { ...set, weight: progression.weight, reps: progression.reps } : set
+      }),
+    }
   }
 
   const startWorkout = (template) => {
@@ -703,21 +326,9 @@ function App() {
       durationSeconds: 0,
       pausedAt: null,
       pausedDurationSeconds: 0,
-      exercises: chosen.map((exerciseId) => {
-        const previous = getPreviousSet(appState.workouts, exerciseId)
-        const prescription = template?.prescriptions?.[exerciseId]
-        const cardio = isCardioExercise(exerciseMap.get(exerciseId))
-        return {
-          id: uid('we'),
-          exerciseId,
-          notes: '',
-          restSeconds: prescription?.restSeconds,
-          targetMinReps: prescription?.minReps,
-          targetMaxReps: prescription?.maxReps,
-          baseWeight: appState.exerciseSettings?.[exerciseId]?.baseWeight || 0,
-          sets: Array.from({ length: prescription?.sets || (cardio ? 1 : 3) }, () => createWorkoutSet(previous)),
-        }
-      }),
+      exercises: chosen.map((exerciseId) =>
+        createWorkoutExercise(exerciseId, template?.prescriptions?.[exerciseId]),
+      ),
     }
 
     setNow(Date.now())
@@ -756,19 +367,9 @@ function App() {
   const addExercise = (exerciseId) => {
     updateActiveWorkout((workout) => {
       if (workout.exercises.some((item) => item.exerciseId === exerciseId)) return workout
-      const previous = getPreviousSet(appState.workouts, exerciseId)
       return {
         ...workout,
-        exercises: [
-          ...workout.exercises,
-          {
-            id: uid('we'),
-            exerciseId,
-            notes: '',
-            baseWeight: appState.exerciseSettings?.[exerciseId]?.baseWeight || 0,
-            sets: [createWorkoutSet(previous)],
-          },
-        ],
+        exercises: [...workout.exercises, createWorkoutExercise(exerciseId, null, 1)],
       }
     })
     setSheet(null)
@@ -899,6 +500,22 @@ function App() {
 
   const skipRest = () => setAppState((state) => ({ ...state, restTimer: null }))
 
+  // Back to last session's numbers on every set not yet done.
+  const keepPreviousLoad = (workoutExerciseId) => {
+    updateActiveWorkout((workout) => ({
+      ...workout,
+      exercises: workout.exercises.map((exercise) => {
+        if (exercise.id !== workoutExerciseId || !exercise.progression) return exercise
+        const { fromWeight, fromReps } = exercise.progression
+        return {
+          ...exercise,
+          progression: undefined,
+          sets: exercise.sets.map((set) => (set.completed ? set : { ...set, weight: fromWeight, reps: fromReps })),
+        }
+      }),
+    }))
+  }
+
   const changeSetType = (workoutExerciseId, setId, type) => {
     updateActiveWorkout((workout) => ({
       ...workout,
@@ -932,6 +549,9 @@ function App() {
   }
 
   const removeSet = (workoutExerciseId, setId) => {
+    const owner = activeWorkout?.exercises.find((exercise) => exercise.id === workoutExerciseId)
+    const index = owner?.sets.findIndex((set) => set.id === setId) ?? -1
+    const removed = owner?.sets[index]
     updateActiveWorkout((workout) => ({
       ...workout,
       exercises: workout.exercises.map((exercise) =>
@@ -940,15 +560,34 @@ function App() {
           : exercise,
       ),
     }))
+    if (!removed) return
+    notify('Set ' + (index + 1) + ' removed', () =>
+      updateActiveWorkout((workout) => ({
+        ...workout,
+        exercises: workout.exercises.map((exercise) =>
+          exercise.id === workoutExerciseId && !exercise.sets.some((set) => set.id === setId)
+            ? { ...exercise, sets: insertAt(exercise.sets, index, removed) }
+            : exercise,
+        ),
+      })),
+    )
   }
 
   const removeExercise = (workoutExerciseId) => {
+    const index = activeWorkout?.exercises.findIndex((exercise) => exercise.id === workoutExerciseId) ?? -1
+    const removed = activeWorkout?.exercises[index]
     updateActiveWorkout((workout) => ({
       ...workout,
       exercises: workout.exercises.filter((exercise) => exercise.id !== workoutExerciseId),
     }))
     setSheet(null)
-    notify('Exercise removed')
+    notify('Exercise removed', removed && (() =>
+      updateActiveWorkout((workout) =>
+        workout.exercises.some((exercise) => exercise.id === workoutExerciseId)
+          ? workout
+          : { ...workout, exercises: insertAt(workout.exercises, index, removed) },
+      )
+    ))
   }
 
   const moveExercise = (workoutExerciseId, direction) => {
@@ -1039,16 +678,20 @@ function App() {
 
   const finishWorkout = (routineAction = 'none') => {
     if (!activeWorkout) return
+    void requestPersistentStorage()
     const newRoutineId = routineAction === 'create' ? uid('routine') : null
     const cardio = getCardioSummary(activeWorkout, exerciseMap)
     const recordedDuration = Math.max(elapsedSeconds, cardio.totalDurationSeconds || 0)
     const finished = {
       ...activeWorkout,
+      exercises: activeWorkout.exercises.map(({ progression: _suggestion, ...item }) => item),
       sourceRoutineId: newRoutineId || activeWorkout.sourceRoutineId || null,
       completedAt: new Date().toISOString(),
       durationSeconds: recordedDuration,
     }
     setAppState((state) => {
+      // A second tap that lands before the sheet closes must not log it twice.
+      if (state.activeWorkout?.id !== activeWorkout.id) return state
       const sourceRoutine = state.routines.find((routine) => routine.id === activeWorkout.sourceRoutineId)
       let routines = state.routines
 
@@ -1090,9 +733,13 @@ function App() {
   }
 
   const discardWorkout = () => {
+    const discarded = activeWorkout
     setAppState((state) => ({ ...state, activeWorkout: null, restTimer: null }))
     setSheet(null)
-    notify('Workout discarded')
+    notify('Workout discarded', discarded && (() => {
+      setAppState((state) => (state.activeWorkout ? state : { ...state, activeWorkout: discarded }))
+      setView('train')
+    }))
   }
 
   const createRoutine = (data) => {
@@ -1124,11 +771,19 @@ function App() {
   }
 
   const deleteRoutine = (id) => {
+    const index = appState.routines.findIndex((routine) => routine.id === id)
+    const removed = appState.routines[index]
     setAppState((state) => ({
       ...state,
       routines: state.routines.filter((routine) => routine.id !== id),
     }))
-    notify('Routine deleted')
+    notify('Routine deleted', removed && (() =>
+      setAppState((state) =>
+        state.routines.some((routine) => routine.id === id)
+          ? state
+          : { ...state, routines: insertAt(state.routines, index, removed) },
+      )
+    ))
   }
 
   const addMeasurement = (entry) => {
@@ -1156,16 +811,40 @@ function App() {
   }
 
   const deleteMeasurement = (id) => {
+    const index = appState.measurements.findIndex((entry) => entry.id === id)
+    const removed = appState.measurements[index]
     setAppState((state) => ({
       ...state,
       measurements: state.measurements.filter((entry) => entry.id !== id),
     }))
-    notify('Measurement removed')
+    notify('Measurement removed', removed && (() =>
+      setAppState((state) =>
+        state.measurements.some((entry) => entry.id === id)
+          ? state
+          : { ...state, measurements: insertAt(state.measurements, index, removed) },
+      )
+    ))
   }
 
-  const addProgressPhoto = (photo) => {
-    const nextPhotos = [{ ...photo, id: photo.id || uid('photo') }, ...appState.progressPhotos].slice(0, 12)
-    const candidate = { ...appState, progressPhotos: nextPhotos }
+  const addProgressPhoto = async (photo) => {
+    const id = photo.id || uid('photo')
+    void requestPersistentStorage()
+    if (photoStore === 'ready') {
+      try {
+        await putPhoto(id, photo.dataUrl)
+      } catch {
+        notify('Could not save the photo — this device may be out of space.')
+        return
+      }
+      setPhotoData((current) => new Map(current).set(id, photo.dataUrl))
+      setAppState((state) => ({
+        ...state,
+        progressPhotos: [{ id, date: photo.date }, ...state.progressPhotos],
+      }))
+      notify('Progress photo saved locally')
+      return
+    }
+    const candidate = { ...appState, progressPhotos: [{ ...photo, id }, ...appState.progressPhotos] }
     if (JSON.stringify(candidate).length > 4_500_000) {
       notify('Photo storage is full. Export a backup, then remove an older photo.')
       return
@@ -1175,11 +854,36 @@ function App() {
   }
 
   const deleteProgressPhoto = (id) => {
+    const index = appState.progressPhotos.findIndex((photo) => photo.id === id)
+    const removedMeta = appState.progressPhotos[index]
+    const removedImage = photoData.get(id)
+    if (photoStore === 'ready') void deletePhoto(id).catch(() => {})
+    setPhotoData((current) => {
+      if (!current.has(id)) return current
+      const next = new Map(current)
+      next.delete(id)
+      return next
+    })
     setAppState((state) => ({
       ...state,
       progressPhotos: state.progressPhotos.filter((photo) => photo.id !== id),
     }))
-    notify('Progress photo removed')
+    notify('Progress photo removed', removedMeta && (async () => {
+      if (removedImage && photoStore === 'ready') {
+        try {
+          await putPhoto(id, removedImage)
+        } catch {
+          notify('Could not restore the photo')
+          return
+        }
+      }
+      if (removedImage) setPhotoData((current) => new Map(current).set(id, removedImage))
+      setAppState((state) =>
+        state.progressPhotos.some((photo) => photo.id === id)
+          ? state
+          : { ...state, progressPhotos: insertAt(state.progressPhotos, index, removedMeta) },
+      )
+    }))
   }
 
   const saveCustomExercise = (data, existingId = null) => {
@@ -1225,7 +929,8 @@ function App() {
   const updateWorkout = (id, changes) => {
     setAppState((state) => ({
       ...state,
-      workouts: state.workouts.map((workout) => (workout.id === id ? { ...workout, ...changes } : workout)),
+      // Re-sorted, since a corrected date can move a workout in the timeline.
+      workouts: sortWorkouts(state.workouts.map((workout) => (workout.id === id ? { ...workout, ...changes } : workout))),
     }))
     notify('Workout updated')
   }
@@ -1253,12 +958,20 @@ function App() {
   }
 
   const deleteWorkout = (id) => {
+    const index = appState.workouts.findIndex((workout) => workout.id === id)
+    const removed = appState.workouts[index]
     setAppState((state) => ({
       ...state,
       workouts: state.workouts.filter((workout) => workout.id !== id),
     }))
     setSheet(null)
-    notify('Workout deleted')
+    notify('Workout deleted', removed && (() =>
+      setAppState((state) =>
+        state.workouts.some((workout) => workout.id === id)
+          ? state
+          : { ...state, workouts: insertAt(state.workouts, index, removed) },
+      )
+    ))
   }
 
   const repeatWorkout = (workout) => {
@@ -1272,50 +985,7 @@ function App() {
 
   const changeUnit = (nextUnit) => {
     if (nextUnit === appState.settings.unit) return
-    const factor = nextUnit === 'lb' ? 2.2046226218 : 1 / 2.2046226218
-    const lengthFactor = nextUnit === 'lb' ? 1 / 2.54 : 2.54
-    const convertWorkout = (workout) =>
-      workout
-        ? {
-            ...workout,
-            exercises: workout.exercises.map((exercise) => ({
-              ...exercise,
-              baseWeight: convertBaseWeight(exercise.baseWeight, factor),
-              sets: exercise.sets.map((set) => ({
-                ...set,
-                weight: set.weight === '' || set.weight == null || !Number.isFinite(Number(set.weight))
-                  ? set.weight
-                  : Math.round(Number(set.weight) * factor * 2) / 2,
-              })),
-            })),
-          }
-        : null
-
-    setAppState((state) => ({
-      ...state,
-      settings: { ...state.settings, unit: nextUnit },
-      exerciseSettings: convertExerciseSettings(state.exerciseSettings, factor),
-      workouts: state.workouts.map(convertWorkout),
-      activeWorkout: convertWorkout(state.activeWorkout),
-      measurements: state.measurements.map((measurement) => ({
-        ...measurement,
-        weight: measurement.weight === '' || measurement.weight == null
-          ? measurement.weight
-          : Math.round(Number(measurement.weight) * factor * 10) / 10,
-        waist: measurement.waist === '' || measurement.waist == null
-          ? measurement.waist
-          : Math.round(Number(measurement.waist) * lengthFactor * 10) / 10,
-        chest: measurement.chest === '' || measurement.chest == null
-          ? measurement.chest
-          : Math.round(Number(measurement.chest) * lengthFactor * 10) / 10,
-        arm: measurement.arm === '' || measurement.arm == null
-          ? measurement.arm
-          : Math.round(Number(measurement.arm) * lengthFactor * 10) / 10,
-        thigh: measurement.thigh === '' || measurement.thigh == null
-          ? measurement.thigh
-          : Math.round(Number(measurement.thigh) * lengthFactor * 10) / 10,
-      })),
-    }))
+    setAppState((state) => convertStateUnits(state, nextUnit))
     notify('Weights converted to ' + nextUnit)
   }
 
@@ -1343,6 +1013,10 @@ function App() {
     if (!file) return
     try {
       const imported = await importAppState(file)
+      // The backup replaces everything, photos included; its images are moved
+      // into the emptied store by the migration effect.
+      if (photoStore === 'ready') await clearPhotos().catch(() => {})
+      setPhotoData(new Map())
       setAppState(normalizeState(imported))
       setSheet(null)
       notify('Backup imported')
@@ -1355,9 +1029,43 @@ function App() {
 
   const resetData = () => {
     clearAppState()
+    void clearPhotos().catch(() => {})
+    setPhotoData(new Map())
     setAppState(createInitialState())
     setSheet(null)
     notify('Local data reset')
+  }
+
+  // The backup carries the photo images back inline, so one file restores
+  // everything on another device.
+  const exportBackup = () => {
+    const exportedAt = new Date().toISOString()
+    const ok = exportAppState({
+      ...appState,
+      progressPhotos,
+      settings: { ...appState.settings, lastBackupAt: exportedAt },
+    })
+    if (ok) {
+      setAppState((state) => ({ ...state, settings: { ...state.settings, lastBackupAt: exportedAt } }))
+    }
+    notify(ok ? 'Backup downloaded' : 'Could not create backup')
+  }
+
+  // Nudge once there's something worth losing: a few real sessions and no
+  // backup in the last fortnight.
+  const backupReminder = (() => {
+    const realWorkouts = appState.workouts.filter((workout) => !workout.isSample).length
+    if (appState.hasStarterData || realWorkouts < 3) return null
+    if (Date.parse(appState.settings.backupSnoozedUntil) > Date.now()) return null
+    const last = Date.parse(appState.settings.lastBackupAt)
+    if (!last) return 'No backup yet'
+    const days = Math.floor((Date.now() - last) / 86400000)
+    return days >= 14 ? 'Last backup ' + days + ' days ago' : null
+  })()
+
+  const snoozeBackupReminder = () => {
+    const until = new Date(Date.now() + 7 * 86400000).toISOString()
+    setAppState((state) => ({ ...state, settings: { ...state.settings, backupSnoozedUntil: until } }))
   }
 
   const installApp = async () => {
@@ -1394,12 +1102,15 @@ function App() {
 
       <div className="app-pane">
         {!inSession && (
-          <MobileTopBar openSettings={() => setSheet({ type: 'settings' })} activeWorkout={activeWorkout} />
+          <MobileTopBar
+            openSettings={() => setSheet({ type: 'settings' })}
+            openSession={() => navigate('train')}
+            activeWorkout={activeWorkout}
+          />
         )}
         <main className="app-main">
           <Suspense fallback={<FeatureLoader />}>
-            <AnimatePresence mode="wait">
-              <motion.div key={view + Boolean(activeWorkout)} className="view-frame" {...MOTION}>
+            <motion.div key={view + Boolean(activeWorkout)} className="view-frame" {...MOTION}>
               {view === 'train' &&
                 (activeWorkout ? (
                   <LiveWorkout
@@ -1424,6 +1135,7 @@ function App() {
                     openFinish={() => setSheet({ type: 'finish' })}
                     openDiscard={() => setSheet({ type: 'session-menu' })}
                     toggleWorkoutTimer={toggleWorkoutTimer}
+                    keepPreviousLoad={keepPreviousLoad}
                   />
                 ) : (
                   <TrainView
@@ -1434,6 +1146,9 @@ function App() {
                     exerciseMap={exerciseMap}
                     hasStarterData={appState.hasStarterData}
                     clearStarterData={clearStarterData}
+                    backupReminder={backupReminder}
+                    exportBackup={exportBackup}
+                    snoozeBackupReminder={snoozeBackupReminder}
                     startWorkout={startWorkout}
                     openWorkout={(workout) => setSheet({ type: 'workout', workout })}
                   />
@@ -1480,7 +1195,7 @@ function App() {
                   unit={appState.settings.unit}
                   exerciseMap={exerciseMap}
                   measurements={appState.measurements}
-                  photos={appState.progressPhotos}
+                  photos={progressPhotos}
                   addMeasurement={addMeasurement}
                   deleteMeasurement={deleteMeasurement}
                   addProgressPhoto={addProgressPhoto}
@@ -1492,8 +1207,7 @@ function App() {
                   )}
                 />
               )}
-              </motion.div>
-            </AnimatePresence>
+            </motion.div>
           </Suspense>
         </main>
       </div>
@@ -1548,10 +1262,7 @@ function App() {
                 }
                 canInstall={Boolean(installPrompt)}
                 installApp={installApp}
-                exportData={() => {
-                  const ok = exportAppState(appState)
-                  notify(ok ? 'Backup downloaded' : 'Could not create backup')
-                }}
+                exportData={exportBackup}
                 exportCsv={() => {
                   const ok = exportWorkoutsCsv(appState, exerciseMap)
                   notify(ok ? 'Workout CSV downloaded' : 'Could not create CSV')
@@ -1712,6 +1423,7 @@ function App() {
       <AnimatePresence>
         {toast && (
           <motion.div
+            key={toast.id}
             className="toast"
             initial={{ opacity: 0, y: 18, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1719,2079 +1431,21 @@ function App() {
             role="status"
           >
             <Check size={16} strokeWidth={2.5} />
-            {toast}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
-function Brand({ compact = false }) {
-  return (
-    <div className={'brand ' + (compact ? 'brand--compact' : '')}>
-      <span className="brand-mark"><span /></span>
-      <span className="brand-copy">
-        <strong>OPEN</strong>
-        <b>WORKOUT</b>
-      </span>
-    </div>
-  )
-}
-
-function Sidebar({ view, navigate, activeWorkout, openSettings }) {
-  return (
-    <aside className="sidebar">
-      <Brand />
-      <nav className="side-nav" aria-label="Primary navigation">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon
-          const selected = view === item.id
-          return (
-            <button
-              key={item.id}
-              className={'side-nav-item ' + (selected ? 'is-active' : '')}
-              onClick={() => navigate(item.id)}
-            >
-              <Icon size={19} strokeWidth={selected ? 2.4 : 1.8} />
-              <span>{item.label}</span>
-              {item.id === 'train' && activeWorkout && <i className="live-dot" />}
-            </button>
-          )
-        })}
-      </nav>
-      <div className="sidebar-bottom">
-        <div className="privacy-note">
-          <ShieldCheck size={17} />
-          <div>
-            <strong>Saved on this device</strong>
-            <span>No account, no sync</span>
-          </div>
-        </div>
-        <button className="side-nav-item" onClick={openSettings}>
-          <Settings size={19} strokeWidth={1.8} />
-          <span>Settings & data</span>
-        </button>
-        <div className="sidebar-signature">SATYAM.LOL</div>
-      </div>
-    </aside>
-  )
-}
-
-function MobileTopBar({ openSettings, activeWorkout }) {
-  return (
-    <header className="mobile-topbar">
-      <Brand compact />
-      <div className="mobile-topbar-actions">
-        {activeWorkout && (
-          <span className="mobile-live"><i /> session ongoing</span>
-        )}
-        <button className="icon-button" onClick={openSettings} aria-label="Open settings">
-          <Settings size={20} />
-        </button>
-      </div>
-    </header>
-  )
-}
-
-function MobileNav({ view, navigate, activeWorkout }) {
-  return (
-    <nav className="mobile-nav" aria-label="Primary navigation">
-      {NAV_ITEMS.map((item) => {
-        const Icon = item.icon
-        const selected = view === item.id
-        return (
-          <button
-            key={item.id}
-            className={selected ? 'is-active' : ''}
-            onClick={() => navigate(item.id)}
-          >
-            <span className="mobile-nav-icon">
-              <Icon size={20} strokeWidth={selected ? 2.5 : 1.9} />
-              {item.id === 'train' && activeWorkout && <i className="nav-live-dot" />}
-            </span>
-            <span>{item.label}</span>
-          </button>
-        )
-      })}
-    </nav>
-  )
-}
-
-function ViewHeader({ eyebrow, title, subtitle, action }) {
-  return (
-    <header className="view-header">
-      <div>
-        {eyebrow && <div className="eyebrow">{eyebrow}</div>}
-        <h1>{title}</h1>
-        {subtitle && <p>{subtitle}</p>}
-      </div>
-      {action}
-    </header>
-  )
-}
-
-function TrainView({ workouts, routines, unit, distanceUnit, exerciseMap, hasStarterData, clearStarterData, startWorkout, openWorkout }) {
-  const latestWorkout = workouts[0]
-  const getStoredRoutine = (template) => routines.find(
-    (routine) => routine.id === template.id || routine.id === 'routine-' + template.id,
-  ) || template
-  const weekCutoff = Date.now() - 7 * 86400000
-  const weekWorkouts = workouts.filter((workout) => new Date(workout.startedAt).getTime() >= weekCutoff)
-  const weekSets = weekWorkouts.reduce((total, workout) => total + completedSetCount(workout), 0)
-  const weekVolume = weekWorkouts.reduce((total, workout) => total + workoutVolume(workout), 0)
-  const weekCardio = weekWorkouts.reduce((summary, workout) => {
-    const cardio = getCardioSummary(workout, exerciseMap)
-    return {
-      distanceKm: summary.distanceKm + cardio.distanceKm,
-    }
-  }, { distanceKm: 0 })
-  const latestCardio = latestWorkout ? getCardioSummary(latestWorkout, exerciseMap) : null
-  const featuredRoutine = getStoredRoutine(TEMPLATES[0])
-  const featuredCount = featuredRoutine.exerciseIds?.length || 0
-  const featuredLast = workouts.find(
-    (workout) => workout.sourceRoutineId === featuredRoutine.id || workout.name === featuredRoutine.name,
-  )
-
-  return (
-    <div className="train-view content-width">
-      <ViewHeader
-        eyebrow={formatDate(new Date(), { weekday: 'long', day: 'numeric', month: 'long' })}
-        title={getGreeting() + '.'}
-        action={
-          <button className="button button--dark desktop-action" onClick={() => startWorkout(null)}>
-            <Plus size={17} /> Empty workout
-          </button>
-        }
-      />
-
-      {hasStarterData && (
-        <div className="starter-banner">
-          <Database size={16} />
-          <p><strong>Sample data is loaded.</strong> Clear it before you log your first session.</p>
-          <button onClick={clearStarterData}>Clear</button>
-        </div>
-      )}
-
-      <div className="train-layout">
-        <div className="train-primary">
-          <section className="session-hero">
-            <div className="session-hero-content">
-              <h2>{featuredRoutine.name}</h2>
-              <div className="hero-meta">
-                <span>{featuredCount} {featuredCount === 1 ? 'exercise' : 'exercises'}</span>
-                <span>
-                  {featuredLast
-                    ? 'Last trained ' + formatDate(featuredLast.startedAt, { day: 'numeric', month: 'short' })
-                    : 'Not trained yet'}
-                </span>
-              </div>
-              <button className="button button--accent button--large" onClick={() => startWorkout(featuredRoutine)}>
-                <Play size={18} fill="currentColor" />
-                Start workout
+            <span>{toast.message}</span>
+            {toast.undo && (
+              <button
+                className="toast-undo"
+                onClick={() => {
+                  toast.undo()
+                  setToast(null)
+                }}
+              >
+                Undo
               </button>
-            </div>
-          </section>
-
-          <section className="section-block">
-            <div className="section-heading">
-              <div>
-                <span className="section-kicker">ROUTINES</span>
-                <h2>Quick start</h2>
-              </div>
-              <button className="text-button mobile-empty" onClick={() => startWorkout(null)}>
-                Empty workout <Plus size={16} />
-              </button>
-            </div>
-            <div className="template-list">
-              {TEMPLATES.slice(1).map((template, index) => (
-                <button
-                  key={template.id}
-                  className="template-row"
-                  onClick={() => startWorkout(getStoredRoutine(template))}
-                >
-                  <span className="template-index">0{index + 1}</span>
-                  <span className="template-main">
-                    <strong>{template.name}</strong>
-                    <small>{template.description}</small>
-                  </span>
-                  <span className="template-type">{template.eyebrow}</span>
-                  <ChevronRight size={19} />
-                </button>
-              ))}
-            </div>
-          </section>
-        </div>
-
-        <aside className="train-aside">
-          <section className="week-panel">
-            <div className="section-kicker">LAST 7 DAYS</div>
-            <div className="week-metrics">
-              <div>
-                <strong>{weekWorkouts.length}</strong>
-                <span>sessions</span>
-              </div>
-              <div>
-                <strong>{weekSets}</strong>
-                <span>{weekCardio.distanceKm > 0 ? 'sets / splits' : 'working sets'}</span>
-              </div>
-              <div>
-                <strong>{weekCardio.distanceKm > 0
-                  ? formatCardioDistance(weekCardio.distanceKm, distanceUnit)
-                  : compactNumber(weekVolume)}</strong>
-                <span>{weekCardio.distanceKm > 0 ? `${distanceUnit} running` : `${unit} volume`}</span>
-              </div>
-            </div>
-            <div className="week-bars" aria-label={weekWorkouts.length + ' workouts this week'}>
-              {Array.from({ length: 7 }, (_, index) => {
-                const date = new Date()
-                date.setDate(date.getDate() - (6 - index))
-                const trained = weekWorkouts.some(
-                  (workout) => new Date(workout.startedAt).toDateString() === date.toDateString(),
-                )
-                return (
-                  <div key={index} className={trained ? 'trained' : ''}>
-                    <i />
-                    <span>{formatDate(date, { weekday: 'narrow' })}</span>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-
-          <section className="recent-panel">
-            <div className="section-heading section-heading--small">
-              <div>
-                <h2>Last workout</h2>
-              </div>
-            </div>
-            {latestWorkout ? (
-              <button className="recent-workout" onClick={() => openWorkout(latestWorkout)}>
-                <div className="date-tile">
-                  <span>{formatDate(latestWorkout.startedAt, { month: 'short' })}</span>
-                  <strong>{formatDate(latestWorkout.startedAt, { day: '2-digit' })}</strong>
-                </div>
-                <div>
-                  <strong>{latestWorkout.name}</strong>
-                  <span>{latestCardio?.distanceKm > 0
-                    ? `${formatCardioDistance(latestCardio.distanceKm, distanceUnit)} ${distanceUnit} · ${formatCardioPace(latestCardio.paceSecondsPerKm, distanceUnit)}`
-                    : `${latestWorkout.exercises.length} exercises · ${Math.round(latestWorkout.durationSeconds / 60)} min`}</span>
-                </div>
-                <ChevronRight size={18} />
-              </button>
-            ) : (
-              <p className="muted-copy">Your first completed workout will appear here.</p>
             )}
-          </section>
-        </aside>
-      </div>
-    </div>
-  )
-}
-
-function SessionBar({
-  workout,
-  elapsedSeconds,
-  completed,
-  planned,
-  openTools,
-  openDiscard,
-  openFinish,
-  toggleWorkoutTimer,
-}) {
-  const progress = planned > 0 ? Math.min(1, completed / planned) : 0
-  return (
-    <header className="session-bar">
-      <button
-        className={'session-timer ' + (workout.pausedAt ? 'is-paused' : '')}
-        onClick={toggleWorkoutTimer}
-        aria-label={workout.pausedAt ? 'Resume workout timer' : 'Pause workout timer'}
-      >
-        {workout.pausedAt ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
-        <strong>{formatDuration(elapsedSeconds)}</strong>
-      </button>
-
-      <div className="session-progress">
-        <span>
-          <b>{completed}</b>/{planned} {planned === 1 ? 'set' : 'sets'}
-        </span>
-        <i style={{ '--session-progress': progress }} aria-hidden="true" />
-      </div>
-
-      <div className="session-bar-actions">
-        <button className="icon-button icon-button--bare" onClick={openTools} aria-label="Open workout tools">
-          <Wrench size={19} />
-        </button>
-        <button className="icon-button icon-button--bare" onClick={openDiscard} aria-label="Workout options">
-          <Ellipsis size={21} />
-        </button>
-        <button
-          className="session-finish"
-          onClick={openFinish}
-          disabled={completed === 0}
-        >
-          Finish
-        </button>
-      </div>
-    </header>
-  )
-}
-
-function SetRow({
-  item,
-  set,
-  setIndex,
-  previousSet,
-  trackingType,
-  baseWeight,
-  unit,
-  updateSet,
-  updateWeight,
-  toggleSet,
-  openSetOptions,
-}) {
-  const added = addedWeight(set.weight, baseWeight)
-  const showTotal = baseWeight > 0 && set.weight !== '' && set.weight != null
-  const selectOnFocus = (event) => event.target.select()
-
-  return (
-    <div
-      className={'set-grid set-row ' + (set.completed ? 'is-complete' : '')}
-      data-set-id={set.id}
-    >
-      <button
-        className={'set-number set-number--' + (set.type || 'normal')}
-        onClick={() => openSetOptions(item.id, set.id)}
-        aria-label={'Options for set ' + (setIndex + 1) + ', ' + (set.type || 'normal')}
-      >
-        {set.type === 'warmup' ? 'W' : set.type === 'drop' ? 'D' : set.type === 'failure' ? 'F' : setIndex + 1}
-      </button>
-
-      <span className="previous-value">
-        {previousSetLabel(previousSet, trackingType, baseWeight)}
-      </span>
-
-      {trackingType === 'duration' ? (
-        <div className="set-field">
-          <input
-            inputMode="numeric"
-            type="number"
-            min="0"
-            enterKeyHint="next"
-            value={set.duration ?? ''}
-            placeholder="—"
-            aria-label={'Set ' + (setIndex + 1) + ' duration in seconds'}
-            onFocus={selectOnFocus}
-            onChange={(event) => updateSet(item.id, set.id, 'duration', event.target.value)}
-          />
-        </div>
-      ) : (
-        <div className="set-field">
-          <input
-            inputMode="decimal"
-            type="number"
-            min="0"
-            step="0.5"
-            enterKeyHint="next"
-            value={added}
-            placeholder="—"
-            aria-label={
-              baseWeight > 0
-                ? 'Set ' + (setIndex + 1) + ' weight added to a ' + formatLoad(baseWeight) + ' ' + unit + ' base'
-                : 'Set ' + (setIndex + 1) + ' weight in ' + unit
-            }
-            onFocus={selectOnFocus}
-            onChange={(event) => updateWeight(item.id, set.id, event.target.value)}
-          />
-          {showTotal && (
-            <span className="set-total" aria-hidden="true">{formatLoad(set.weight)}</span>
-          )}
-        </div>
-      )}
-
-      {trackingType === 'duration' ? (
-        <span className="set-static-value" />
-      ) : (
-        <div className="set-field">
-          <input
-            inputMode={trackingType === 'distance' ? 'decimal' : 'numeric'}
-            type="number"
-            min="0"
-            step={trackingType === 'distance' ? '1' : undefined}
-            enterKeyHint="next"
-            value={trackingType === 'distance' ? set.distance ?? '' : set.reps}
-            placeholder="—"
-            aria-label={
-              'Set ' + (setIndex + 1) + (trackingType === 'distance' ? ' distance in meters' : ' repetitions')
-            }
-            onFocus={selectOnFocus}
-            onChange={(event) =>
-              updateSet(item.id, set.id, trackingType === 'distance' ? 'distance' : 'reps', event.target.value)
-            }
-          />
-        </div>
-      )}
-
-      <button
-        className={'set-rpe ' + (set.rpe === '' || set.rpe == null ? 'is-empty' : '')}
-        onClick={() => openSetOptions(item.id, set.id)}
-        aria-label={'Set ' + (setIndex + 1) + ' RPE' + (set.rpe ? ', currently ' + set.rpe : ', not set')}
-      >
-        {set.rpe === '' || set.rpe == null ? '–' : set.rpe}
-      </button>
-
-      <button
-        className="complete-set"
-        onClick={() => toggleSet(item.id, set.id)}
-        aria-label={(set.completed ? 'Mark set ' + (setIndex + 1) + ' incomplete' : 'Complete set ' + (setIndex + 1))}
-        aria-pressed={Boolean(set.completed)}
-      >
-        <Check size={19} strokeWidth={3} />
-      </button>
-    </div>
-  )
-}
-
-function LiveWorkout({
-  workout,
-  elapsedSeconds,
-  unit,
-  distanceUnit,
-  exerciseMap,
-  previousWorkouts,
-  updateActiveWorkout,
-  updateSet,
-  updateWeight,
-  toggleSet,
-  addSet,
-  removeSet,
-  openExercisePicker,
-  openExercise,
-  openExerciseMenu,
-  openSetOptions,
-  openBaseWeight,
-  openTools,
-  openFinish,
-  openDiscard,
-  toggleWorkoutTimer,
-}) {
-  const [openNotes, setOpenNotes] = useState(() => new Set())
-  const cardioSummary = getCardioSummary(workout, exerciseMap, { completedOnly: false })
-  const completedCardio = getCardioSummary(workout, exerciseMap)
-  const cardioOnly = workoutIsCardioOnly(workout, exerciseMap)
-  const completedWork = completedSetCount(workout)
-  const plannedWork = workout.exercises.reduce((total, item) => total + (item.sets?.length || 0), 0)
-
-  const keepNoteOpen = (id) =>
-    setOpenNotes((current) => (current.has(id) ? current : new Set(current).add(id)))
-
-  const toggleNote = (id) =>
-    setOpenNotes((current) => {
-      const next = new Set(current)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-
-  return (
-    <div className="live-workout">
-      <SessionBar
-        workout={workout}
-        elapsedSeconds={elapsedSeconds}
-        completed={completedWork}
-        planned={plannedWork}
-        openTools={openTools}
-        openDiscard={openDiscard}
-        openFinish={openFinish}
-        toggleWorkoutTimer={toggleWorkoutTimer}
-      />
-
-      <div className="live-body content-width content-width--narrow">
-        <input
-          className="workout-title-input"
-          value={workout.name}
-          onChange={(event) => {
-            const name = event.target.value
-            updateActiveWorkout((current) => ({ ...current, name }))
-          }}
-          aria-label="Workout name"
-        />
-
-        <div className="live-summary">
-          {cardioSummary.distanceKm > 0 && (
-            <span>{formatCardioDistance(cardioSummary.distanceKm, distanceUnit)} {distanceUnit}</span>
-          )}
-          {cardioSummary.paceSecondsPerKm > 0 && (
-            <span>{formatCardioPace(cardioSummary.paceSecondsPerKm, distanceUnit)} pace</span>
-          )}
-          {!cardioOnly && <span>{workout.exercises.length} exercises</span>}
-          {completedCardio.segmentCount > 0 && (
-            <span>{completedCardio.segmentCount} {completedCardio.segmentCount === 1 ? 'split' : 'splits'}</span>
-          )}
-          {!cardioOnly && <span>{compactNumber(workoutVolume(workout))} {unit} volume</span>}
-        </div>
-
-        <div className="exercise-stack">
-          {workout.exercises.map((item, itemIndex) => {
-            const exercise = exerciseMap.get(item.exerciseId)
-            const trackingType = getTrackingType(exercise)
-            const previous = previousWorkouts
-              .map((past) => past.exercises?.find((entry) => entry.exerciseId === item.exerciseId))
-              .find(Boolean)
-            const baseWeight = normalizeBaseWeight(item.baseWeight)
-            const noteOpen = openNotes.has(item.id) || Boolean(item.notes)
-            return (
-              <motion.section
-                layout
-                className={'log-exercise ' + (item.supersetId ? 'is-superset' : '')}
-                key={item.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <div className="log-exercise-head">
-                  {item.supersetId && <span className="superset-mark"><Link2 size={12} /> SUPERSET</span>}
-                  <button className="exercise-title-button" onClick={() => openExercise(item.exerciseId)}>
-                    <span className="exercise-number">{String(itemIndex + 1).padStart(2, '0')}</span>
-                    <span>
-                      <strong>{exercise?.name || 'Exercise'}</strong>
-                      <small>
-                        {exercise?.primaryMuscle} · {exercise?.equipment}
-                        {item.targetMinReps ? ' · target ' + item.targetMinReps + (item.targetMaxReps && item.targetMaxReps !== item.targetMinReps ? '–' + item.targetMaxReps : '') + ' reps' : ''}
-                      </small>
-                    </span>
-                  </button>
-                  <button
-                    className="icon-button icon-button--quiet"
-                    aria-label={'Options for ' + (exercise?.name || 'exercise')}
-                    onClick={() => openExerciseMenu(item.id)}
-                  >
-                    <Ellipsis size={21} />
-                  </button>
-                </div>
-
-                {trackingType === 'cardio' ? (
-                  <CardioTracker
-                    item={item}
-                    exercise={exercise}
-                    previous={previous}
-                    distanceUnit={distanceUnit}
-                    updateSet={updateSet}
-                    toggleSet={toggleSet}
-                    addSet={addSet}
-                    removeSet={removeSet}
-                  />
-                ) : (
-                  <>
-                    {trackingType !== 'duration' && (
-                      <button
-                        className={'base-weight-chip ' + (baseWeight ? 'is-set' : '')}
-                        onClick={() => openBaseWeight(item.id)}
-                      >
-                        <Anchor size={13} />
-                        {baseWeight
-                          ? 'Starts at ' + formatLoad(baseWeight) + ' ' + unit
-                          : 'Set base weight'}
-                      </button>
-                    )}
-
-                    <div className="set-grid set-grid--header" aria-hidden="true">
-                      <span>SET</span>
-                      <span>PREV</span>
-                      <span>
-                        {trackingType === 'duration'
-                          ? 'SECS'
-                          : baseWeight
-                            ? '+' + unit.toUpperCase()
-                            : unit.toUpperCase()}
-                      </span>
-                      <span>{trackingType === 'distance' ? 'METRES' : trackingType === 'duration' ? '' : 'REPS'}</span>
-                      <span>RPE</span>
-                      <span />
-                    </div>
-
-                    <div className="set-list">
-                      {item.sets.map((set, setIndex) => (
-                        <SetRow
-                          key={set.id}
-                          item={item}
-                          set={set}
-                          setIndex={setIndex}
-                          previousSet={previous?.sets?.[setIndex]}
-                          trackingType={trackingType}
-                          baseWeight={baseWeight}
-                          unit={unit}
-                          updateSet={updateSet}
-                          updateWeight={updateWeight}
-                          toggleSet={toggleSet}
-                          openSetOptions={openSetOptions}
-                        />
-                      ))}
-                    </div>
-
-                    <div className="log-exercise-foot">
-                      <button className="add-set-button" onClick={() => addSet(item.id)}>
-                        <Plus size={15} /> Add set
-                      </button>
-                      {!noteOpen && (
-                        <button className="note-toggle" onClick={() => toggleNote(item.id)}>
-                          <NotebookPen size={15} /> Note
-                        </button>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {noteOpen && (
-                  <textarea
-                    className="exercise-notes"
-                    placeholder="Add a note for this exercise…"
-                    value={item.notes}
-                    rows={1}
-                    // Pinned open once touched, so clearing the last character
-                    // doesn't pull the field (and the keyboard) out from under you.
-                    onFocus={() => keepNoteOpen(item.id)}
-                    onChange={(event) => {
-                      const notes = event.target.value
-                      updateActiveWorkout((current) => ({
-                        ...current,
-                        exercises: current.exercises.map((exercise) =>
-                          exercise.id === item.id ? { ...exercise, notes } : exercise,
-                        ),
-                      }))
-                    }}
-                    aria-label={'Notes for ' + (exercise?.name || 'exercise')}
-                  />
-                )}
-              </motion.section>
-            )
-          })}
-        </div>
-
-        {workout.exercises.length === 0 && (
-          <div className="empty-workout">
-            <span className="empty-icon"><Dumbbell size={28} /></span>
-            <h2>Add your first exercise</h2>
-            <p>Pick from {exerciseMap.size} exercises, or create your own.</p>
-          </div>
-        )}
-
-        <button className="button button--outline button--wide" onClick={openExercisePicker}>
-          <ListPlus size={18} /> Add exercise
-        </button>
-
-        <label className="session-notes">
-          <span>SESSION NOTES</span>
-          <textarea
-            rows={2}
-            value={workout.notes || ''}
-            onChange={(event) => {
-              const notes = event.target.value
-              updateActiveWorkout((current) => ({ ...current, notes }))
-            }}
-            placeholder="How did it go?"
-          />
-        </label>
-      </div>
-    </div>
-  )
-}
-
-function HistoryView({ workouts, unit, distanceUnit, exerciseMap, openWorkout, startWorkout }) {
-  const grouped = useMemo(() => {
-    const groups = new Map()
-    workouts.forEach((workout) => {
-      const key = formatDate(workout.startedAt, { month: 'long', year: 'numeric' })
-      if (!groups.has(key)) groups.set(key, [])
-      groups.get(key).push(workout)
-    })
-    return [...groups.entries()]
-  }, [workouts])
-
-  return (
-    <div className="content-width">
-      <ViewHeader
-        title="Workout history"
-        subtitle={workouts.length + (workouts.length === 1 ? ' completed session.' : ' completed sessions.')}
-        action={
-          <button className="button button--dark desktop-action" onClick={() => startWorkout(null)}>
-            <Plus size={17} /> New workout
-          </button>
-        }
-      />
-
-      {grouped.length ? (
-        <div className="history-groups">
-          {grouped.map(([month, entries]) => (
-            <section className="history-group" key={month}>
-              <div className="history-month">
-                <h2>{month}</h2>
-                <span>{entries.length} {entries.length === 1 ? 'session' : 'sessions'}</span>
-              </div>
-              <div className="history-list">
-                {entries.map((workout) => {
-                  const cardio = getCardioSummary(workout, exerciseMap)
-                  const cardioOnly = workoutIsCardioOnly(workout, exerciseMap)
-                  const strengthSetCount = Math.max(0, completedSetCount(workout) - cardio.segmentCount)
-                  return (
-                  <button className="history-row" key={workout.id} onClick={() => openWorkout(workout)}>
-                    <div className="history-date">
-                      <strong>{formatDate(workout.startedAt, { day: '2-digit' })}</strong>
-                      <span>{formatDate(workout.startedAt, { weekday: 'short' })}</span>
-                    </div>
-                    <div className="history-main">
-                      <strong>{workout.name} {workout.isSample && <em className="sample-tag">SAMPLE</em>}</strong>
-                      <span>
-                        {cardio.distanceKm > 0
-                          ? `${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit} · ${formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}${!cardioOnly && strengthSetCount ? ` · ${strengthSetCount} lifting ${strengthSetCount === 1 ? 'set' : 'sets'}` : ''}`
-                          : workout.exercises.slice(0, 3).map((item) => exerciseMap.get(item.exerciseId)?.name).filter(Boolean).join(' · ')}
-                        {!cardio.distanceKm && workout.exercises.length > 3 ? ' +' + (workout.exercises.length - 3) : ''}
-                      </span>
-                    </div>
-                    <div className="history-stats">
-                      <span><Clock3 size={14} /> {Math.round((cardioOnly && cardio.totalDurationSeconds ? cardio.totalDurationSeconds : workout.durationSeconds) / 60)} min</span>
-                      {cardio.distanceKm > 0 ? (
-                        <span><Activity size={14} /> {formatCardioDistance(cardio.distanceKm, distanceUnit)} {distanceUnit} · {formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}</span>
-                      ) : (
-                        <span><Dumbbell size={14} /> {compactNumber(workoutVolume(workout))} {unit}</span>
-                      )}
-                      {cardio.distanceKm > 0 && workoutVolume(workout) > 0 && (
-                        <span><Dumbbell size={14} /> {compactNumber(workoutVolume(workout))} {unit}</span>
-                      )}
-                    </div>
-                    <ChevronRight size={19} />
-                  </button>
-                  )
-                })}
-              </div>
-            </section>
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          icon={History}
-          title="No workouts yet"
-          body="Finish your first session and it will be kept here on this device."
-          actionLabel="Start a workout"
-          onAction={() => startWorkout(null)}
-        />
-      )}
-    </div>
-  )
-}
-
-function LibraryView({ allExercises, openExercise, openCreate }) {
-  const [search, setSearch] = useState('')
-  const [muscle, setMuscle] = useState('All')
-  const [equipment, setEquipment] = useState('All')
-
-  const filtered = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    return allExercises.filter((exercise) => {
-      const matchesQuery =
-        !query ||
-        exercise.name.toLowerCase().includes(query) ||
-        exercise.primaryMuscle.toLowerCase().includes(query) ||
-        exercise.equipment.toLowerCase().includes(query) ||
-        exercise.pattern.toLowerCase().includes(query)
-      return (
-        matchesQuery &&
-        (muscle === 'All' || exercise.primaryMuscle === muscle) &&
-        (equipment === 'All' || exercise.equipment === equipment)
-      )
-    })
-  }, [allExercises, search, muscle, equipment])
-
-  return (
-    <div className="content-width">
-      <ViewHeader
-        title="Exercise library"
-        subtitle={allExercises.length + ' exercises, each with setup steps and cues.'}
-        action={
-          <button className="button button--dark library-create" onClick={openCreate}>
-            <Plus size={17} /> Custom exercise
-          </button>
-        }
-      />
-
-      <div className="library-tools">
-        <label className="search-box">
-          <Search size={19} />
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search exercise, muscle, or equipment"
-            aria-label="Search exercises"
-          />
-          {search && (
-            <button onClick={() => setSearch('')} aria-label="Clear search">
-              <X size={16} />
-            </button>
-          )}
-        </label>
-
-        <div className="filter-scroller" aria-label="Filter by muscle group">
-          {['All', ...muscleGroups].map((group) => (
-            <button
-              key={group}
-              className={'filter-chip ' + (muscle === group ? 'is-active' : '')}
-              onClick={() => setMuscle(group)}
-            >
-              {group}
-            </button>
-          ))}
-        </div>
-
-        <div className="equipment-filter">
-          <label htmlFor="equipment-filter">Equipment</label>
-          <select id="equipment-filter" value={equipment} onChange={(event) => setEquipment(event.target.value)}>
-            {['All', ...equipmentOptions].map((option) => (
-              <option key={option}>{option}</option>
-            ))}
-          </select>
-          <span>{filtered.length} results</span>
-        </div>
-      </div>
-
-      {filtered.length ? (
-        <div className="exercise-directory">
-          {filtered.map((exercise, index) => (
-            <motion.button
-              className="directory-row"
-              key={exercise.id}
-              onClick={() => openExercise(exercise.id)}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: Math.min(index * 0.012, 0.2) }}
-              layout
-            >
-              <span className="directory-monogram">{exercise.name.split(' ').slice(0, 2).map((word) => word[0]).join('')}</span>
-              <span className="directory-main">
-                <strong>{exercise.name}</strong>
-                <small>{exercise.custom ? 'Custom · ' : ''}{exercise.pattern} · {exercise.equipment}</small>
-              </span>
-              <span className="muscle-label">{exercise.primaryMuscle}</span>
-              <span className={'difficulty difficulty--' + exercise.difficulty.toLowerCase()}>{exercise.difficulty}</span>
-              <ChevronRight size={19} />
-            </motion.button>
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          icon={Search}
-          title="No matching exercises"
-          body="Try a different name, muscle group, or equipment filter."
-          actionLabel="Clear filters"
-          onAction={() => {
-            setSearch('')
-            setMuscle('All')
-            setEquipment('All')
-          }}
-        />
-      )}
-    </div>
-  )
-}
-
-function ProgressView({
-  workouts,
-  unit,
-  exerciseMap,
-  measurements,
-  addMeasurement,
-  deleteMeasurement,
-  photos,
-  addProgressPhoto,
-  deleteProgressPhoto,
-  openWorkout,
-}) {
-  const [section, setSection] = useState('overview')
-  const last30 = workouts.filter(
-    (workout) => new Date(workout.startedAt).getTime() >= Date.now() - 30 * 86400000,
-  )
-  const totalVolume = last30.reduce((total, workout) => total + workoutVolume(workout), 0)
-  const totalSets = last30.reduce((total, workout) => total + completedSetCount(workout), 0)
-  const averageMinutes = last30.length
-    ? Math.round(last30.reduce((total, workout) => total + workout.durationSeconds, 0) / last30.length / 60)
-    : 0
-  const prs = getPersonalRecords(workouts)
-  const weekly = getWeeklyVolume(workouts)
-
-  return (
-    <div className="content-width">
-      <ViewHeader
-        title="Training progress"
-        subtitle="Consistency, muscle balance, strength records, and body metrics."
-      />
-
-      <div className="progress-tabs" role="tablist" aria-label="Progress views">
-        {[
-          ['overview', 'Overview'],
-          ['calendar', 'Calendar'],
-          ['body', 'Body'],
-        ].map(([id, label]) => (
-          <button
-            key={id}
-            className={section === id ? 'is-active' : ''}
-            onClick={() => setSection(id)}
-            role="tab"
-            aria-selected={section === id}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <AnimatePresence mode="wait">
-        {section === 'overview' && (
-          <motion.div key="overview" {...MOTION}>
-            <section className="metric-band">
-              <div>
-                <span>SESSIONS</span>
-                <strong>{last30.length}</strong>
-                <small>last 30 days</small>
-              </div>
-              <div>
-                <span>WORKING SETS</span>
-                <strong>{totalSets}</strong>
-                <small>last 30 days</small>
-              </div>
-              <div>
-                <span>VOLUME</span>
-                <strong>{compactNumber(totalVolume)}</strong>
-                <small>{unit} moved</small>
-              </div>
-              <div>
-                <span>AVG. SESSION</span>
-                <strong>{averageMinutes}</strong>
-                <small>minutes</small>
-              </div>
-            </section>
-
-            <div className="progress-layout">
-              <section className="chart-section">
-                <div className="section-heading">
-                  <div>
-                    <h2>Weekly volume</h2>
-                  </div>
-                  <span className="chart-unit">{unit}</span>
-                </div>
-                <VolumeChart data={weekly} />
-              </section>
-
-              <section className="records-section">
-                <div className="section-heading">
-                  <div>
-                    <h2>Personal records</h2>
-                  </div>
-                </div>
-                <div className="record-list">
-                  {prs.slice(0, 5).map((record, index) => (
-                    <div className="record-row" key={record.exerciseId}>
-                      <span className="record-rank">{String(index + 1).padStart(2, '0')}</span>
-                      <span className="record-main">
-                        <strong>{exerciseMap.get(record.exerciseId)?.name || 'Exercise'}</strong>
-                        <small>Estimated 1RM</small>
-                      </span>
-                      <span className="record-value">
-                        <strong>{record.estimate}</strong>
-                        <small>{unit}</small>
-                      </span>
-                    </div>
-                  ))}
-                  {!prs.length && <p className="muted-copy">Complete weighted sets to see records here.</p>}
-                </div>
-              </section>
-            </div>
-            <Suspense fallback={<FeatureLoader compact />}>
-              <MuscleBreakdown workouts={workouts} exerciseMap={exerciseMap} />
-            </Suspense>
-          </motion.div>
-        )}
-        {section === 'calendar' && (
-          <motion.div key="calendar" {...MOTION}>
-            <Suspense fallback={<FeatureLoader compact />}>
-              <TrainingCalendar workouts={workouts} onSelectWorkout={openWorkout} />
-            </Suspense>
-          </motion.div>
-        )}
-        {section === 'body' && (
-          <motion.div key="body" {...MOTION}>
-            <Suspense fallback={<FeatureLoader compact />}>
-              <MeasurementsPanel
-                measurements={measurements}
-                onAdd={addMeasurement}
-                onDelete={deleteMeasurement}
-                unit={unit}
-              />
-              <ProgressPhotos
-                photos={photos}
-                onAdd={addProgressPhoto}
-                onDelete={deleteProgressPhoto}
-              />
-            </Suspense>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  )
-}
-
-function getWeeklyVolume(workouts) {
-  return Array.from({ length: 6 }, (_, reverseIndex) => {
-    const weeksAgo = 5 - reverseIndex
-    const end = new Date()
-    end.setHours(23, 59, 59, 999)
-    end.setDate(end.getDate() - weeksAgo * 7)
-    const start = new Date(end)
-    start.setDate(start.getDate() - 6)
-    start.setHours(0, 0, 0, 0)
-    const value = workouts
-      .filter((workout) => {
-        const date = new Date(workout.startedAt)
-        return date >= start && date <= end
-      })
-      .reduce((total, workout) => total + workoutVolume(workout), 0)
-    return {
-      label: formatDate(end, { month: 'short', day: 'numeric' }),
-      value,
-    }
-  })
-}
-
-function getPersonalRecords(workouts) {
-  const records = new Map()
-  workouts.forEach((workout) => {
-    workout.exercises?.forEach((exercise) => {
-      exercise.sets?.forEach((set) => {
-        if (!set.completed || !Number(set.weight) || !Number(set.reps)) return
-        const estimate = Math.round(Number(set.weight) * (1 + Number(set.reps) / 30) * 10) / 10
-        if (!records.has(exercise.exerciseId) || estimate > records.get(exercise.exerciseId).estimate) {
-          records.set(exercise.exerciseId, {
-            exerciseId: exercise.exerciseId,
-            estimate,
-            weight: Number(set.weight),
-            reps: Number(set.reps),
-          })
-        }
-      })
-    })
-  })
-  return [...records.values()].sort((a, b) => b.estimate - a.estimate)
-}
-
-function VolumeChart({ data }) {
-  const max = Math.max(...data.map((item) => item.value), 1)
-  const points = data.map((item, index) => ({
-    x: 18 + index * (364 / Math.max(data.length - 1, 1)),
-    y: 154 - (item.value / max) * 116,
-    ...item,
-  }))
-  const line = points.map((point, index) => (index === 0 ? 'M ' : 'L ') + point.x + ' ' + point.y).join(' ')
-  const area = line + ' L ' + points.at(-1).x + ' 168 L ' + points[0].x + ' 168 Z'
-
-  return (
-    <div className="chart-wrap">
-      <svg viewBox="0 0 400 200" role="img" aria-label="Weekly workout volume">
-        {[38, 78, 118, 158].map((y) => (
-          <line key={y} x1="18" y1={y} x2="382" y2={y} className="chart-gridline" />
-        ))}
-        <motion.path
-          d={area}
-          className="chart-area"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        />
-        <motion.path
-          d={line}
-          className="chart-line"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 0.7, ease: 'easeOut' }}
-        />
-        {points.map((point) => (
-          <g key={point.label}>
-            <circle cx={point.x} cy={point.y} r="4.5" className="chart-dot" />
-            <text x={point.x} y="192" textAnchor="middle" className="chart-label">{point.label}</text>
-          </g>
-        ))}
-      </svg>
-    </div>
-  )
-}
-
-function Sheet({ children, onClose, kind = '', wide = false, share = false, hideClose = false }) {
-  const backdropRef = useRef(null)
-
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
-
-  useEffect(() => {
-    if (kind !== 'picker') return undefined
-
-    const viewport = window.visualViewport
-    const syncVisualViewport = () => {
-      const backdrop = backdropRef.current
-      if (!backdrop) return
-      backdrop.style.setProperty('--visual-viewport-height', `${viewport?.height || window.innerHeight}px`)
-      backdrop.style.setProperty('--visual-viewport-top', `${viewport?.offsetTop || 0}px`)
-    }
-
-    syncVisualViewport()
-    viewport?.addEventListener('resize', syncVisualViewport)
-    viewport?.addEventListener('scroll', syncVisualViewport)
-    window.addEventListener('resize', syncVisualViewport)
-    return () => {
-      viewport?.removeEventListener('resize', syncVisualViewport)
-      viewport?.removeEventListener('scroll', syncVisualViewport)
-      window.removeEventListener('resize', syncVisualViewport)
-    }
-  }, [kind])
-
-  return (
-    <motion.div
-      ref={backdropRef}
-      className={'sheet-backdrop ' + (kind === 'picker' ? 'sheet-backdrop--picker' : '')}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose()
-      }}
-    >
-      <motion.div
-        className={'sheet ' + (wide ? 'sheet--wide ' : '') + (share ? 'sheet--share ' : '') + (kind === 'picker' ? 'sheet--picker' : '')}
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 32, stiffness: 350 }}
-        role="dialog"
-        aria-modal="true"
-      >
-        <div className="sheet-handle" />
-        {!hideClose && (
-          <button className="sheet-close icon-button" onClick={onClose} aria-label="Close dialog">
-            <X size={20} />
-          </button>
-        )}
-        {children}
-      </motion.div>
-    </motion.div>
-  )
-}
-
-function SheetHeading({ eyebrow, title, body, back }) {
-  return (
-    <div className="sheet-heading">
-      {back && (
-        <button className="sheet-back" onClick={back}>
-          <ArrowLeft size={17} /> Back
-        </button>
-      )}
-      {eyebrow && <span className="section-kicker">{eyebrow}</span>}
-      <h2>{title}</h2>
-      {body && <p>{body}</p>}
-    </div>
-  )
-}
-
-function ExercisePicker({ allExercises, currentIds, addExercise, openDetails }) {
-  const [query, setQuery] = useState('')
-  const [muscle, setMuscle] = useState('All')
-  const results = allExercises.filter((exercise) => {
-    const search = query.toLowerCase()
-    return (
-      (!query ||
-        exercise.name.toLowerCase().includes(search) ||
-        exercise.primaryMuscle.toLowerCase().includes(search)) &&
-      (muscle === 'All' || exercise.primaryMuscle === muscle)
-    )
-  })
-
-  return (
-    <div className="sheet-content picker-content">
-      <SheetHeading
-        title="Add an exercise"
-        body={'Search all ' + allExercises.length + ' exercises.'}
-      />
-      <label className="search-box search-box--sheet">
-        <Search size={19} />
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search exercises" autoFocus />
-      </label>
-      <div className="filter-scroller picker-filters">
-        {['All', ...muscleGroups].map((group) => (
-          <button
-            className={'filter-chip ' + (muscle === group ? 'is-active' : '')}
-            key={group}
-            onClick={() => setMuscle(group)}
-          >
-            {group}
-          </button>
-        ))}
-      </div>
-      <div className="picker-list">
-        {results.map((exercise) => {
-          const added = currentIds.includes(exercise.id)
-          return (
-            <div className="picker-row" key={exercise.id}>
-              <button className="picker-details" onClick={() => openDetails(exercise.id)}>
-                <span className="directory-monogram">{exercise.name.split(' ').slice(0, 2).map((word) => word[0]).join('')}</span>
-                <span>
-                  <strong>{exercise.name}</strong>
-                  <small>{exercise.primaryMuscle} · {exercise.equipment}</small>
-                </span>
-              </button>
-              <button
-                className={'picker-add ' + (added ? 'is-added' : '')}
-                onClick={() => !added && addExercise(exercise.id)}
-                disabled={added}
-                aria-label={added ? exercise.name + ' already added' : 'Add ' + exercise.name}
-              >
-                {added ? <Check size={17} /> : <Plus size={18} />}
-              </button>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-function ExerciseDetail({
-  exercise,
-  workouts,
-  unit,
-  distanceUnit,
-  canAdd,
-  addExercise,
-  goBack,
-  editCustom,
-  deleteCustom,
-}) {
-  if (!exercise) return null
-  return (
-    <div className="sheet-content exercise-detail">
-      <SheetHeading
-        eyebrow={exercise.primaryMuscle + ' · ' + exercise.equipment}
-        title={exercise.name}
-        body={exercise.pattern + ' · ' + exercise.difficulty}
-        back={goBack}
-      />
-
-      <ExerciseMuscleMap exercise={exercise} />
-
-      <div className="instruction-layout">
-        <section>
-          <div className="instruction-title">
-            <span>HOW TO</span>
-            <small>{exercise.instructions.length} STEPS</small>
-          </div>
-          <ol className="instruction-steps">
-            {exercise.instructions.map((instruction, index) => (
-              <li key={instruction}>
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <p>{instruction}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <aside className="cue-panel">
-          <div className="instruction-title">
-            <span>COACHING CUES</span>
-          </div>
-          <ul>
-            {exercise.cues.map((cue) => (
-              <li key={cue}><Zap size={14} fill="currentColor" /> {cue}</li>
-            ))}
-          </ul>
-          <div className="safety-note">
-            <Info size={17} />
-            <p>Use a load you can control. Stop if you feel sharp pain, dizziness, or unusual discomfort.</p>
-          </div>
-        </aside>
-      </div>
-
-      <ExercisePerformance exercise={exercise} workouts={workouts} unit={unit} distanceUnit={distanceUnit} />
-
-      {exercise.custom && (
-        <div className="custom-detail-actions">
-          <button onClick={editCustom}><Settings size={16} /> Edit custom exercise</button>
-          <button onClick={deleteCustom}><Trash2 size={16} /> Delete</button>
-        </div>
-      )}
-
-      {canAdd && (
-        <div className="sheet-sticky-action">
-          <button className="button button--accent button--wide" onClick={() => addExercise(exercise.id)}>
-            <Plus size={18} /> Add to workout
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function WorkoutDaySheet({ workouts, unit, distanceUnit, exerciseMap, openWorkout }) {
-  const date = workouts[0]?.startedAt || workouts[0]?.completedAt
-  return (
-    <div className="sheet-content workout-day-sheet">
-      <SheetHeading
-        title={formatDate(date, { weekday: 'long', day: 'numeric', month: 'long' })}
-        body={workouts.length + ' sessions completed.'}
-      />
-      <div className="workout-day-list">
-        {workouts.map((workout) => {
-          const cardio = getCardioSummary(workout, exerciseMap)
-          const cardioOnly = workoutIsCardioOnly(workout, exerciseMap)
-          return (
-          <button key={workout.id} onClick={() => openWorkout(workout)}>
-            <span>
-              <strong>{workout.name}</strong>
-              <small>
-                {workout.exercises.slice(0, 3)
-                  .map((item) => exerciseMap.get(item.exerciseId)?.name)
-                  .filter(Boolean)
-                  .join(' · ')}
-              </small>
-            </span>
-            <span>
-              <strong>{Math.round((cardioOnly && cardio.totalDurationSeconds ? cardio.totalDurationSeconds : workout.durationSeconds) / 60)} min</strong>
-              <small>{cardio.distanceKm > 0
-                ? `${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit} · ${formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}`
-                : `${compactNumber(workoutVolume(workout))} ${unit}`}</small>
-            </span>
-            <ChevronRight size={18} />
-          </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-function WorkoutDetail({
-  workout,
-  unit,
-  distanceUnit,
-  exerciseMap,
-  updateWorkout,
-  deleteWorkout,
-  repeatWorkout,
-  openShare,
-  saveWorkoutAsRoutine,
-}) {
-  const [editing, setEditing] = useState(false)
-  const [deleteArmed, setDeleteArmed] = useState(false)
-  const [name, setName] = useState(workout?.name || '')
-  const [date, setDate] = useState(workout?.startedAt ? new Date(workout.startedAt).toISOString().slice(0, 10) : '')
-  if (!workout) return null
-  const cardio = getCardioSummary(workout, exerciseMap)
-  const cardioOnly = workoutIsCardioOnly(workout, exerciseMap)
-  const strengthSetCount = Math.max(0, completedSetCount(workout) - cardio.segmentCount)
-  const hybrid = cardio.distanceKm > 0 && strengthSetCount > 0
-  const summaryBody = hybrid
-    ? `${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit} · ${formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)} · ${strengthSetCount} lifting ${strengthSetCount === 1 ? 'set' : 'sets'} · ${compactNumber(workoutVolume(workout))} ${unit}`
-    : cardioOnly && cardio.distanceKm > 0
-    ? `${formatCardioTime(cardio.totalDurationSeconds)} · ${formatCardioDistance(cardio.distanceKm, distanceUnit)} ${distanceUnit} · ${formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}`
-    : Math.round(workout.durationSeconds / 60) + ' min · ' + completedSetCount(workout) + ' sets · ' + compactNumber(workoutVolume(workout)) + ' ' + unit
-  const saveDetails = () => {
-    const nextDate = new Date(workout.startedAt)
-    const [year, month, day] = date.split('-').map(Number)
-    nextDate.setFullYear(year, month - 1, day)
-    updateWorkout(workout.id, { name: name.trim() || 'Workout', startedAt: nextDate.toISOString() })
-    setEditing(false)
-  }
-  return (
-    <div className="sheet-content workout-detail">
-      <SheetHeading
-        eyebrow={formatDate(workout.startedAt, { weekday: 'long', day: 'numeric', month: 'long' })}
-        title={workout.name}
-        body={summaryBody}
-      />
-      <div className="workout-detail-actions">
-        <button onClick={() => setEditing((value) => !value)}><Settings size={16} /> Edit</button>
-        <button onClick={() => repeatWorkout(workout)}><Copy size={16} /> Repeat</button>
-        <button onClick={() => openShare(workout)}><Share2 size={16} /> Share</button>
-        <button className="save-routine-action" onClick={() => saveWorkoutAsRoutine(workout)}>
-          <ListPlus size={16} /> Save as routine
-        </button>
-      </div>
-      {editing && (
-        <div className="workout-edit-form">
-          <label>
-            <span>WORKOUT NAME</span>
-            <input value={name} onChange={(event) => setName(event.target.value)} />
-          </label>
-          <label>
-            <span>DATE</span>
-            <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
-          </label>
-          <button className="button button--dark button--wide" onClick={saveDetails}>Save changes</button>
-        </div>
-      )}
-      {cardio.distanceKm > 0 && (
-        <div className="workout-cardio-summary">
-          <div><span>DISTANCE</span><strong>{formatCardioDistance(cardio.distanceKm, distanceUnit)} <small>{distanceUnit}</small></strong></div>
-          <div><span>PACE</span><strong>{formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}</strong></div>
-          <div><span>AVG SPEED</span><strong>{formatCardioSpeed(cardio.averageSpeedKph, distanceUnit)}</strong></div>
-        </div>
-      )}
-      <div className="workout-detail-list">
-        {workout.exercises.map((item, index) => {
-          const exercise = exerciseMap.get(item.exerciseId)
-          const trackingType = getTrackingType(exercise)
-          const completedCount = item.sets.filter((set) => set.completed).length
-          const workLabel = trackingType === 'cardio'
-            ? completedCount === 1 ? 'split' : 'splits'
-            : completedCount === 1 ? 'set' : 'sets'
-          return (
-            <section key={item.id}>
-              <div className="workout-detail-exercise">
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <div>
-                  <strong>{exercise?.name || 'Exercise'}</strong>
-                  <small>
-                    {exercise?.primaryMuscle} · {completedCount} {workLabel}
-                    {normalizeBaseWeight(item.baseWeight)
-                      ? ' · from ' + formatLoad(item.baseWeight) + ' ' + unit
-                      : ''}
-                  </small>
-                </div>
-              </div>
-              <div className="readonly-sets">
-                {item.sets.filter((set) => set.completed).map((set, setIndex) => (
-                  <div key={set.id}>
-                    <span>{trackingType === 'cardio' ? 'SPLIT' : 'SET'} {setIndex + 1}</span>
-                    <strong>{completedSetLabel(set, trackingType, unit, distanceUnit)}</strong>
-                    <small>{set.rpe ? 'RPE ' + set.rpe : '—'}</small>
-                  </div>
-                ))}
-              </div>
-              {item.notes && <p className="detail-note">{item.notes}</p>}
-            </section>
-          )
-        })}
-      </div>
-      {workout.notes && (
-        <div className="session-note-detail">
-          <span>SESSION NOTES</span>
-          <p>{workout.notes}</p>
-        </div>
-      )}
-      {!deleteArmed ? (
-        <button className="delete-history-button" onClick={() => setDeleteArmed(true)}>
-          <Trash2 size={15} /> Delete workout
-        </button>
-      ) : (
-        <div className="delete-history-confirm">
-          <span>Delete this workout permanently?</span>
-          <button onClick={() => setDeleteArmed(false)}>Cancel</button>
-          <button onClick={() => deleteWorkout(workout.id)}>Delete</button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function FinishWorkoutSheet({ workout, elapsedSeconds, unit, distanceUnit, exerciseMap, sourceRoutine, finishWorkout, cancel }) {
-  const currentExerciseIds = workoutExerciseIds(workout)
-  const cardio = getCardioSummary(workout, exerciseMap)
-  const cardioOnly = workoutIsCardioOnly(workout, exerciseMap)
-  const strengthSetCount = Math.max(0, completedSetCount(workout) - cardio.segmentCount)
-  const hybrid = cardio.distanceKm > 0 && strengthSetCount > 0
-  const routineChanged = sourceRoutine && !sameExerciseOrder(
-    currentExerciseIds,
-    sourceRoutine.exerciseIds || [],
-  )
-  const canCreateRoutine = currentExerciseIds.length > 0
-
-  return (
-    <div className="sheet-content compact-sheet">
-      <span className="confirm-icon confirm-icon--success"><Check size={25} /></span>
-      <SheetHeading
-        title="Finish workout?"
-        body={routineChanged
-          ? 'You changed the exercise lineup. Choose what should happen to the routine.'
-          : 'Review the summary before you save.'}
-      />
-      <div className="finish-summary">
-        {hybrid ? (
-          <>
-            <div><span>DISTANCE</span><strong>{formatCardioDistance(cardio.distanceKm, distanceUnit)} <small>{distanceUnit}</small></strong></div>
-            <div><span>PACE</span><strong>{formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}</strong></div>
-            <div><span>LIFT VOLUME</span><strong>{compactNumber(workoutVolume(workout))} <small>{unit}</small></strong></div>
-          </>
-        ) : cardioOnly ? (
-          <>
-            <div><span>TIME</span><strong>{formatDuration(cardio.totalDurationSeconds || elapsedSeconds)}</strong></div>
-            <div><span>DISTANCE</span><strong>{formatCardioDistance(cardio.distanceKm, distanceUnit)} <small>{distanceUnit}</small></strong></div>
-            <div><span>PACE</span><strong>{formatCardioPace(cardio.paceSecondsPerKm, distanceUnit)}</strong></div>
-          </>
-        ) : (
-          <>
-            <div><span>TIME</span><strong>{formatDuration(elapsedSeconds)}</strong></div>
-            <div><span>SETS</span><strong>{completedSetCount(workout)}</strong></div>
-            <div><span>VOLUME</span><strong>{compactNumber(workoutVolume(workout))} <small>{unit}</small></strong></div>
-          </>
-        )}
-      </div>
-      {routineChanged ? (
-        <div className="finish-routine-actions">
-          <span>ROUTINE CHANGES</span>
-          <button className="button button--accent button--wide" onClick={() => finishWorkout('update')}>
-            <Check size={18} /> Update {sourceRoutine.name}
-          </button>
-          <button className="button button--outline button--wide" onClick={() => finishWorkout('create')}>
-            <ListPlus size={18} /> Save as new routine
-          </button>
-          <button className="button button--ghost button--wide" onClick={() => finishWorkout('none')}>
-            Save workout only
-          </button>
-        </div>
-      ) : sourceRoutine ? (
-        <button className="button button--accent button--wide" onClick={() => finishWorkout('none')}>
-          <Check size={18} /> Save workout
-        </button>
-      ) : (
-        <div className="finish-routine-actions">
-          <span>SAVE THIS SESSION</span>
-          <button
-            className="button button--accent button--wide"
-            onClick={() => finishWorkout('create')}
-            disabled={!canCreateRoutine}
-          >
-            <ListPlus size={18} /> Save workout + new routine
-          </button>
-          <button className="button button--ghost button--wide" onClick={() => finishWorkout('none')}>
-            Save workout only
-          </button>
-        </div>
-      )}
-      <button className="button button--ghost button--wide" onClick={cancel}>Keep training</button>
-    </div>
-  )
-}
-
-function ConfirmSheet({ icon: Icon, title, body, confirmLabel, onConfirm, onCancel, danger }) {
-  return (
-    <div className="sheet-content compact-sheet">
-      <span className={'confirm-icon ' + (danger ? 'confirm-icon--danger' : '')}><Icon size={24} /></span>
-      <SheetHeading title={title} body={body} />
-      <button className={'button button--wide ' + (danger ? 'button--danger' : 'button--dark')} onClick={onConfirm}>
-        {confirmLabel}
-      </button>
-      <button className="button button--ghost button--wide" onClick={onCancel}>Cancel</button>
-    </div>
-  )
-}
-
-function ExerciseActionsSheet({
-  workout,
-  workoutExerciseId,
-  unit,
-  moveExercise,
-  toggleSuperset,
-  setExerciseRest,
-  openBaseWeight,
-  removeExercise,
-  close,
-}) {
-  const index = workout?.exercises.findIndex((exercise) => exercise.id === workoutExerciseId) ?? -1
-  const item = workout?.exercises[index]
-  return (
-    <div className="sheet-content compact-menu-sheet">
-      <SheetHeading
-        title="Adjust exercise"
-        body="Reorder the session, create a superset, or remove this exercise."
-      />
-      <div className="exercise-action-list">
-        <button onClick={() => moveExercise(workoutExerciseId, -1)} disabled={index <= 0}>
-          <span><ArrowUp size={17} /></span><div><strong>Move up</strong><small>Earlier in this workout</small></div><ChevronRight size={18} />
-        </button>
-        <button onClick={() => moveExercise(workoutExerciseId, 1)} disabled={index < 0 || index >= workout.exercises.length - 1}>
-          <span><ArrowDown size={17} /></span><div><strong>Move down</strong><small>Later in this workout</small></div><ChevronRight size={18} />
-        </button>
-        <button onClick={() => toggleSuperset(workoutExerciseId)} disabled={workout?.exercises.length < 2}>
-          <span><Link2 size={17} /></span>
-          <div>
-            <strong>{item?.supersetId ? 'Remove superset' : 'Pair as superset'}</strong>
-            <small>{item?.supersetId ? 'Unlink the grouped exercises' : 'Link with the adjacent exercise'}</small>
-          </div>
-          <ChevronRight size={18} />
-        </button>
-        <button onClick={() => openBaseWeight(workoutExerciseId)}>
-          <span><Anchor size={17} /></span>
-          <div>
-            <strong>Base weight</strong>
-            <small>
-              {normalizeBaseWeight(item?.baseWeight)
-                ? 'Starts at ' + formatLoad(item.baseWeight) + ' ' + unit + ' — you log what you add'
-                : 'Log only what you add to the bar'}
-            </small>
-          </div>
-          <ChevronRight size={18} />
-        </button>
-        <div className="exercise-rest-option">
-          <div>
-            <span><TimerReset size={17} /></span>
-            <div><strong>Rest after sets</strong><small>Override the default for this exercise</small></div>
-          </div>
-          <div>
-            {[60, 90, 120, 180].map((seconds) => (
-              <button
-                key={seconds}
-                className={item?.restSeconds === seconds ? 'is-active' : ''}
-                onClick={() => setExerciseRest(workoutExerciseId, seconds)}
-              >
-                {seconds < 120 ? seconds + 's' : seconds / 60 + 'm'}
-              </button>
-            ))}
-          </div>
-        </div>
-        <button className="is-danger" onClick={() => removeExercise(workoutExerciseId)}>
-          <span><Trash2 size={17} /></span><div><strong>Remove exercise</strong><small>Delete its sets from this session</small></div><ChevronRight size={18} />
-        </button>
-      </div>
-      <button className="button button--ghost button--wide" onClick={close}>Cancel</button>
-    </div>
-  )
-}
-
-// The session bar replaces the app bar on phones, so anything the app bar
-// offered has to be reachable from here too.
-function SessionMenuSheet({ openPicker, openSettings, openDiscard, close }) {
-  return (
-    <div className="sheet-content compact-menu-sheet">
-      <SheetHeading title="Workout options" />
-      <div className="exercise-action-list">
-        <button onClick={openPicker}>
-          <span><Plus size={17} /></span><div><strong>Add exercise</strong><small>From the library or your own</small></div><ChevronRight size={18} />
-        </button>
-        <button onClick={openSettings}>
-          <span><Settings size={17} /></span><div><strong>Settings</strong><small>Units, rest timer, theme, backups</small></div><ChevronRight size={18} />
-        </button>
-        <button className="is-danger" onClick={openDiscard}>
-          <span><Trash2 size={17} /></span><div><strong>Discard workout</strong><small>Remove this session and its sets</small></div><ChevronRight size={18} />
-        </button>
-      </div>
-      <button className="button button--ghost button--wide" onClick={close}>Cancel</button>
-    </div>
-  )
-}
-
-function BaseWeightSheet({ exercise, item, unit, onSave, onClose }) {
-  const current = normalizeBaseWeight(item?.baseWeight)
-  const suggestion = suggestedBaseWeight(exercise, unit)
-  const [value, setValue] = useState(() => (current ? String(current) : suggestion ? String(suggestion) : ''))
-  const presets = barPresets(unit)
-  const parsed = normalizeBaseWeight(value)
-
-  return (
-    <div className="sheet-content base-weight-sheet">
-      <SheetHeading
-        title="Base weight"
-        body={
-          'What ' + (exercise?.name || 'this exercise') + ' weighs before you add anything — the bar, or a loaded carriage. ' +
-          'You then log only what you put on, and the total is kept for you.'
-        }
-      />
-
-      <div className="base-weight-presets" role="group" aria-label="Common base weights">
-        {presets.map((preset) => (
-          <button
-            key={preset.id}
-            type="button"
-            className={parsed === preset.weight ? 'is-active' : ''}
-            onClick={() => setValue(String(preset.weight))}
-          >
-            <strong>{formatLoad(preset.weight)}<small>{unit}</small></strong>
-            <span>{preset.label}</span>
-          </button>
-        ))}
-      </div>
-
-      <label className="base-weight-custom">
-        <span>OR ENTER IT EXACTLY</span>
-        <div>
-          <input
-            inputMode="decimal"
-            type="number"
-            min="0"
-            step="0.5"
-            value={value}
-            placeholder="0"
-            autoFocus
-            onFocus={(event) => event.target.select()}
-            onChange={(event) => setValue(event.target.value)}
-            aria-label={'Base weight in ' + unit}
-          />
-          <b>{unit}</b>
-        </div>
-      </label>
-
-      <p className="base-weight-preview">
-        {parsed > 0 ? (
-          <>
-            Type <b>60</b>, log <b>{formatLoad(60 + parsed)} {unit}</b>.
-          </>
-        ) : (
-          <>No base weight — you log the total yourself.</>
-        )}
-      </p>
-
-      <div className="base-weight-actions">
-        <button className="button button--accent button--wide" onClick={() => onSave(parsed)}>
-          <Check size={18} /> {parsed > 0 ? 'Use ' + formatLoad(parsed) + ' ' + unit : 'Save'}
-        </button>
-        {current > 0 && (
-          <button className="button button--ghost button--wide" onClick={() => onSave(0)}>
-            Remove base weight
-          </button>
-        )}
-        <button className="button button--ghost button--wide" onClick={onClose}>Cancel</button>
-      </div>
-
-      <p className="base-weight-note">
-        Remembered for {exercise?.name || 'this exercise'} in future workouts. Weights you have
-        already logged keep their total.
-      </p>
-    </div>
-  )
-}
-
-function CustomExerciseSheet({ initial, onSave }) {
-  const [form, setForm] = useState(() => ({
-    name: initial?.name || '',
-    primaryMuscle: initial?.primaryMuscle || 'Chest',
-    equipment: initial?.equipment || 'Dumbbell',
-    difficulty: initial?.difficulty || 'Beginner',
-    trackingType: initial?.trackingType || 'weight-reps',
-    pattern: initial?.pattern || '',
-    instructions: initial?.instructions?.join('\n') || '',
-    cues: initial?.cues?.join('\n') || '',
-  }))
-  const update = (field, value) => setForm((current) => ({ ...current, [field]: value }))
-  const save = () => {
-    if (!form.name.trim()) return
-    onSave({
-      ...form,
-      instructions: form.instructions.split('\n').map((value) => value.trim()).filter(Boolean),
-      cues: form.cues.split('\n').map((value) => value.trim()).filter(Boolean),
-    })
-  }
-  return (
-    <div className="sheet-content custom-exercise-sheet">
-      <SheetHeading
-        title={initial ? 'Edit exercise' : 'Create exercise'}
-        body="Add an exercise that is not in the built-in library."
-      />
-      <div className="custom-form-grid">
-        <label className="custom-form-wide">
-          <span>EXERCISE NAME</span>
-          <input value={form.name} onChange={(event) => update('name', event.target.value)} placeholder="e.g. Cable Bayesian Curl" autoFocus />
-        </label>
-        <label>
-          <span>PRIMARY MUSCLE</span>
-          <select value={form.primaryMuscle} onChange={(event) => update('primaryMuscle', event.target.value)}>
-            {muscleGroups.map((group) => <option key={group}>{group}</option>)}
-          </select>
-        </label>
-        <label>
-          <span>EQUIPMENT</span>
-          <select value={form.equipment} onChange={(event) => update('equipment', event.target.value)}>
-            {equipmentOptions.map((option) => <option key={option}>{option}</option>)}
-          </select>
-        </label>
-        <label>
-          <span>DIFFICULTY</span>
-          <select value={form.difficulty} onChange={(event) => update('difficulty', event.target.value)}>
-            {['Beginner', 'Intermediate', 'Advanced'].map((option) => <option key={option}>{option}</option>)}
-          </select>
-        </label>
-        <label>
-          <span>TRACKING STYLE</span>
-          <select value={form.trackingType} onChange={(event) => update('trackingType', event.target.value)}>
-            <option value="weight-reps">Weight + reps</option>
-            <option value="duration">Duration</option>
-            <option value="distance">Weight + distance</option>
-            <option value="cardio">Run / cardio metrics</option>
-          </select>
-        </label>
-        <label className="custom-form-wide">
-          <span>MOVEMENT PATTERN</span>
-          <input value={form.pattern} onChange={(event) => update('pattern', event.target.value)} placeholder="e.g. Elbow flexion" />
-        </label>
-        <label className="custom-form-wide">
-          <span>INSTRUCTIONS · ONE STEP PER LINE</span>
-          <textarea rows={4} value={form.instructions} onChange={(event) => update('instructions', event.target.value)} placeholder={'Set up the cable just above floor height.\nKeep the upper arm behind your torso.\nCurl without moving the shoulder.'} />
-        </label>
-        <label className="custom-form-wide">
-          <span>COACHING CUES · ONE PER LINE</span>
-          <textarea rows={3} value={form.cues} onChange={(event) => update('cues', event.target.value)} placeholder={'Keep the elbow still.\nControl the return.'} />
-        </label>
-      </div>
-      <button className="button button--accent button--wide" onClick={save} disabled={!form.name.trim()}>
-        {initial ? <Check size={18} /> : <Plus size={18} />} {initial ? 'Save changes' : 'Save custom exercise'}
-      </button>
-    </div>
-  )
-}
-
-function SettingsSheet({
-  settings,
-  workoutCount,
-  changeUnit,
-  changeDistanceUnit,
-  changeTheme,
-  changeRest,
-  changeKeepAwake,
-  changeTimerSound,
-  canInstall,
-  installApp,
-  exportData,
-  exportCsv,
-  triggerImport,
-  resetData,
-}) {
-  const [resetArmed, setResetArmed] = useState(false)
-  return (
-    <div className="sheet-content settings-sheet">
-      <SheetHeading
-        title="Settings & data"
-      />
-
-      <section className="setting-section theme-setting">
-        <div className="setting-label">
-          <div><Palette size={18} /><span>App theme</span></div>
-          <small>Applied everywhere and saved on this device.</small>
-        </div>
-        <div className="theme-picker" role="radiogroup" aria-label="App theme">
-          {THEMES.map((theme) => {
-            const selected = normalizeTheme(settings.theme) === theme.id
-            return (
-              <button
-                key={theme.id}
-                type="button"
-                className={'theme-option ' + (selected ? 'is-active' : '')}
-                onClick={() => changeTheme(theme.id)}
-                role="radio"
-                aria-checked={selected}
-              >
-                <span className="theme-option-preview" aria-hidden="true">
-                  {theme.swatches.map((swatch, index) => (
-                    <i key={swatch} style={{ background: swatch, '--swatch-index': index }} />
-                  ))}
-                </span>
-                <span className="theme-option-copy">
-                  <strong>{theme.name}</strong>
-                  <small>{theme.description}</small>
-                </span>
-                <span className="theme-option-check" aria-hidden="true">
-                  {selected && <Check size={13} strokeWidth={3} />}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
-      <section className="setting-section">
-        <div className="setting-label">
-          <div><Dumbbell size={18} /><span>Weight unit</span></div>
-          <small>Existing logs are converted automatically.</small>
-        </div>
-        <div className="segmented-control">
-          {['kg', 'lb'].map((unit) => (
-            <button
-              key={unit}
-              className={settings.unit === unit ? 'is-active' : ''}
-              onClick={() => changeUnit(unit)}
-            >
-              {unit.toUpperCase()}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="setting-section">
-        <div className="setting-label">
-          <div><Activity size={18} /><span>Running distance</span></div>
-          <small>Run data stays precise when you switch display units.</small>
-        </div>
-        <div className="segmented-control">
-          {['km', 'mi'].map((distanceUnit) => (
-            <button
-              key={distanceUnit}
-              className={(settings.distanceUnit || 'km') === distanceUnit ? 'is-active' : ''}
-              onClick={() => changeDistanceUnit(distanceUnit)}
-            >
-              {distanceUnit.toUpperCase()}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="setting-section setting-toggle-row">
-        <div className="setting-label">
-          <div><Zap size={18} /><span>Keep screen awake</span></div>
-          <small>Useful while a workout is running.</small>
-        </div>
-        <button
-          className={'toggle-switch ' + (settings.keepAwake ? 'is-active' : '')}
-          onClick={() => changeKeepAwake(!settings.keepAwake)}
-          role="switch"
-          aria-checked={Boolean(settings.keepAwake)}
-        >
-          <span />
-        </button>
-      </section>
-
-      <section className="setting-section">
-        <div className="setting-label">
-          <div><TimerReset size={18} /><span>Rest timer</span></div>
-          <small>Starts after you complete a set.</small>
-        </div>
-        <div className="rest-options">
-          {[60, 90, 120, 180].map((seconds) => (
-            <button
-              key={seconds}
-              className={settings.restSeconds === seconds ? 'is-active' : ''}
-              onClick={() => changeRest(seconds)}
-            >
-              {seconds < 120 ? seconds + 's' : seconds / 60 + 'm'}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="setting-section setting-toggle-row">
-        <div className="setting-label">
-          <div><Volume2 size={18} /><span>Timer sound</span></div>
-          <small>Play a short cue when rest ends.</small>
-        </div>
-        <button
-          className={'toggle-switch ' + (settings.timerSound ? 'is-active' : '')}
-          onClick={() => changeTimerSound(!settings.timerSound)}
-          role="switch"
-          aria-checked={Boolean(settings.timerSound)}
-        >
-          <span />
-        </button>
-      </section>
-
-      {canInstall && (
-        <section className="data-section">
-          <div className="setting-label">
-            <div><Download size={18} /><span>Install OpenWorkout</span></div>
-            <small>Use it full-screen like a phone app.</small>
-          </div>
-          <button className="button button--dark button--wide install-button" onClick={installApp}>
-            <Download size={17} /> Add to this device
-          </button>
-        </section>
-      )}
-
-      <section className="data-section">
-        <div className="setting-label">
-          <div><Database size={18} /><span>Local data</span></div>
-          <small>{workoutCount} workouts stored on this device.</small>
-        </div>
-        <div className="data-actions">
-          <button onClick={exportData}>
-            <span><Download size={18} /></span>
-            <div><strong>Export backup</strong><small>Download readable JSON</small></div>
-            <ChevronRight size={18} />
-          </button>
-          <button onClick={exportCsv}>
-            <span><FileJson size={18} /></span>
-            <div><strong>Export workout CSV</strong><small>Open in Sheets or Excel</small></div>
-            <ChevronRight size={18} />
-          </button>
-          <button onClick={triggerImport}>
-            <span><Upload size={18} /></span>
-            <div><strong>Import backup</strong><small>Restore from a JSON file</small></div>
-            <ChevronRight size={18} />
-          </button>
-        </div>
-      </section>
-
-      <div className="privacy-callout">
-        <ShieldCheck size={20} />
-        <div>
-          <strong>Nothing leaves this device.</strong>
-          <p>No account, no server, no analytics. Export a backup to move your data somewhere else.</p>
-        </div>
-      </div>
-
-      {!resetArmed ? (
-        <button className="reset-link" onClick={() => setResetArmed(true)}>
-          <Trash2 size={16} /> Reset local data
-        </button>
-      ) : (
-        <div className="reset-confirm">
-          <p>Reset all workouts and restore the starter data?</p>
-          <div>
-            <button onClick={() => setResetArmed(false)}>Cancel</button>
-            <button onClick={resetData}>Yes, reset</button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function RestTimer({ remaining, total, adjust, skip }) {
-  const progress = Math.max(0, Math.min(1, remaining / Math.max(total, 1)))
-  return (
-    <motion.div
-      className="rest-timer"
-      initial={{ opacity: 0, y: 28, scale: 0.94 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 18, scale: 0.96 }}
-    >
-      <div
-        className="rest-progress"
-        style={{ '--rest-progress': String(progress * 360) + 'deg' }}
-      >
-        <TimerReset size={17} />
-      </div>
-      <div className="rest-copy">
-        <span>REST TIMER</span>
-        <strong>{formatDuration(remaining)}</strong>
-      </div>
-      <button onClick={() => adjust(-15)} aria-label="Subtract 15 seconds">
-        <Minus size={17} />
-      </button>
-      <button onClick={() => adjust(15)} aria-label="Add 15 seconds">
-        <Plus size={17} />
-      </button>
-      <button className="skip-rest" onClick={skip}>Skip</button>
-    </motion.div>
-  )
-}
-
-function EmptyState({ icon: Icon, title, body, actionLabel, onAction }) {
-  return (
-    <div className="empty-state">
-      <span><Icon size={27} /></span>
-      <h2>{title}</h2>
-      <p>{body}</p>
-      <button className="button button--dark" onClick={onAction}>{actionLabel}</button>
-    </div>
-  )
-}
-
-function FeatureLoader({ compact = false }) {
-  return (
-    <div className={'feature-loader ' + (compact ? 'feature-loader--compact' : '')} role="status">
-      <span />
-      <p>Loading…</p>
     </div>
   )
 }

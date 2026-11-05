@@ -13,7 +13,9 @@ import {
 } from 'lucide-react'
 import '../progress-photos.css'
 
-const PHOTO_LIMIT = 12
+// Photos live in IndexedDB, which is sized against free disk space, so the cap
+// is about keeping the timeline browsable rather than about storage.
+const PHOTO_LIMIT = 60
 const MAX_IMAGE_EDGE = 900
 const JPEG_QUALITY = 0.72
 const MAX_SOURCE_BYTES = 30 * 1024 * 1024
@@ -270,7 +272,7 @@ export function ProgressPhotos({ photos = [], onAdd, onDelete }) {
           onClick={adding ? closeAdd : openAdd}
           aria-label={adding ? 'Close photo form' : atLimit ? 'Photo limit reached' : 'Add progress photo'}
         >
-          {adding ? <X size={18} /> : <><Plus size={16} /><span>{atLimit ? '12 / 12' : 'Add photo'}</span></>}
+          {adding ? <X size={18} /> : <><Plus size={16} /><span>{atLimit ? PHOTO_LIMIT + ' / ' + PHOTO_LIMIT : 'Add photo'}</span></>}
         </button>
       </header>
 
@@ -535,9 +537,9 @@ export function ProgressPhotos({ photos = [], onAdd, onDelete }) {
       <footer className="photo-storage-note">
         <HardDrive size={16} />
         <p>
-          <strong>Local storage: about {formatBytes(storageBytes)} used.</strong>
-          A 12-photo gallery typically needs 2–6 MB; browser limits vary. Export your data before clearing site storage.
-          {photos.length > PHOTO_LIMIT ? ' Showing the 12 most recent photos.' : ''}
+          <strong>Stored on this device: about {formatBytes(storageBytes)}.</strong>
+          Photos are included in the JSON backup. Export one before clearing site data or changing phones.
+          {photos.length > PHOTO_LIMIT ? ' Showing the ' + PHOTO_LIMIT + ' most recent photos.' : ''}
         </p>
       </footer>
     </section>

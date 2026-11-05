@@ -19,8 +19,9 @@ The base weight is remembered per exercise for future workouts, suggested from t
     npm install
     npm run dev
 
-Run the unit tests (also run by the deploy workflow before every build) with:
+Lint and run the unit tests (the deploy workflow runs both before every build) with:
 
+    npm run lint
     npm test
 
 Create a production build with:

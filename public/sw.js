@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "openworkout-shell-";
-const CACHE_NAME = `${CACHE_PREFIX}v2`;
+const CACHE_NAME = `${CACHE_PREFIX}v3`;
 const APP_SHELL = new URL("./", self.registration.scope).href;
 const ASSET_DESTINATIONS = new Set([
   "font",

@@ -283,7 +283,7 @@ function MealTimeline({ entries, onLog, onDelete }) {
   )
 }
 
-function DayView({ date, entries, foods, target, recommendation, nutrition, onLog, onQuickAdd, onDelete, onCopyYesterday }) {
+function DayView({ entries, foods, target, recommendation, nutrition, onLog, onQuickAdd, onDelete, onCopyYesterday }) {
   const totals = totalForEntries(entries)
   const remaining = Math.max(0, target - totals.protein)
   return (
@@ -458,7 +458,7 @@ function FoodsView({ foods, recentFoodIds, onCreate, onEdit, onQuickLog }) {
   )
 }
 
-function GoalSetup({ profile, recommendation, onSave, linkedWeight }) {
+function GoalSetup({ profile, onSave, linkedWeight }) {
   const [draft, setDraft] = useState(profile)
   const preview = calculateProteinRecommendation(draft)
 
