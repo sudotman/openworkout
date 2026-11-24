@@ -95,6 +95,7 @@ export function createInitialState() {
       keepAwake: true,
       countWarmups: false,
       timerSound: true,
+      liveLayout: 'list',
     },
     routines: TEMPLATES.map((template) => ({
       ...template,

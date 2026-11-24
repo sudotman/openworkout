@@ -22,6 +22,7 @@ import { FinishWorkoutSheet, WorkoutDaySheet, WorkoutDetail } from './components
 import { exercises } from './data/exercises.js'
 import { getTheme, isDarkTheme } from './data/themes.js'
 import {
+  FocusWorkout,
   loadProgressPhotos,
   loadProgressPlus,
   NutritionView,
@@ -46,6 +47,7 @@ import {
   requestPersistentStorage,
 } from './lib/photo-store.js'
 import { suggestNextLoad } from './lib/progression.js'
+import { settleWorkoutRuns, tracksDistanceFromSpeed } from './lib/cardio-run.js'
 import {
   clearAppState,
   exportAppState,
@@ -676,15 +678,20 @@ function App() {
     )
   }
 
+  // A run still on the clock when the workout ends is stopped where it stands
+  // and logged, rather than lost or left counting.
+  const runDistanceFor = (item) => tracksDistanceFromSpeed(exerciseMap.get(item.exerciseId))
+
   const finishWorkout = (routineAction = 'none') => {
     if (!activeWorkout) return
+    const activeWorkoutNow = settleWorkoutRuns(activeWorkout, Date.now(), runDistanceFor, { stop: true })
     void requestPersistentStorage()
     const newRoutineId = routineAction === 'create' ? uid('routine') : null
-    const cardio = getCardioSummary(activeWorkout, exerciseMap)
+    const cardio = getCardioSummary(activeWorkoutNow, exerciseMap)
     const recordedDuration = Math.max(elapsedSeconds, cardio.totalDurationSeconds || 0)
     const finished = {
-      ...activeWorkout,
-      exercises: activeWorkout.exercises.map(({ progression: _suggestion, ...item }) => item),
+      ...activeWorkoutNow,
+      exercises: activeWorkoutNow.exercises.map(({ progression: _suggestion, ...item }) => item),
       sourceRoutineId: newRoutineId || activeWorkout.sourceRoutineId || null,
       completedAt: new Date().toISOString(),
       durationSeconds: recordedDuration,
@@ -1090,9 +1097,29 @@ function App() {
   }
 
   const inSession = view === 'train' && Boolean(activeWorkout)
+  const focusLayout = appState.settings.liveLayout === 'focus'
+  // The list edits the stored fields directly, so a run on the clock is
+  // brought up to date (and keeps running) before switching to it.
+  const toggleLiveLayout = () =>
+    setAppState((state) => ({
+      ...state,
+      activeWorkout: state.activeWorkout && settleWorkoutRuns(state.activeWorkout, Date.now(), runDistanceFor),
+      settings: { ...state.settings, liveLayout: state.settings.liveLayout === 'focus' ? 'list' : 'focus' },
+    }))
+  const openFinishSheet = () => {
+    updateActiveWorkout((workout) => settleWorkoutRuns(workout, Date.now(), runDistanceFor))
+    setSheet({ type: 'finish' })
+  }
 
   return (
-    <div className={'app-shell' + (inSession ? ' is-in-session' : '') + (restTimer ? ' is-resting' : '')}>
+    <div
+      className={
+        'app-shell' +
+        (inSession ? ' is-in-session' : '') +
+        (inSession && focusLayout ? ' is-focus' : '') +
+        (restTimer ? ' is-resting' : '')
+      }
+    >
       <Sidebar
         view={view}
         navigate={navigate}
@@ -1110,33 +1137,66 @@ function App() {
         )}
         <main className="app-main">
           <Suspense fallback={<FeatureLoader />}>
-            <motion.div key={view + Boolean(activeWorkout)} className="view-frame" {...MOTION}>
+            <motion.div key={view + Boolean(activeWorkout) + focusLayout} className="view-frame" {...MOTION}>
               {view === 'train' &&
                 (activeWorkout ? (
-                  <LiveWorkout
-                    workout={activeWorkout}
-                    elapsedSeconds={elapsedSeconds}
-                    unit={appState.settings.unit}
-                    distanceUnit={appState.settings.distanceUnit}
-                    exerciseMap={exerciseMap}
-                    previousWorkouts={appState.workouts}
-                    updateActiveWorkout={updateActiveWorkout}
-                    updateSet={updateSet}
-                    updateWeight={updateWeight}
-                    toggleSet={toggleSet}
-                    addSet={addSet}
-                    removeSet={removeSet}
-                    openExercisePicker={() => setSheet({ type: 'picker' })}
-                    openExercise={(exerciseId) => setSheet({ type: 'exercise', exerciseId })}
-                    openExerciseMenu={(workoutExerciseId) => setSheet({ type: 'exercise-menu', workoutExerciseId })}
-                    openSetOptions={(workoutExerciseId, setId) => setSheet({ type: 'set-options', workoutExerciseId, setId })}
-                    openBaseWeight={(workoutExerciseId) => setSheet({ type: 'base-weight', workoutExerciseId })}
-                    openTools={() => setSheet({ type: 'tools' })}
-                    openFinish={() => setSheet({ type: 'finish' })}
-                    openDiscard={() => setSheet({ type: 'session-menu' })}
-                    toggleWorkoutTimer={toggleWorkoutTimer}
-                    keepPreviousLoad={keepPreviousLoad}
-                  />
+                  focusLayout ? (
+                    <FocusWorkout
+                      workout={activeWorkout}
+                      now={now}
+                      elapsedSeconds={elapsedSeconds}
+                      unit={appState.settings.unit}
+                      distanceUnit={appState.settings.distanceUnit}
+                      exerciseMap={exerciseMap}
+                      previousWorkouts={appState.workouts}
+                      updateActiveWorkout={updateActiveWorkout}
+                      updateSet={updateSet}
+                      updateWeight={updateWeight}
+                      toggleSet={toggleSet}
+                      addSet={addSet}
+                      removeSet={removeSet}
+                      openExercisePicker={() => setSheet({ type: 'picker' })}
+                      openExercise={(exerciseId) => setSheet({ type: 'exercise', exerciseId })}
+                      openExerciseMenu={(workoutExerciseId) => setSheet({ type: 'exercise-menu', workoutExerciseId })}
+                      openSetOptions={(workoutExerciseId, setId) => setSheet({ type: 'set-options', workoutExerciseId, setId })}
+                      openTools={() => setSheet({ type: 'tools' })}
+                      openFinish={openFinishSheet}
+                      openDiscard={() => setSheet({ type: 'session-menu' })}
+                      toggleWorkoutTimer={toggleWorkoutTimer}
+                      keepPreviousLoad={keepPreviousLoad}
+                      toggleLayout={toggleLiveLayout}
+                      rest={restRemaining !== null ? { remaining: restRemaining, total: restTimer.total } : null}
+                      adjustRest={adjustRest}
+                      skipRest={skipRest}
+                      sheetOpen={Boolean(sheet)}
+                    />
+                  ) : (
+                    <LiveWorkout
+                      workout={activeWorkout}
+                      elapsedSeconds={elapsedSeconds}
+                      unit={appState.settings.unit}
+                      distanceUnit={appState.settings.distanceUnit}
+                      exerciseMap={exerciseMap}
+                      previousWorkouts={appState.workouts}
+                      updateActiveWorkout={updateActiveWorkout}
+                      updateSet={updateSet}
+                      updateWeight={updateWeight}
+                      toggleSet={toggleSet}
+                      addSet={addSet}
+                      removeSet={removeSet}
+                      openExercisePicker={() => setSheet({ type: 'picker' })}
+                      openExercise={(exerciseId) => setSheet({ type: 'exercise', exerciseId })}
+                      openExerciseMenu={(workoutExerciseId) => setSheet({ type: 'exercise-menu', workoutExerciseId })}
+                      openSetOptions={(workoutExerciseId, setId) => setSheet({ type: 'set-options', workoutExerciseId, setId })}
+                      openBaseWeight={(workoutExerciseId) => setSheet({ type: 'base-weight', workoutExerciseId })}
+                      openTools={() => setSheet({ type: 'tools' })}
+                      openFinish={() => setSheet({ type: 'finish' })}
+                      openDiscard={() => setSheet({ type: 'session-menu' })}
+                      toggleWorkoutTimer={toggleWorkoutTimer}
+                      keepPreviousLoad={keepPreviousLoad}
+                      toggleLayout={toggleLiveLayout}
+                    />
+                  )
                 ) : (
                   <TrainView
                     workouts={appState.workouts}
@@ -1215,7 +1275,7 @@ function App() {
       <MobileNav view={view} navigate={navigate} activeWorkout={activeWorkout} />
 
       <AnimatePresence>
-        {restRemaining !== null && (
+        {restRemaining !== null && !(inSession && focusLayout) && (
           <RestTimer
             remaining={restRemaining}
             total={restTimer.total}

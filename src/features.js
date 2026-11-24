@@ -49,3 +49,7 @@ export const CardioTracker = lazy(() =>
 export const NutritionView = lazy(() =>
   import('./components/NutritionView.jsx').then((module) => ({ default: module.NutritionView })),
 )
+
+export const FocusWorkout = lazy(() =>
+  import('./views/FocusWorkout.jsx').then((module) => ({ default: module.FocusWorkout })),
+)

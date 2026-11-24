@@ -3,6 +3,7 @@ import {
   Check,
   Dumbbell,
   Ellipsis,
+  Focus,
   Link2,
   ListPlus,
   Minus,
@@ -10,6 +11,7 @@ import {
   Pause,
   Play,
   Plus,
+  Rows3,
   TimerReset,
   TrendingUp,
   Wrench,
@@ -31,6 +33,8 @@ export function SessionBar({
   openDiscard,
   openFinish,
   toggleWorkoutTimer,
+  layout = 'list',
+  toggleLayout,
 }) {
   const progress = planned > 0 ? Math.min(1, completed / planned) : 0
   return (
@@ -52,6 +56,16 @@ export function SessionBar({
       </div>
 
       <div className="session-bar-actions">
+        {toggleLayout && (
+          <button
+            className={'icon-button icon-button--bare' + (layout === 'focus' ? ' is-active' : '')}
+            onClick={toggleLayout}
+            aria-label={layout === 'focus' ? 'Show all exercises' : 'Focus on one set at a time'}
+            aria-pressed={layout === 'focus'}
+          >
+            {layout === 'focus' ? <Rows3 size={19} /> : <Focus size={19} />}
+          </button>
+        )}
         <button className="icon-button icon-button--bare" onClick={openTools} aria-label="Open workout tools">
           <Wrench size={19} />
         </button>
@@ -208,6 +222,7 @@ export function LiveWorkout({
   openDiscard,
   toggleWorkoutTimer,
   keepPreviousLoad,
+  toggleLayout,
 }) {
   const [openNotes, setOpenNotes] = useState(() => new Set())
   const cardioSummary = getCardioSummary(workout, exerciseMap, { completedOnly: false })
@@ -238,6 +253,7 @@ export function LiveWorkout({
         openDiscard={openDiscard}
         openFinish={openFinish}
         toggleWorkoutTimer={toggleWorkoutTimer}
+        toggleLayout={toggleLayout}
       />
 
       <div className="live-body content-width content-width--narrow">
