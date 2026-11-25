@@ -1104,7 +1104,11 @@ function App() {
     setAppState((state) => ({
       ...state,
       activeWorkout: state.activeWorkout && settleWorkoutRuns(state.activeWorkout, Date.now(), runDistanceFor),
-      settings: { ...state.settings, liveLayout: state.settings.liveLayout === 'focus' ? 'list' : 'focus' },
+      settings: {
+        ...state.settings,
+        liveLayout: state.settings.liveLayout === 'focus' ? 'list' : 'focus',
+        liveLayoutPicked: true,
+      },
     }))
   const openFinishSheet = () => {
     updateActiveWorkout((workout) => settleWorkoutRuns(workout, Date.now(), runDistanceFor))

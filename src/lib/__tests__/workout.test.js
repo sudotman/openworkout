@@ -35,6 +35,14 @@ describe('normalizeWorkout', () => {
 })
 
 describe('normalizeState', () => {
+  it('opens workouts in focus unless list was picked with the toggle', () => {
+    expect(normalizeState({ version: 1, settings: {} }).settings.liveLayout).toBe('focus')
+    expect(normalizeState({ version: 1, settings: { liveLayout: 'list' } }).settings.liveLayout).toBe('focus')
+    expect(
+      normalizeState({ version: 1, settings: { liveLayout: 'list', liveLayoutPicked: true } }).settings.liveLayout,
+    ).toBe('list')
+  })
+
   it('sorts imported workouts newest first', () => {
     const state = normalizeState({
       version: 1,

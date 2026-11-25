@@ -95,7 +95,7 @@ export function createInitialState() {
       keepAwake: true,
       countWarmups: false,
       timerSound: true,
-      liveLayout: 'list',
+      liveLayout: 'focus',
     },
     routines: TEMPLATES.map((template) => ({
       ...template,
@@ -318,6 +318,9 @@ export function normalizeState(state) {
       ...fallback.settings,
       ...(state.settings || {}),
       theme: normalizeTheme(state.settings?.theme),
+      // Focus is the default. A layout saved before that was the stored default,
+      // not a choice, so only one picked with the toggle is kept.
+      liveLayout: state.settings?.liveLayoutPicked && state.settings.liveLayout === 'list' ? 'list' : 'focus',
     },
   }
 }
